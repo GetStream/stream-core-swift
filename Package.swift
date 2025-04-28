@@ -12,7 +12,8 @@ let package = Package(
             name: "StreamCore",
             targets: ["StreamCore"]
         )
-    ],    
+    ],
+    dependencies: [ ],    
     targets: [
         .target(
             name: "StreamCore"
