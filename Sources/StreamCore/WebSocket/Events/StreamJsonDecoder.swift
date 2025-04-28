@@ -6,7 +6,7 @@ import Foundation
 
 // MARK: - JSONDecoder Stream
 
-final class StreamJSONDecoder: JSONDecoder, @unchecked Sendable {
+public final class StreamJSONDecoder: JSONDecoder, @unchecked Sendable {
     let iso8601formatter: ISO8601DateFormatter
     let dateCache: NSCache<NSString, NSDate>
 
@@ -52,7 +52,7 @@ final class StreamJSONDecoder: JSONDecoder, @unchecked Sendable {
 
 extension JSONDecoder {
     /// A default `JSONDecoder`.
-    static let `default`: JSONDecoder = stream
+    public static let `default`: JSONDecoder = stream
 
     /// A Stream Chat JSON decoder.
     static let stream: StreamJSONDecoder = {
@@ -64,7 +64,7 @@ extension JSONDecoder {
 
 extension JSONEncoder {
     /// A default `JSONEncoder`.
-    static let `default`: JSONEncoder = stream
+    public static let `default`: JSONEncoder = stream
     /// A default gzip `JSONEncoder`.
     static let defaultGzip: JSONEncoder = streamGzip
 

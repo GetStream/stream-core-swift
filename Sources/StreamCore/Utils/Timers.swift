@@ -4,7 +4,7 @@
 
 import Foundation
 
-protocol Timer {
+public protocol Timer {
     /// Schedules a new timer.
     ///
     /// - Parameters:
@@ -33,13 +33,13 @@ protocol Timer {
 }
 
 extension Timer {
-    static func currentTime() -> Date {
+    public static func currentTime() -> Date {
         Date()
     }
 }
 
 /// Allows resuming and suspending of a timer.
-protocol RepeatingTimerControl {
+public protocol RepeatingTimerControl {
     /// Resumes the timer.
     func resume()
     
@@ -48,7 +48,7 @@ protocol RepeatingTimerControl {
 }
 
 /// Allows cancelling a timer.
-protocol TimerControl {
+public protocol TimerControl {
     /// Cancels the timer.
     func cancel()
 }
@@ -56,9 +56,9 @@ protocol TimerControl {
 extension DispatchWorkItem: TimerControl {}
 
 /// Default real-world implementations of timers.
-struct DefaultTimer: Timer {
+public struct DefaultTimer: Timer {
     @discardableResult
-    static func schedule(
+    public static func schedule(
         timeInterval: TimeInterval,
         queue: DispatchQueue,
         onFire: @escaping () -> Void
@@ -68,7 +68,7 @@ struct DefaultTimer: Timer {
         return worker
     }
     
-    static func scheduleRepeating(
+    public static func scheduleRepeating(
         timeInterval: TimeInterval,
         queue: DispatchQueue,
         onFire: @escaping () -> Void

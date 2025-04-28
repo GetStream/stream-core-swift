@@ -4,7 +4,7 @@
 
 import Foundation
 
-protocol WebSocketEngine: AnyObject, Sendable {
+public protocol WebSocketEngine: AnyObject, Sendable {
     var request: URLRequest { get }
     var callbackQueue: DispatchQueue { get }
     var delegate: WebSocketEngineDelegate? { get set }
@@ -19,13 +19,13 @@ protocol WebSocketEngine: AnyObject, Sendable {
     func sendPing()
 }
 
-protocol WebSocketEngineDelegate: AnyObject, Sendable {
+public protocol WebSocketEngineDelegate: AnyObject, Sendable {
     func webSocketDidConnect()
     func webSocketDidDisconnect(error: WebSocketEngineError?)
     func webSocketDidReceiveMessage(_ data: Data)
 }
 
-struct WebSocketEngineError: Error {
+public struct WebSocketEngineError: Error {
     static let stopErrorCode = 1000
     
     let reason: String

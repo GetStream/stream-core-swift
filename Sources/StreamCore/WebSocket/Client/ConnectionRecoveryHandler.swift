@@ -6,7 +6,7 @@ import CoreData
 import Foundation
 
 /// The type that keeps track of active chat components and asks them to reconnect when it's needed
-protocol ConnectionRecoveryHandler: ConnectionStateDelegate, Sendable {}
+public protocol ConnectionRecoveryHandler: ConnectionStateDelegate, Sendable {}
 
 /// The type is designed to obtain missing events that happened in watched channels while user
 /// was not connected to the web-socket.
@@ -17,7 +17,7 @@ protocol ConnectionRecoveryHandler: ConnectionStateDelegate, Sendable {}
 /// We remember `lastReceivedEventDate` when state becomes `connecting` to catch the last event date
 /// before the `HealthCheck` override the `lastReceivedEventDate` with the recent date.
 ///
-final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, @unchecked Sendable {
+public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, @unchecked Sendable {
     // MARK: - Properties
     
     private let webSocketClient: WebSocketClient
@@ -32,7 +32,7 @@ final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, @unchec
 
     // MARK: - Init
 
-    convenience init(
+    public convenience init(
         webSocketClient: WebSocketClient,
         eventNotificationCenter: EventNotificationCenter,
         backgroundTaskScheduler: BackgroundTaskScheduler?,
@@ -57,7 +57,7 @@ final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, @unchec
         )
     }
 
-    init(
+    public init(
         webSocketClient: WebSocketClient,
         eventNotificationCenter: EventNotificationCenter,
         backgroundTaskScheduler: BackgroundTaskScheduler?,
@@ -174,7 +174,7 @@ extension DefaultConnectionRecoveryHandler {
         }
     }
     
-    func webSocketClient(_ client: WebSocketClient, didUpdateConnectionState state: WebSocketConnectionState) {
+    public func webSocketClient(_ client: WebSocketClient, didUpdateConnectionState state: WebSocketConnectionState) {
         log.debug("Connection state: \(state)", subsystems: .webSocket)
         
         switch state {
@@ -269,7 +269,7 @@ private extension DefaultConnectionRecoveryHandler {
 
 // MARK: - Automatic Reconnection Policies
 
-protocol AutomaticReconnectionPolicy {
+public protocol AutomaticReconnectionPolicy {
     func canBeReconnected() -> Bool
 }
 

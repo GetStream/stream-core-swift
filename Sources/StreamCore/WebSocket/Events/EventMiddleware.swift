@@ -5,7 +5,7 @@
 import Foundation
 
 /// An object used to pre-process incoming `Event`.
-protocol EventMiddleware {
+public protocol EventMiddleware {
     /// Processes the incoming event and returns `nil` if it was consumed (no further processing is needed).
     ///
     /// - Parameters:

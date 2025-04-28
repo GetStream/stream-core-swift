@@ -26,7 +26,7 @@ extension Notification {
 ///
 /// Basically, it's a wrapper over legacy monitor based on `Reachability` (iOS 11 only)
 /// and default monitor based on `Network`.`NWPathMonitor` (iOS 12+).
-final class InternetConnection: @unchecked Sendable {
+public final class InternetConnection: @unchecked Sendable {
     /// The current Internet connection status.
     @Published private(set) var status: InternetConnectionStatus {
         didSet {
@@ -50,7 +50,7 @@ final class InternetConnection: @unchecked Sendable {
 
     /// Creates a `InternetConnection` with a given monitor.
     /// - Parameter monitor: an Internet connection monitor. Use nil for a default `InternetConnectionMonitor`.
-    init(
+    public init(
         notificationCenter: NotificationCenter = .default,
         monitor: InternetConnectionMonitor
     ) {
@@ -68,7 +68,7 @@ final class InternetConnection: @unchecked Sendable {
 }
 
 extension InternetConnection: InternetConnectionDelegate {
-    func internetConnectionStatusDidChange(status: InternetConnectionStatus) {
+    public func internetConnectionStatusDidChange(status: InternetConnectionStatus) {
         self.status = status
     }
 }
@@ -86,14 +86,14 @@ private extension InternetConnection {
 // MARK: - Internet Connection Monitors
 
 /// A delegate to receive Internet connection events.
-protocol InternetConnectionDelegate: AnyObject {
+public protocol InternetConnectionDelegate: AnyObject {
     /// Calls when the Internet connection status did change.
     /// - Parameter status: an Internet connection status.
     func internetConnectionStatusDidChange(status: InternetConnectionStatus)
 }
 
 /// A protocol for Internet connection monitors.
-protocol InternetConnectionMonitor: AnyObject {
+public protocol InternetConnectionMonitor: AnyObject {
     /// A delegate for receiving Internet connection events.
     var delegate: InternetConnectionDelegate? { get set }
 
@@ -150,28 +150,30 @@ extension InternetConnectionStatus {
 extension InternetConnection {
     /// The default Internet connection monitor for iOS 12+.
     /// It uses Apple Network API.
-    class Monitor: InternetConnectionMonitor, @unchecked Sendable {
+    public class Monitor: InternetConnectionMonitor, @unchecked Sendable {
         private var monitor: NWPathMonitor?
         private let queue = DispatchQueue(label: "io.getstream.internet-monitor")
 
-        weak var delegate: InternetConnectionDelegate?
+        weak public var delegate: InternetConnectionDelegate?
 
-        var status: InternetConnectionStatus {
+        public var status: InternetConnectionStatus {
             if let path = monitor?.currentPath {
                 return status(from: path)
             }
 
             return .unknown
         }
+        
+        public init() {}
 
-        func start() {
+        public func start() {
             guard monitor == nil else { return }
 
             monitor = createMonitor()
             monitor?.start(queue: queue)
         }
 
-        func stop() {
+        public func stop() {
             monitor?.cancel()
             monitor = nil
         }

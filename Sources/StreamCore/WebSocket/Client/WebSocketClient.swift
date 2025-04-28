@@ -5,7 +5,7 @@
 import Combine
 import Foundation
 
-class WebSocketClient: @unchecked Sendable {
+public class WebSocketClient: @unchecked Sendable {
     /// The notification center `WebSocketClient` uses to send notifications about incoming events.
     let eventNotificationCenter: EventNotificationCenter
 
@@ -17,7 +17,7 @@ class WebSocketClient: @unchecked Sendable {
     }
 
     /// The current state the web socket connection.
-    @Atomic private(set) var connectionState: WebSocketConnectionState = .initialized {
+    @Atomic private(set) public var connectionState: WebSocketConnectionState = .initialized {
         didSet {
             pingController.connectionStateDidChange(connectionState)
 
@@ -31,11 +31,11 @@ class WebSocketClient: @unchecked Sendable {
     }
 
     let connectionSubject = PassthroughSubject<WebSocketConnectionState, Never>()
-    let eventSubject = PassthroughSubject<Event, Never>()
+    public let eventSubject = PassthroughSubject<Event, Never>()
 
-    weak var connectionStateDelegate: ConnectionStateDelegate?
+    public weak var connectionStateDelegate: ConnectionStateDelegate?
 
-    var connectURL: URL
+    public var connectURL: URL
 
     var requiresAuth: Bool
 
@@ -43,7 +43,7 @@ class WebSocketClient: @unchecked Sendable {
     private let eventDecoder: AnyEventDecoder
 
     /// The web socket engine used to make the actual WS connection
-    private(set) var engine: WebSocketEngine?
+    public private(set) var engine: WebSocketEngine?
 
     /// The queue on which web socket engine methods are called
     private let engineQueue: DispatchQueue = .init(label: "io.getStream.video.core.web_socket_engine_queue", qos: .userInitiated)
@@ -70,17 +70,18 @@ class WebSocketClient: @unchecked Sendable {
         return engine
     }
 
-    var onWSConnectionEstablished: (() -> Void)?
-    var onConnected: (() -> Void)?
+    public var onWSConnectionEstablished: (() -> Void)?
+    public var onConnected: (() -> Void)?
 
-    init(
+    public init(
         sessionConfiguration: URLSessionConfiguration,
         eventDecoder: AnyEventDecoder,
         eventNotificationCenter: EventNotificationCenter,
         webSocketClientType: WebSocketClientType,
-        environment: Environment = .init(),
+        environment: Environment = Environment(),
         connectURL: URL,
-        requiresAuth: Bool = true
+        requiresAuth: Bool = true,
+        pingRequestBuilder: (() -> any SendableEvent)? = nil
     ) {
         self.environment = environment
         self.sessionConfiguration = sessionConfiguration
@@ -94,6 +95,7 @@ class WebSocketClient: @unchecked Sendable {
             engineQueue,
             webSocketClientType
         )
+        pingController.pingRequestBuilder = pingRequestBuilder
         
         pingController.delegate = self
     }
@@ -101,7 +103,7 @@ class WebSocketClient: @unchecked Sendable {
     /// Connects the web connect.
     ///
     /// Calling this method has no effect is the web socket is already connected, or is in the connecting phase.
-    func connect() {
+    public func connect() {
         switch connectionState {
         // Calling connect in the following states has no effect
         case .connecting, .authenticating, .connected(healthCheckInfo: _):
@@ -122,7 +124,7 @@ class WebSocketClient: @unchecked Sendable {
     ///
     /// Calling this function has no effect, if the connection is in an inactive state.
     /// - Parameter source: Additional information about the source of the disconnection. Default value is `.userInitiated`.
-    func disconnect(
+    public func disconnect(
         code: URLSessionWebSocketTask.CloseCode = .normalClosure,
         source: WebSocketConnectionState.DisconnectionSource = .userInitiated,
         completion: @Sendable @escaping () -> Void
@@ -135,7 +137,7 @@ class WebSocketClient: @unchecked Sendable {
         }
     }
 
-    func disconnect(source: WebSocketConnectionState.DisconnectionSource = .userInitiated) async {
+    public func disconnect(source: WebSocketConnectionState.DisconnectionSource = .userInitiated) async {
         await withCheckedContinuation { [weak self] continuation in
             guard let self else {
                 continuation.resume()
@@ -148,11 +150,11 @@ class WebSocketClient: @unchecked Sendable {
     }
 }
 
-protocol ConnectionStateDelegate: AnyObject {
+public protocol ConnectionStateDelegate: AnyObject {
     func webSocketClient(_ client: WebSocketClient, didUpdateConnectionState state: WebSocketConnectionState)
 }
 
-extension WebSocketClient {
+public extension WebSocketClient {
     /// An object encapsulating all dependencies of `WebSocketClient`.
     struct Environment {
         typealias CreatePingController = (
@@ -180,19 +182,21 @@ extension WebSocketClient {
         ) -> Batcher<Event> = {
             Batcher<Event>(period: 0.0, handler: $0)
         }
+        
+        public init() {}
     }
 }
 
 // MARK: - Web Socket Delegate
 
 extension WebSocketClient: WebSocketEngineDelegate {
-    func webSocketDidConnect() {
+    public func webSocketDidConnect() {
         log.debug("Web socket connection established", subsystems: .webSocket)
         connectionState = .authenticating
         onWSConnectionEstablished?()
     }
 
-    func webSocketDidReceiveMessage(_ data: Data) {
+    public func webSocketDidReceiveMessage(_ data: Data) {
         var event: Event
 
         do {
@@ -232,7 +236,7 @@ extension WebSocketClient: WebSocketEngineDelegate {
         eventsBatcher.append(event)
     }
 
-    func webSocketDidDisconnect(error engineError: WebSocketEngineError?) {
+    public func webSocketDidDisconnect(error engineError: WebSocketEngineError?) {
         switch connectionState {
         case .connecting, .authenticating, .connected:
             let serverError = engineError.map { ClientError.WebSocket(with: $0) }
@@ -302,7 +306,7 @@ extension Notification.Name {
     static let NewEventReceived = Notification.Name("io.getStream.video.core.new_event_received")
 }
 
-enum WebSocketClientType {
+public enum WebSocketClientType {
     case coordinator
     case sfu
 }
@@ -334,5 +338,9 @@ extension ClientError {
     public class WebSocket: ClientError, @unchecked Sendable {}
 }
 
-struct WSDisconnected: Event {}
-struct WSConnected: Event {}
+public struct WSDisconnected: Event {
+    public init() {}
+}
+public struct WSConnected: Event {
+    public init() {}
+}

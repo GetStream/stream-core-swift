@@ -5,7 +5,7 @@
 import Foundation
 
 /// The type encapsulating the logic of computing delays for the failed actions that needs to be retried.
-protocol RetryStrategy: Sendable {
+public protocol RetryStrategy: Sendable {
     /// Returns the # of consecutively failed retries.
     var consecutiveFailuresCount: Int { get }
     
@@ -29,7 +29,7 @@ extension RetryStrategy {
     /// Returns the delay and then increments # of consecutively failed retries.
     ///
     /// - Returns: The delay for the next retry.
-    mutating func getDelayAfterTheFailure() -> TimeInterval {
+    public mutating func getDelayAfterTheFailure() -> TimeInterval {
         defer { incrementConsecutiveFailures() }
         
         return nextRetryDelay()
@@ -37,20 +37,20 @@ extension RetryStrategy {
 }
 
 /// The default implementation of `RetryStrategy` with exponentially growing delays.
-struct DefaultRetryStrategy: RetryStrategy {
+public struct DefaultRetryStrategy: RetryStrategy {
     static let maximumReconnectionDelay: TimeInterval = 25
     
-    @Atomic private(set) var consecutiveFailuresCount = 0
+    @Atomic private(set) public var consecutiveFailuresCount = 0
     
-    mutating func incrementConsecutiveFailures() {
+    mutating public func incrementConsecutiveFailures() {
         _consecutiveFailuresCount.mutate { $0 + 1 }
     }
     
-    mutating func resetConsecutiveFailures() {
+    mutating public func resetConsecutiveFailures() {
         consecutiveFailuresCount = 0
     }
     
-    func nextRetryDelay() -> TimeInterval {
+    public func nextRetryDelay() -> TimeInterval {
         var delay: TimeInterval = 0
 
         let consecutiveFailuresCount = self.consecutiveFailuresCount
@@ -65,4 +65,6 @@ struct DefaultRetryStrategy: RetryStrategy {
 
         return delay
     }
+    
+    public init() {}
 }

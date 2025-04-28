@@ -17,7 +17,7 @@ protocol WebSocketPingControllerDelegate: AnyObject {
     func disconnectOnNoPongReceived()
 }
 
-protocol HealthCheck: Event, Equatable {}
+public protocol HealthCheck: Event, Equatable {}
 
 /// The controller manages ping and pong timers. It sends ping periodically to keep a web socket connection alive.
 /// After ping is sent, a pong waiting timer is started, and if pong does not come, a forced disconnect is called.
@@ -41,7 +41,7 @@ class WebSocketPingController {
     /// A delegate to control `WebSocketClient` connection by `WebSocketPingController`.
     weak var delegate: WebSocketPingControllerDelegate?
     
-    var sfuPingRequestBuilder: (() -> any SendableEvent)?
+    var pingRequestBuilder: (() -> any SendableEvent)?
     
     deinit {
         cancelPongTimeoutTimer()
@@ -84,8 +84,8 @@ class WebSocketPingController {
         log.info("WebSocket Ping", subsystems: .webSocket)
         if webSocketClientType == .coordinator {
             delegate?.sendPing()
-        } else if let sfuPingRequestBuilder {
-            var sfuRequest = sfuPingRequestBuilder()
+        } else if let pingRequestBuilder {
+            let sfuRequest = pingRequestBuilder()
             delegate?.sendPing(healthCheckEvent: sfuRequest)
         }
     }

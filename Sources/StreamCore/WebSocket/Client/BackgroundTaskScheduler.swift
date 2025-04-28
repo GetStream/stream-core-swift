@@ -5,7 +5,7 @@
 import Foundation
 
 /// Object responsible for platform specific handling of background tasks
-protocol BackgroundTaskScheduler: Sendable {
+public protocol BackgroundTaskScheduler: Sendable {
     /// It's your responsibility to finish previously running task.
     ///
     /// Returns: `false` if system forbid background task, `true` otherwise
@@ -27,7 +27,7 @@ protocol BackgroundTaskScheduler: Sendable {
 #if os(iOS)
 import UIKit
 
-class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sendable {
+public class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sendable {
     private let applicationStateAdapter = StreamAppStateAdapter()
 
     private lazy var app: UIApplication? = {
@@ -39,10 +39,12 @@ class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sendable {
     /// The identifier of the currently running background task. `nil` if no background task is running.
     private var activeBackgroundTask: UIBackgroundTaskIdentifier?
 
-    var isAppActive: Bool { applicationStateAdapter.state == .foreground }
+    public var isAppActive: Bool { applicationStateAdapter.state == .foreground }
+    
+    public init() {}
 
     @MainActor
-    func beginTask(expirationHandler: (@Sendable() -> Void)?) -> Bool {
+    public func beginTask(expirationHandler: (@Sendable() -> Void)?) -> Bool {
         activeBackgroundTask = app?.beginBackgroundTask { [weak self] in
             expirationHandler?()
             self?.endTask()
@@ -51,7 +53,7 @@ class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sendable {
     }
 
     @MainActor
-    func endTask() {
+    public func endTask() {
         if let activeTask = activeBackgroundTask {
             app?.endBackgroundTask(activeTask)
             activeBackgroundTask = nil
@@ -61,7 +63,7 @@ class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sendable {
     private var onEnteringBackground: () -> Void = {}
     private var onEnteringForeground: () -> Void = {}
 
-    func startListeningForAppStateUpdates(
+    public func startListeningForAppStateUpdates(
         onEnteringBackground: @escaping () -> Void,
         onEnteringForeground: @escaping () -> Void
     ) {
@@ -83,7 +85,7 @@ class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sendable {
         )
     }
 
-    func stopListeningForAppStateUpdates() {
+    public func stopListeningForAppStateUpdates() {
         onEnteringForeground = {}
         onEnteringBackground = {}
 

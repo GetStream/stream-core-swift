@@ -5,7 +5,7 @@
 import Foundation
 
 /// A Client error.
-public class ClientError: Error, ReflectiveStringConvertible, @unchecked Sendable {
+open class ClientError: Error, ReflectiveStringConvertible, @unchecked Sendable {
     public struct Location: Equatable, Sendable {
         public let file: String
         public let line: Int
@@ -30,7 +30,7 @@ public class ClientError: Error, ReflectiveStringConvertible, @unchecked Sendabl
     }
     
     /// Retrieve the localized description for this error.
-    public var localizedDescription: String { message ?? errorDescription ?? "" }
+    open var localizedDescription: String { message ?? errorDescription ?? "" }
     
     /// A client error based on an external general error.
     /// - Parameters:
@@ -90,7 +90,7 @@ extension ClientError: Equatable {
     }
 }
 
-extension ClientError {
+public extension ClientError {
     /// Returns `true` if underlaying error is `ErrorPayload` with code is inside invalid token codes range.
     var isInvalidTokenError: Bool {
         (underlyingError as? ErrorPayload)?.isInvalidTokenError == true
@@ -109,14 +109,14 @@ extension Error {
 }
 
 extension Error {
-    var isTokenExpiredError: Bool {
+    public var isTokenExpiredError: Bool {
         if let error = self as? APIError, ClosedRange.tokenInvalidErrorCodes ~= error.code {
             return true
         }
         return false
     }
     
-    var hasClientErrors: Bool {
+    public var hasClientErrors: Bool {
         if let apiError = self as? APIError,
            ClosedRange.clientErrorCodes ~= apiError.statusCode {
             return false
@@ -127,7 +127,7 @@ extension Error {
 
 extension ClosedRange where Bound == Int {
     /// The error codes for token-related errors. Typically, a refreshed token is required to recover.
-    static let tokenInvalidErrorCodes: Self = 40...42
+    public static let tokenInvalidErrorCodes: Self = 40...42
     
     /// The range of HTTP request status codes for client errors.
     static let clientErrorCodes: Self = 400...499

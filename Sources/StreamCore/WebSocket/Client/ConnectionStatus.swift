@@ -25,7 +25,7 @@ public enum ConnectionStatus: Equatable, Sendable {
     case disconnecting
 }
 
-extension ConnectionStatus {
+public extension ConnectionStatus {
     // In internal initializer used for convering internal `WebSocketConnectionState` to `ChatClientConnectionStatus`.
     init(webSocketConnectionState: WebSocketConnectionState) {
         switch webSocketConnectionState {
@@ -53,9 +53,9 @@ extension ConnectionStatus {
 typealias ConnectionId = String
 
 /// A web socket connection state.
-enum WebSocketConnectionState: Equatable {
+public enum WebSocketConnectionState: Equatable {
     /// Provides additional information about the source of disconnecting.
-    enum DisconnectionSource: Equatable {
+    public enum DisconnectionSource: Equatable {
         /// A user initiated web socket disconnecting.
         case userInitiated
         
@@ -69,7 +69,7 @@ enum WebSocketConnectionState: Equatable {
         case noPongReceived
         
         /// Returns the underlaying error if connection cut was initiated by the server.
-        var serverError: ClientError? {
+        public var serverError: ClientError? {
             guard case let .serverInitiated(error) = self else { return nil }
             
             return error

@@ -5,9 +5,12 @@
 import Foundation
 
 /// An `Event` object representing an event in the chat system.
-public protocol Event: Sendable {}
+public protocol Event: Sendable {
+    func healthcheck() -> HealthCheckInfo?
+    func error() -> Error?
+}
 
-extension Event {
+public extension Event {
     func healthcheck() -> HealthCheckInfo? {
         return nil
     }
@@ -17,22 +20,27 @@ extension Event {
     }
 }
 
-public protocol SendableEvent: Event, ReflectiveStringConvertible {
+public protocol SendableEvent: Event {
     func serializedData(partial: Bool) throws -> Data
 }
 
 extension Event {
-    var name: String {
+    public var name: String {
         String(describing: Self.self)
     }
 }
 
 /// A type-erased wrapper protocol for `EventDecoder`.
-protocol AnyEventDecoder {
+public protocol AnyEventDecoder {
     func decode(from: Data) throws -> Event
 }
 
-struct HealthCheckInfo: Equatable {
-    let connectionId: String?
-    let participantCount: Int?
+public struct HealthCheckInfo: Equatable, Sendable {
+    public let connectionId: String?
+    public let participantCount: Int?
+    
+    public init(connectionId: String? = nil, participantCount: Int? = nil) {
+        self.connectionId = connectionId
+        self.participantCount = participantCount
+    }
 }

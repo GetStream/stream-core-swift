@@ -5,12 +5,12 @@
 import Foundation
 
 /// The type is designed to pre-process some incoming `Event` via middlewares before being published
-class EventNotificationCenter: NotificationCenter, @unchecked Sendable {
+public class EventNotificationCenter: NotificationCenter, @unchecked Sendable {
     private(set) var middlewares: [EventMiddleware] = []
 
     var eventPostingQueue = DispatchQueue(label: "io.getstream.event-notification-center")
     
-    func add(middlewares: [EventMiddleware]) {
+    public func add(middlewares: [EventMiddleware]) {
         self.middlewares.append(contentsOf: middlewares)
     }
 
