@@ -16,7 +16,10 @@ let package = Package(
     dependencies: [ ],    
     targets: [
         .target(
-            name: "StreamCore"
+            name: "StreamCore",
+            swiftSettings: [
+                .define("BUILD_LIBRARY_FOR_DISTRIBUTION")
+            ]
         )
     ]
 )
