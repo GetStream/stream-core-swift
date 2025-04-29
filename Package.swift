@@ -18,7 +18,7 @@ let package = Package(
         .target(
             name: "StreamCore",
             swiftSettings: [
-                .define("BUILD_LIBRARY_FOR_DISTRIBUTION")
+                .unsafeFlags(["-enable-library-evolution"])
             ]
         )
     ]
