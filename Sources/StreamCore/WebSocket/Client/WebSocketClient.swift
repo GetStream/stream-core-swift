@@ -184,6 +184,20 @@ public extension WebSocketClient {
         }
         
         public init() {}
+        
+        init(
+            timerType: Timer.Type = DefaultTimer.self,
+            createPingController: @escaping CreatePingController,
+            createEngine: @escaping CreateEngine,
+            eventBatcherBuilder: @escaping (
+                _ handler: @Sendable @escaping ([Event], @Sendable @escaping () -> Void) -> Void
+            ) -> Batcher<Event>
+        ) {
+            self.timerType = timerType
+            self.createPingController = createPingController
+            self.createEngine = createEngine
+            self.eventBatcherBuilder = eventBatcherBuilder
+        }
     }
 }
 

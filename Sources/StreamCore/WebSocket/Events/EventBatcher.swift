@@ -25,7 +25,7 @@ protocol EventBatcher: Sendable {
     func processImmediately(completion: @Sendable @escaping () -> Void)
 }
 
-final class Batcher<Item> {
+class Batcher<Item> {
     /// The batching period. If the item is added sonner then `period` has passed after the first item they will get into the same batch.
     private let period: TimeInterval
     /// The time used to create timers.
