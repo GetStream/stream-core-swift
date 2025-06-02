@@ -6,8 +6,8 @@ import Foundation
 
 public struct UserAuth: @unchecked Sendable, DefaultAPIClientMiddleware {
             
-    var tokenProvider: () -> String
-    var connectionId: () async throws -> String
+    public var tokenProvider: () -> String
+    public var connectionId: () async throws -> String
     
     public init(tokenProvider: @escaping () -> String, connectionId: @escaping () async throws -> String) {
         self.tokenProvider = tokenProvider
