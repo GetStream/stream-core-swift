@@ -45,7 +45,7 @@ final class URLSessionWebSocketEngine: NSObject, WebSocketEngine, @unchecked Sen
         )
 
         log.debug(
-            "Making Websocket upgrade request: \(request.url?.absoluteString)\n"
+            "Making Websocket upgrade request: \(request.url?.absoluteString ?? "")\n"
                 + "Headers:\n\(String(describing: request.allHTTPHeaderFields))\n"
                 + "Query items:\n\(request.queryItems.prettyPrinted)",
             subsystems: .webSocket
@@ -100,7 +100,7 @@ final class URLSessionWebSocketEngine: NSObject, WebSocketEngine, @unchecked Sen
                 log.debug(
                     """
                     Event message sent
-                    \(String(data: data, encoding: .utf8))
+                    \(String(data: data, encoding: .utf8) ?? "")
                     """, subsystems: .webSocket
                 )
                 self?.doRead()

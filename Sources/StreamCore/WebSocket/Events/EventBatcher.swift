@@ -25,19 +25,19 @@ protocol EventBatcher: Sendable {
     func processImmediately(completion: @Sendable @escaping () -> Void)
 }
 
-class Batcher<Item> {
+class Batcher<Item>: @unchecked Sendable {
     /// The batching period. If the item is added sonner then `period` has passed after the first item they will get into the same batch.
     private let period: TimeInterval
     /// The time used to create timers.
     private let timerType: Timer.Type
     /// The timer that  calls `processor` when fired.
-    private var batchProcessingTimer: TimerControl?
+    private let batchProcessingTimer = AllocatedUnfairLock<TimerControl?>(nil)
     /// The closure which processes the batch.
     private let handler: @Sendable(_ batch: [Item], _ completion: @Sendable @escaping () -> Void) -> Void
     /// The serial queue where item appends and batch processing is happening on.
     private let queue = DispatchQueue(label: "io.getstream.Batch.\(Item.self)")
     /// The current batch of items.
-    private(set) var currentBatch: [Item] = []
+    let currentBatch = AllocatedUnfairLock([Item]())
     
     init(
         period: TimeInterval,
@@ -51,11 +51,11 @@ class Batcher<Item> {
     
     func append(_ item: Item) {
         timerType.schedule(timeInterval: 0, queue: queue) { [weak self] in
-            self?.currentBatch.append(item)
+            self?.currentBatch.withLock { $0.append(item) }
             
-            guard let self = self, self.batchProcessingTimer == nil else { return }
+            guard let self = self, self.batchProcessingTimer.value == nil else { return }
             
-            self.batchProcessingTimer = self.timerType.schedule(
+            self.batchProcessingTimer.value = self.timerType.schedule(
                 timeInterval: self.period,
                 queue: self.queue,
                 onFire: { self.process() }
@@ -70,9 +70,15 @@ class Batcher<Item> {
     }
     
     private func process(completion: (@Sendable() -> Void)? = nil) {
-        handler(currentBatch) { completion?() }
-        currentBatch.removeAll()
-        batchProcessingTimer?.cancel()
-        batchProcessingTimer = nil
+        let items = currentBatch.withLock { items in
+            let existingItems = items
+            items.removeAll()
+            return existingItems
+        }
+        handler(items) { completion?() }
+        batchProcessingTimer.withLock { timer in
+            timer?.cancel()
+            timer = nil
+        }
     }
 }

@@ -552,7 +552,7 @@ private extension Logger {
             if let threadName = Thread.current.name, !threadName.isEmpty {
                 return "[\(threadName)] "
             } else if
-                let queueName = String(validatingUTF8: __dispatch_queue_get_label(nil)), !queueName.isEmpty {
+                let queueName = String(validatingCString: __dispatch_queue_get_label(nil)), !queueName.isEmpty {
                 return "[\(queueName)] "
             } else {
                 return String(format: "[%p] ", Thread.current)
