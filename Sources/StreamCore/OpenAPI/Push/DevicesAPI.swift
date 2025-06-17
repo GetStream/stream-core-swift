@@ -5,8 +5,8 @@
 import Foundation
 
 open class DevicesAPI: DevicesAPIEndpoints, @unchecked Sendable {
+    public var middlewares: [DefaultAPIClientMiddleware]
     internal var transport: DefaultAPITransport
-    internal var middlewares: [DefaultAPIClientMiddleware]
     internal var basePath: String
     internal var jsonDecoder: JSONDecoder
     internal var jsonEncoder: JSONEncoder
