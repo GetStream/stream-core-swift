@@ -2,7 +2,7 @@
 ///
 /// An API key can be obtained by registering on [our website](https://getstream.io/chat/trial/\).
 ///
-public struct APIKey: Equatable {
+public struct APIKey: Equatable, Sendable {
     /// The string representation of the API key
     public let apiKeyString: String
     
