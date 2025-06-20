@@ -81,6 +81,12 @@ public struct AttachmentUploadingState: Hashable {
 
     /// The information about file size/mimeType.
     public let file: AttachmentFile
+    
+    public init(localFileURL: URL, state: LocalAttachmentState, file: AttachmentFile) {
+        self.localFileURL = localFileURL
+        self.state = state
+        self.file = file
+    }
 }
 
 // MARK: - Type erasure/recovery
