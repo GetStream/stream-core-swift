@@ -60,8 +60,8 @@ public extension CDNClient {
 }
 
 /// Default implementation of CDNClient that uses Stream CDN
-class StreamCDNClient: CDNClient, @unchecked Sendable {
-    static var maxAttachmentSize: Int64 { 100 * 1024 * 1024 }
+public class StreamCDNClient: CDNClient, @unchecked Sendable {
+    public static var maxAttachmentSize: Int64 { 100 * 1024 * 1024 }
 
     private let decoder: RequestDecoder
     private let encoder: RequestEncoder
@@ -69,7 +69,7 @@ class StreamCDNClient: CDNClient, @unchecked Sendable {
     /// Keeps track of uploading tasks progress
     @Atomic private var taskProgressObservers: [Int: NSKeyValueObservation] = [:]
 
-    init(
+    public init(
         encoder: RequestEncoder,
         decoder: RequestDecoder,
         sessionConfiguration: URLSessionConfiguration
@@ -79,7 +79,7 @@ class StreamCDNClient: CDNClient, @unchecked Sendable {
         self.decoder = decoder
     }
 
-    func uploadAttachment(
+    public func uploadAttachment(
         _ attachment: AnyStreamAttachment,
         progress: (@Sendable (Double) -> Void)? = nil,
         completion: @Sendable @escaping (Result<URL, Error>) -> Void
@@ -94,7 +94,7 @@ class StreamCDNClient: CDNClient, @unchecked Sendable {
         })
     }
 
-    func uploadAttachment(
+    public func uploadAttachment(
         _ attachment: AnyStreamAttachment,
         progress: (@Sendable (Double) -> Void)? = nil,
         completion: @Sendable @escaping (Result<UploadedFile, Error>) -> Void
@@ -132,8 +132,6 @@ class StreamCDNClient: CDNClient, @unchecked Sendable {
                 return
             }
             
-            print("======= \(urlRequest.cURLRepresentation(for: self.session))")
-
             let task = self.session.dataTask(with: urlRequest) { [decoder = self.decoder] (data, response, error) in
                 do {
                     let response: FileUploadPayload = try decoder.decodeRequestResponse(

@@ -4,7 +4,7 @@
 
 import Foundation
 
-struct Endpoint<ResponseType: Decodable>: Codable {
+public struct Endpoint<ResponseType: Decodable>: Codable {
     let path: EndpointPath
     let method: EndpointMethod
     let queryItems: Encodable?
@@ -39,7 +39,7 @@ struct Endpoint<ResponseType: Decodable>: Codable {
         case body
     }
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         path = try container.decode(EndpointPath.self, forKey: .path)
         method = try container.decode(EndpointMethod.self, forKey: .method)
@@ -49,7 +49,7 @@ struct Endpoint<ResponseType: Decodable>: Codable {
         body = try container.decodeIfPresent(Data.self, forKey: .body)
     }
 
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(path, forKey: .path)
         try container.encode(method, forKey: .method)

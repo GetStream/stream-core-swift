@@ -21,7 +21,7 @@ public protocol AttachmentUploader {
 public class StreamAttachmentUploader: AttachmentUploader {
     let cdnClient: CDNClient
 
-    init(cdnClient: CDNClient) {
+    public init(cdnClient: CDNClient) {
         self.cdnClient = cdnClient
     }
 

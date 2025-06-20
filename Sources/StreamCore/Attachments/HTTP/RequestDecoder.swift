@@ -5,7 +5,7 @@
 import Foundation
 
 /// An object responsible for handling incoming URL request response and decoding it.
-protocol RequestDecoder: Sendable {
+public protocol RequestDecoder: Sendable {
     /// Decodes an incoming URL request response.
     ///
     /// - Parameters:
@@ -18,8 +18,11 @@ protocol RequestDecoder: Sendable {
 }
 
 /// The default implementation of `RequestDecoder`.
-struct DefaultRequestDecoder: RequestDecoder {
-    func decodeRequestResponse<ResponseType: Decodable>(data: Data?, response: URLResponse?, error: Error?) throws -> ResponseType {
+public struct DefaultRequestDecoder: RequestDecoder {
+    
+    public init() {}
+    
+    public func decodeRequestResponse<ResponseType: Decodable>(data: Data?, response: URLResponse?, error: Error?) throws -> ResponseType {
         // Handle the error case
         guard error == nil else {
             let error = error!

@@ -5,7 +5,7 @@
 import Foundation
 
 /// On object responsible for creating a `URLRequest`, and encoding all required and `Endpoint` specific data to it.
-protocol RequestEncoder {
+public protocol RequestEncoder {
     /// A delegate the encoder uses for obtaining the current `connectionId`.
     ///
     /// Trying to encode an `Endpoint` with the `requiresConnectionId` set to `true` without setting the delegate
@@ -70,7 +70,7 @@ extension RequestEncoder {
 }
 
 /// The default implementation of `RequestEncoder`.
-class DefaultRequestEncoder: RequestEncoder {
+public class DefaultRequestEncoder: RequestEncoder {
     let baseURL: URL
     let apiKey: APIKey
 
@@ -83,9 +83,9 @@ class DefaultRequestEncoder: RequestEncoder {
     /// On the other hand, any big number for a timeout here would be "to much". In normal situations, the requests should be back in less than a second,
     /// otherwise we have a connection problem, which is handled as described above.
     private let waiterTimeout: TimeInterval = 10
-    weak var connectionDetailsProviderDelegate: ConnectionDetailsProviderDelegate?
+    weak public var connectionDetailsProviderDelegate: ConnectionDetailsProviderDelegate?
 
-    func encodeRequest<ResponsePayload: Decodable>(
+    public func encodeRequest<ResponsePayload: Decodable>(
         for endpoint: Endpoint<ResponsePayload>,
         completion: @escaping (Result<URLRequest, Error>) -> Void
     ) {
@@ -125,7 +125,7 @@ class DefaultRequestEncoder: RequestEncoder {
         }
     }
 
-    required init(baseURL: URL, apiKey: APIKey) {
+    public required init(baseURL: URL, apiKey: APIKey) {
         self.baseURL = baseURL
         self.apiKey = apiKey
     }
@@ -286,7 +286,7 @@ private extension URL {
 }
 
 typealias WaiterToken = String
-protocol ConnectionDetailsProviderDelegate: AnyObject {
+public protocol ConnectionDetailsProviderDelegate: AnyObject {
     func provideConnectionId(timeout: TimeInterval, completion: @escaping (Result<String, Error>) -> Void)
     func provideToken(timeout: TimeInterval, completion: @escaping (Result<UserToken, Error>) -> Void)
 }
@@ -296,20 +296,20 @@ public extension ClientError {
     final class MissingConnectionId: ClientError, @unchecked Sendable {}
 }
 
-class ConnectionProvider: ConnectionDetailsProviderDelegate {
+public class ConnectionProvider: ConnectionDetailsProviderDelegate {
     let connectionId: String
     let token: UserToken
     
-    init(connectionId: String, token: UserToken) {
+    public init(connectionId: String, token: UserToken) {
         self.connectionId = connectionId
         self.token = token
     }
     
-    func provideConnectionId(timeout: TimeInterval, completion: @escaping (Result<String, any Error>) -> Void) {
+    public func provideConnectionId(timeout: TimeInterval, completion: @escaping (Result<String, any Error>) -> Void) {
         completion(.success(connectionId))
     }
     
-    func provideToken(timeout: TimeInterval, completion: @escaping (Result<UserToken, any Error>) -> Void) {
+    public func provideToken(timeout: TimeInterval, completion: @escaping (Result<UserToken, any Error>) -> Void) {
         completion(.success(token))
     }
     
