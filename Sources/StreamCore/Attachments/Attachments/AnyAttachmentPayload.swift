@@ -6,7 +6,7 @@ import Foundation
 
 /// A protocol an attachment payload type has to conform in order it can be
 /// attached to/exposed on the message.
-public protocol AttachmentPayload: Codable {
+public protocol AttachmentPayload: Codable, Sendable {
     /// A type of resulting attachment.
     static var type: AttachmentType { get }
 }

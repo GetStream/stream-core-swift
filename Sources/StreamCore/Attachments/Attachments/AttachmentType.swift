@@ -47,7 +47,7 @@ public enum LocalAttachmentDownloadState: Hashable {
 }
 
 /// An attachment action, e.g. send, shuffle.
-public struct AttachmentAction: Codable, Hashable {
+public struct AttachmentAction: Codable, Hashable, Sendable {
     /// A name.
     public let name: String
     /// A value of an action.
@@ -84,12 +84,12 @@ public struct AttachmentAction: Codable, Hashable {
     public var isCancel: Bool { value.lowercased() == "cancel" }
 
     /// An attachment action type, e.g. button.
-    public enum ActionType: String, Codable {
+    public enum ActionType: String, Codable, Sendable {
         case button
     }
 
     /// An attachment action style, e.g. primary button.
-    public enum ActionStyle: String, Codable {
+    public enum ActionStyle: String, Codable, Sendable {
         case `default`
         case primary
     }
@@ -140,7 +140,7 @@ public extension AttachmentType {
 }
 
 /// An attachment file description.
-public struct AttachmentFile: Codable, Hashable {
+public struct AttachmentFile: Codable, Hashable, Sendable {
     enum CodingKeys: String, CodingKey, CaseIterable {
         case mimeType = "mime_type"
         case size = "file_size"
