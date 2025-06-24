@@ -5,7 +5,7 @@
 import Foundation
 
 /// On object responsible for creating a `URLRequest`, and encoding all required and `Endpoint` specific data to it.
-public protocol RequestEncoder {
+public protocol RequestEncoder: Sendable {
     /// A delegate the encoder uses for obtaining the current `connectionId`.
     ///
     /// Trying to encode an `Endpoint` with the `requiresConnectionId` set to `true` without setting the delegate
@@ -70,7 +70,7 @@ extension RequestEncoder {
 }
 
 /// The default implementation of `RequestEncoder`.
-public class DefaultRequestEncoder: RequestEncoder {
+public class DefaultRequestEncoder: RequestEncoder, @unchecked Sendable {
     let baseURL: URL
     let apiKey: APIKey
 
@@ -296,7 +296,7 @@ public extension ClientError {
     final class MissingConnectionId: ClientError, @unchecked Sendable {}
 }
 
-public class ConnectionProvider: ConnectionDetailsProviderDelegate {
+public final class ConnectionProvider: ConnectionDetailsProviderDelegate, Sendable {
     let connectionId: String
     let token: UserToken
     

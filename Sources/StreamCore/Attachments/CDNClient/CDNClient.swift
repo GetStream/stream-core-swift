@@ -16,7 +16,7 @@ public struct UploadedFile: Decodable {
 }
 
 /// The CDN client is responsible to upload files to a CDN.
-public protocol CDNClient {
+public protocol CDNClient: Sendable {
     static var maxAttachmentSize: Int64 { get }
 
     /// Uploads attachment as a multipart/form-data and returns only the uploaded remote file.

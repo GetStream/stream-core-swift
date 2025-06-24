@@ -18,7 +18,7 @@ public protocol AttachmentUploader {
     )
 }
 
-public class StreamAttachmentUploader: AttachmentUploader {
+public class StreamAttachmentUploader: AttachmentUploader, @unchecked Sendable {
     let cdnClient: CDNClient
 
     public init(cdnClient: CDNClient) {
