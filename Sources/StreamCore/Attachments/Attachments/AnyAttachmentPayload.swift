@@ -14,12 +14,12 @@ public protocol AttachmentPayload: Codable, Sendable {
 /// A type-erased type that wraps either a local file URL that has to be uploaded
 /// and attached to the message OR a custom payload which the message attachment
 /// should contain.
-public struct AnyAttachmentPayload {
+public struct AnyAttachmentPayload: Sendable {
     /// A type of attachment that will be created when the message is sent.
     public let type: AttachmentType
 
     /// A payload that will exposed on attachment when the message is sent.
-    public let payload: Encodable
+    public let payload: Encodable & Sendable
 
     /// A URL referencing to the local file that should be uploaded.
     public let localFileURL: URL?
