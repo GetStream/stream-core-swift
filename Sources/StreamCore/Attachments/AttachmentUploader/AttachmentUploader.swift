@@ -16,6 +16,24 @@ public protocol AttachmentUploader {
         progress: (@Sendable (Double) -> Void)?,
         completion: @Sendable @escaping (Result<UploadedAttachment, Error>) -> Void
     )
+    
+    func upload(
+        _ attachment: AnyStreamAttachment,
+        progress: (@Sendable (Double) -> Void)?
+    ) async throws -> UploadedAttachment
+}
+
+extension AttachmentUploader {
+    public func upload(
+        _ attachment: AnyStreamAttachment,
+        progress: (@Sendable (Double) -> Void)?
+    ) async throws -> UploadedAttachment {
+        try await withCheckedThrowingContinuation { continuation in
+            upload(attachment, progress: progress) { result in
+                continuation.resume(with: result)
+            }
+        }
+    }
 }
 
 public class StreamAttachmentUploader: AttachmentUploader, @unchecked Sendable {
