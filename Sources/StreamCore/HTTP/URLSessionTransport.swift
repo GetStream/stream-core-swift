@@ -50,7 +50,8 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
     }
 
     func execute(request: URLRequest) async throws -> (Data, URLResponse) {
-        try await executeTask(retryPolicy: .fastAndSimple) {
+        log.debug(request.cURLRepresentation(in: urlSession))
+        return try await executeTask(retryPolicy: .fastAndSimple) {
             do {
                 return try await execute(request: request, isRetry: false)
             } catch {
