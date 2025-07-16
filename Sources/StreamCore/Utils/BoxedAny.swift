@@ -15,15 +15,27 @@ import Foundation
 /// Can be written as:
 /// ```swift
 /// struct ActivityInfo {
-///   let parent: ActivityInfo? { _parent.value as? ActivityInfo }
+///   let parent: ActivityInfo? { _parent.getValue() }
 ///   let _parent: BoxedAny?
 /// }
 /// ```
-public struct BoxedAny: Sendable {
-    public init?(_ value: (any Sendable)?) {
-        guard value != nil else { return nil }
+public struct BoxedAny: Equatable, Sendable {
+    private let value: any Equatable & Sendable
+    private let isEqual: @Sendable (any Equatable & Sendable) -> Bool
+    
+    public init<T: Equatable & Sendable>(_ value: T) {
         self.value = value
+        self.isEqual = { other in
+            guard let otherValue = other as? T else { return false }
+            return value == otherValue
+        }
     }
-
-    public let value: any Sendable
+    
+    public func getValue<T>() -> T? {
+        return value as? T
+    }
+    
+    public static func == (lhs: BoxedAny, rhs: BoxedAny) -> Bool {
+        return lhs.isEqual(rhs.value)
+    }
 }
