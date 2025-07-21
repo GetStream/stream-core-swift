@@ -65,6 +65,7 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
                     log.debug("Retrying failed request \(updated) with new token", subsystems: .httpRequests)
                     return try await execute(request: updated, isRetry: true)
                 } else {
+                    log.debug("\(error as NSError)", subsystems: .httpRequests)
                     throw error
                 }
             }
