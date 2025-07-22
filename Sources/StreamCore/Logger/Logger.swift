@@ -223,9 +223,17 @@ public enum LogConfig {
     ///
     /// Logger will initialize the destinations with its own parameters. If you want full control on the parameters, use `destinations` directly,
     /// where you can pass parameters to destination initializers yourself.
-    nonisolated(unsafe) public static var destinationTypes: [LogDestination.Type] = [ConsoleLogDestination.self] {
+    nonisolated(unsafe) public static var destinationTypes: [LogDestination.Type] = Self.defaultDestinations {
         didSet {
             invalidateLogger()
+        }
+    }
+    
+    static var defaultDestinations: [LogDestination.Type] {
+        if #available(iOS 14.0, *) {
+            [OSLogDestination.self]
+        } else {
+            [ConsoleLogDestination.self]
         }
     }
     
