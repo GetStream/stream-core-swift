@@ -125,13 +125,7 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
         do {
             return try await execute(request: clone.urlRequest())
         } catch {
-            // Log error and rethrow
-            log.error(
-                "URLSessionTransport: \(request.url.absoluteString)\n"
-                    + "Headers:\n\(request.headers)\n"
-                    + "Query items:\n\(request.queryParams)",
-                subsystems: .httpRequests, error: error
-            )
+            log.error("HTTP request failed: \(request.url.absoluteString)", subsystems: .httpRequests, error: error)
             throw error
         }
     }

@@ -46,7 +46,7 @@ public final class OSLogDestination: BaseLogDestination, @unchecked Sendable {
 
         var extendedMessage = "\(extendedDetails)> \(logDetails.message)"
         if let error = logDetails.error {
-            extendedMessage += "[Error: \(error)]"
+            extendedMessage += "\n\(error)"
         }
         let formattedMessage = LogConfig
             .formatters
