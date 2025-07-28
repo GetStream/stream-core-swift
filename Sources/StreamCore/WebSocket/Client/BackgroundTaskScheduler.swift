@@ -64,8 +64,8 @@ public class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sen
         }
     }
 
-    private var onEnteringBackground: () -> Void = {}
-    private var onEnteringForeground: () -> Void = {}
+    @MainActor private var onEnteringBackground: () -> Void = {}
+    @MainActor private var onEnteringForeground: () -> Void = {}
 
     public func startListeningForAppStateUpdates(
         onEnteringBackground: @escaping () -> Void,
@@ -107,11 +107,15 @@ public class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sen
     }
 
     @objc private func handleAppDidEnterBackground() {
-        onEnteringBackground()
+        Task { @MainActor in
+            onEnteringBackground()
+        }
     }
 
     @objc private func handleAppDidBecomeActive() {
-        onEnteringForeground()
+        Task { @MainActor in
+            onEnteringForeground()
+        }
     }
 
     deinit {
