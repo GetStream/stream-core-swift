@@ -5,7 +5,6 @@
 import Foundation
 
 public final class ConnectUserDetailsRequest: @unchecked Sendable, Codable, JSONEncodable, Hashable {
-    
     public var custom: [String: RawJSON]?
     public var id: String
     public var image: String?

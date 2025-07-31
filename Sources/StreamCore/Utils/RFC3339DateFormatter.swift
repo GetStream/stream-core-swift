@@ -23,7 +23,7 @@ struct RFC3339DateFormatter: Sendable {
         formatter.dateWithMicroseconds(from: dateString)
     }
 
-    nonisolated(unsafe) private let formatter: ISO8601DateFormatter = {
+    private nonisolated(unsafe) let formatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter

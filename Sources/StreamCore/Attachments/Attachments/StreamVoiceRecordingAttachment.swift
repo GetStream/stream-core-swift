@@ -103,13 +103,13 @@ extension VoiceRecordingAttachmentPayload: Decodable {
         let container = try decoder.container(keyedBy: AttachmentCodingKeys.self)
         let voiceRecordingContainer = try decoder.container(keyedBy: CodingKeys.self)
 
-        self.init(
-            title: try container.decodeIfPresent(String.self, forKey: .title),
-            voiceRecordingRemoteURL: try container.decode(URL.self, forKey: .assetURL),
-            file: try AttachmentFile(from: decoder),
-            duration: try voiceRecordingContainer.decodeIfPresent(TimeInterval.self, forKey: .duration),
-            waveformData: try voiceRecordingContainer.decodeIfPresent([Float].self, forKey: .waveformData),
-            extraData: try Self.decodeExtraData(from: decoder)
+        try self.init(
+            title: container.decodeIfPresent(String.self, forKey: .title),
+            voiceRecordingRemoteURL: container.decode(URL.self, forKey: .assetURL),
+            file: AttachmentFile(from: decoder),
+            duration: voiceRecordingContainer.decodeIfPresent(TimeInterval.self, forKey: .duration),
+            waveformData: voiceRecordingContainer.decodeIfPresent([Float].self, forKey: .waveformData),
+            extraData: Self.decodeExtraData(from: decoder)
         )
     }
 }

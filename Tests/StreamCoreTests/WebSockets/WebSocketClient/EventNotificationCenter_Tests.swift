@@ -7,7 +7,6 @@ import CoreData
 import XCTest
 
 final class EventNotificationCenter_Tests: XCTestCase, @unchecked Sendable {
-
     func test_init_worksCorrectly() {
         // Create middlewares
         let middlewares: [EventMiddleware_Mock] = [

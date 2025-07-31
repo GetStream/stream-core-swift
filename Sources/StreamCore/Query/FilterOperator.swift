@@ -48,8 +48,8 @@ public enum FilterOperator: String, Sendable {
 extension FilterOperator {
     var isGroup: Bool {
         switch self {
-        case .and, .or: return true
-        default: return false
+        case .and, .or: true
+        default: false
         }
     }
 }

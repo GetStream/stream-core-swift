@@ -6,7 +6,7 @@ import Foundation
 
 extension URLRequest {
     var queryItems: [URLQueryItem] {
-        if let url = url,
+        if let url,
            let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
            let queryItems = urlComponents.queryItems {
             return queryItems

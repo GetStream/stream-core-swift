@@ -25,7 +25,7 @@ func CompareJSONEqual(
     
     preprocessBoolValues(&json)
     
-    try CompareJSONEqual(json, try expression2())
+    try CompareJSONEqual(json, expression2())
 }
 
 /// Asserts the given 2 JSON Serializations are equal, by creating JSON objects from Data and comparing dictionaries.

@@ -5,7 +5,6 @@
 import Foundation
 
 public final class CreateDeviceRequest: @unchecked Sendable, Codable, JSONEncodable, Hashable {
-    
     public enum PushProvider: String, Sendable, Codable, CaseIterable {
         case apn
         case firebase

@@ -138,9 +138,9 @@ extension InternetConnectionStatus {
     /// Returns `true` if the internet connection is available, ignoring the quality of the connection.
     public var isAvailable: Bool {
         if case .available = self {
-            return true
+            true
         } else {
-            return false
+            false
         }
     }
 }
@@ -154,7 +154,7 @@ extension InternetConnection {
         private var monitor: NWPathMonitor?
         private let queue = DispatchQueue(label: "io.getstream.internet-monitor")
 
-        weak public var delegate: InternetConnectionDelegate?
+        public weak var delegate: InternetConnectionDelegate?
 
         public var status: InternetConnectionStatus {
             if let path = monitor?.currentPath {

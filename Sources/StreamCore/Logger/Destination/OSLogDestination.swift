@@ -7,7 +7,6 @@ import OSLog
 
 @available(iOS 14.0, *)
 public final class OSLogDestination: BaseLogDestination, @unchecked Sendable {
-
     private let loggers: [String: os.Logger] = LogSubsystem
         .allCases
         .reduce(into: [String: os.Logger]()) {
@@ -19,7 +18,7 @@ public final class OSLogDestination: BaseLogDestination, @unchecked Sendable {
             )
         }
 
-    public override func process(logDetails: LogDetails) {
+    override public func process(logDetails: LogDetails) {
         guard let logger = loggers[logDetails.subsystem.description] else {
             return
         }

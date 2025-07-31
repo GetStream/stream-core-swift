@@ -1,0 +1,28 @@
+default_platform :ios
+opt_out_usage
+skip_docs
+
+before_all do |lane|
+  if is_ci
+    setup_ci
+    setup_git_config
+  end
+end
+
+desc 'Run source code formatting/linting'
+lane :run_swift_format do |options|
+  Dir.chdir('..') do
+    strict = options[:strict] ? '--lint' : nil
+    sources_matrix[:swiftformat].each do |path|
+      sh("mint run swiftformat #{strict} --config .swiftformat #{path}")
+      sh("mint run swiftlint lint --config .swiftlint.yml --fix --progress --reporter json #{path}") unless strict
+      sh("mint run swiftlint lint --config .swiftlint.yml --strict --progress --reporter json #{path}")
+    end
+  end
+end
+
+lane :sources_matrix do
+  {
+    swiftformat: ['Sources', 'Tests', 'Package.swift']
+  }
+end

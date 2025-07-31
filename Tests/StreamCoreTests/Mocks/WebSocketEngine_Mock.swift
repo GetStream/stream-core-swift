@@ -6,7 +6,6 @@ import Foundation
 @testable import StreamCore
 
 final class WebSocketEngine_Mock: WebSocketEngine, @unchecked Sendable {
-
     var request: URLRequest
     var sessionConfiguration: URLSessionConfiguration
     var isConnected: Bool = false

@@ -6,7 +6,6 @@ import Combine
 import Foundation
 
 public final class DisposableBag: @unchecked Sendable {
-
     private final class Storage {
         private var storage: [String: AnyCancellable] = [:]
         private let queue = UnfairQueue()
@@ -72,7 +71,6 @@ extension AnyCancellable {
 }
 
 extension Task {
-    
     func eraseToAnyCancellable() -> AnyCancellable { .init(cancel) }
 
     public func store(

@@ -50,9 +50,9 @@ extension RawRepresentable where RawValue: JSONEncodable {
 
 private func encodeIfPossible<T>(_ object: T) -> Any {
     if let encodableObject = object as? JSONEncodable {
-        return encodableObject.encodeToJSON()
+        encodableObject.encodeToJSON()
     } else {
-        return object
+        object
     }
 }
 

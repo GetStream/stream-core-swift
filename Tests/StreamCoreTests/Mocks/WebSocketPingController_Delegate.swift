@@ -7,7 +7,6 @@ import Foundation
 
 // A concrete `WebSocketPingControllerDelegate` implementation allowing capturing the delegate calls
 final class WebSocketPingController_Delegate: WebSocketPingControllerDelegate {
-
     var sendPing_calledCount = 0
     var disconnectOnNoPongReceived_calledCount = 0
 

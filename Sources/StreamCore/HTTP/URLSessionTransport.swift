@@ -58,7 +58,7 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
                 if error.isTokenExpiredError && tokenProvider != nil {
                     log.debug("Refreshing user token", subsystems: .httpRequests)
                     let token = try await refreshToken()
-                    if let onTokenUpdate = onTokenUpdate {
+                    if let onTokenUpdate {
                         onTokenUpdate(token)
                     }
                     let updated = update(request: request, with: token.rawValue)
@@ -74,7 +74,7 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
     private func execute(request: URLRequest, isRetry: Bool) async throws -> (Data, URLResponse) {
         try await withCheckedThrowingContinuation { continuation in
             let task = urlSession.dataTask(with: request) { data, response, error in
-                if let error = error {
+                if let error {
                     continuation.resume(throwing: error)
                     return
                 }
@@ -84,7 +84,7 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
                         return
                     }
                 }
-                guard let data = data, let response = response else {
+                guard let data, let response else {
                     continuation.resume(
                         throwing: ClientError.NetworkError(
                             "HTTP request failed without response data, URL: \(request.url?.absoluteString ?? "-")"
@@ -105,7 +105,7 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
     }
     
     private static func apiError(from data: Data?, response: HTTPURLResponse) -> Error {
-        guard let data = data else {
+        guard let data else {
             return ClientError.NetworkError(
                 "HTTP status code: \(response.statusCode) URL: \(response.url?.absoluteString ?? "-")"
             )

@@ -209,7 +209,7 @@ extension StreamAttachment<Data> {
         }
 
         // If the attachment is local, we should create the payload as a local file
-        if let uploadingState = self.uploadingState, uploadingState.state != .uploaded {
+        if let uploadingState, uploadingState.state != .uploaded {
             return AnyAttachmentPayload(type: type, payload: payload, localFileURL: uploadingState.localFileURL)
         }
 

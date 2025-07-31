@@ -17,7 +17,7 @@ public class WebSocketClient: @unchecked Sendable {
     }
 
     /// The current state the web socket connection.
-    @Atomic private(set) public var connectionState: WebSocketConnectionState = .initialized {
+    @Atomic public private(set) var connectionState: WebSocketConnectionState = .initialized {
         didSet {
             pingController.connectionStateDidChange(connectionState)
 
@@ -106,7 +106,7 @@ public class WebSocketClient: @unchecked Sendable {
     public func connect() {
         switch connectionState {
         // Calling connect in the following states has no effect
-        case .connecting, .authenticating, .connected(healthCheckInfo: _):
+        case .connecting, .authenticating, .connected:
             return
         default: break
         }
@@ -292,10 +292,9 @@ extension WebSocketClient: WebSocketEngineDelegate {
 // MARK: - Ping Controller Delegate
 
 extension WebSocketClient: WebSocketPingControllerDelegate {
-
     func sendPing(healthCheckEvent: SendableEvent) {
         engineQueue.async { [weak engine] in
-            if case .connected(healthCheckInfo: _) = self.connectionState {
+            if case .connected = self.connectionState {
                 engine?.send(message: healthCheckEvent)
             }
         }
@@ -355,6 +354,7 @@ extension ClientError {
 public struct WSDisconnected: Event {
     public init() {}
 }
+
 public struct WSConnected: Event {
     public init() {}
 }

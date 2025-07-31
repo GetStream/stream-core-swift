@@ -31,15 +31,15 @@ public final class Atomic<T>: @unchecked Sendable {
         var queue: LockQueuing {
             switch self {
             case .unfair:
-                return UnfairQueue()
+                UnfairQueue()
             case .recursive:
-                return RecursiveQueue()
+                RecursiveQueue()
             }
         }
     }
 
     private let queue: LockQueuing
-    nonisolated(unsafe) private var _value: T
+    private nonisolated(unsafe) var _value: T
 
     public var wrappedValue: T {
         get { queue.sync { _value } }

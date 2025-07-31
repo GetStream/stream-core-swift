@@ -27,11 +27,11 @@ public enum HTTPMethod: String {
 public struct Request {
     public var url: URL
     public var method: HTTPMethod
-    public var body: Data? = nil
+    public var body: Data?
     public var queryParams: [URLQueryItem] = []
     public var headers: [String: String] = [:]
     
-    public init(url: URL, method: HTTPMethod, body: Data? = nil, queryParams: [URLQueryItem], headers: [String : String]) {
+    public init(url: URL, method: HTTPMethod, body: Data? = nil, queryParams: [URLQueryItem], headers: [String: String]) {
         self.url = url
         self.method = method
         self.body = body

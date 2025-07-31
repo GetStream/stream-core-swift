@@ -6,7 +6,6 @@ import Foundation
 
 /// A delegate to control `WebSocketClient` connection by `WebSocketPingController`.
 protocol WebSocketPingControllerDelegate: AnyObject {
-        
     /// `WebSocketPingController` will call this function periodically to keep a connection alive.
     func sendPing(healthCheckEvent: SendableEvent)
     

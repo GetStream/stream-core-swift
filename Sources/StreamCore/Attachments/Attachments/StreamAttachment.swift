@@ -159,7 +159,7 @@ public extension StreamAttachment where Payload: AttachmentPayload {
 // MARK: - Local Downloads
 
 /// The attachment payload which can be downloaded.
-public typealias DownloadableAttachmentPayload = AttachmentPayloadDownloading & AttachmentPayload
+public typealias DownloadableAttachmentPayload = AttachmentPayload & AttachmentPayloadDownloading
 
 /// A capability of downloading attachment payload data to the local storage.
 public protocol AttachmentPayloadDownloading {

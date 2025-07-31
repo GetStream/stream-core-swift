@@ -83,7 +83,7 @@ public class DefaultRequestEncoder: RequestEncoder, @unchecked Sendable {
     /// On the other hand, any big number for a timeout here would be "to much". In normal situations, the requests should be back in less than a second,
     /// otherwise we have a connection problem, which is handled as described above.
     private let waiterTimeout: TimeInterval = 10
-    weak public var connectionDetailsProviderDelegate: ConnectionDetailsProviderDelegate?
+    public weak var connectionDetailsProviderDelegate: ConnectionDetailsProviderDelegate?
 
     public func encodeRequest<ResponsePayload: Decodable>(
         for endpoint: Endpoint<ResponsePayload>,
@@ -312,6 +312,4 @@ public final class ConnectionProvider: ConnectionDetailsProviderDelegate, Sendab
     public func provideToken(timeout: TimeInterval, completion: @escaping (Result<UserToken, any Error>) -> Void) {
         completion(.success(token))
     }
-    
-    
 }

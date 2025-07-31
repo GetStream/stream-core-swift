@@ -5,7 +5,6 @@
 import Foundation
 
 public struct UserAuth: @unchecked Sendable, DefaultAPIClientMiddleware {
-            
     public var tokenProvider: () -> String
     public var connectionId: () async throws -> String
     
@@ -32,7 +31,6 @@ public struct UserAuth: @unchecked Sendable, DefaultAPIClientMiddleware {
 }
 
 public struct AnonymousAuth: DefaultAPIClientMiddleware {
-    
     var token: String
     
     public init(token: String) {
@@ -53,7 +51,6 @@ public struct AnonymousAuth: DefaultAPIClientMiddleware {
 }
 
 public struct DefaultParams: DefaultAPIClientMiddleware {
-    
     let apiKey: String
     let xStreamClientHeader: String
     

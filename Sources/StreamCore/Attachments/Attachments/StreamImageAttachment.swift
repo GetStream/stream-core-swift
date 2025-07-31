@@ -85,10 +85,10 @@ public struct ImageAttachmentPayload: AttachmentPayload {
         self.extraData = extraData
     }
 
-    @available(*, deprecated, renamed: "imageURL")
     /// By default, Stream does not provide a thumbnail url.
     /// Since it uses the original image with query parameters to resize it.
     /// This property was actually misleading, since it was just using the `imageURL` internally.
+    @available(*, deprecated, renamed: "imageURL")
     public var imagePreviewURL: URL {
         get { imageURL }
         set { imageURL = newValue }
@@ -138,7 +138,7 @@ extension ImageAttachmentPayload: Encodable {
         values[AttachmentCodingKeys.title.rawValue] = title.map { .string($0) }
         values[AttachmentCodingKeys.imageURL.rawValue] = .string(imageURL.absoluteString)
 
-        if let originalWidth = self.originalWidth, let originalHeight = self.originalHeight {
+        if let originalWidth, let originalHeight {
             values[AttachmentCodingKeys.originalWidth.rawValue] = .number(originalWidth)
             values[AttachmentCodingKeys.originalHeight.rawValue] = .number(originalHeight)
         }
@@ -177,13 +177,13 @@ extension ImageAttachmentPayload: Decodable {
         let originalWidth = try container.decodeIfPresent(Double.self, forKey: .originalWidth)
         let originalHeight = try container.decodeIfPresent(Double.self, forKey: .originalHeight)
 
-        self.init(
+        try self.init(
             title: title?.trimmingCharacters(in: .whitespacesAndNewlines),
             imageRemoteURL: imageURL,
             file: file,
             originalWidth: originalWidth,
             originalHeight: originalHeight,
-            extraData: try Self.decodeExtraData(from: decoder)
+            extraData: Self.decodeExtraData(from: decoder)
         )
     }
 }

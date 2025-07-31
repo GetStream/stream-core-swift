@@ -7,7 +7,7 @@ import Foundation
 /// The type that does events batching.
 protocol EventBatcher: Sendable {
     typealias Batch = [Event]
-    typealias BatchHandler = @Sendable(_ batch: Batch, _ completion: @Sendable @escaping () -> Void) -> Void
+    typealias BatchHandler = @Sendable (_ batch: Batch, _ completion: @Sendable @escaping () -> Void) -> Void
 
     /// The current batch of events.
     var currentBatch: Batch { get }
@@ -33,7 +33,7 @@ class Batcher<Item>: @unchecked Sendable {
     /// The timer that  calls `processor` when fired.
     private let batchProcessingTimer = AllocatedUnfairLock<TimerControl?>(nil)
     /// The closure which processes the batch.
-    private let handler: @Sendable(_ batch: [Item], _ completion: @Sendable @escaping () -> Void) -> Void
+    private let handler: @Sendable (_ batch: [Item], _ completion: @Sendable @escaping () -> Void) -> Void
     /// The serial queue where item appends and batch processing is happening on.
     private let queue = DispatchQueue(label: "io.getstream.Batch.\(Item.self)")
     /// The current batch of items.
@@ -53,11 +53,11 @@ class Batcher<Item>: @unchecked Sendable {
         timerType.schedule(timeInterval: 0, queue: queue) { [weak self] in
             self?.currentBatch.withLock { $0.append(item) }
             
-            guard let self = self, self.batchProcessingTimer.value == nil else { return }
+            guard let self, batchProcessingTimer.value == nil else { return }
             
-            self.batchProcessingTimer.value = self.timerType.schedule(
-                timeInterval: self.period,
-                queue: self.queue,
+            batchProcessingTimer.value = timerType.schedule(
+                timeInterval: period,
+                queue: queue,
                 onFire: { self.process() }
             )
         }
@@ -69,7 +69,7 @@ class Batcher<Item>: @unchecked Sendable {
         }
     }
     
-    private func process(completion: (@Sendable() -> Void)? = nil) {
+    private func process(completion: (@Sendable () -> Void)? = nil) {
         let items = currentBatch.withLock { items in
             let existingItems = items
             items.removeAll()

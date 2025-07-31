@@ -153,7 +153,7 @@ public struct AttachmentFile: Codable, Hashable, Sendable {
     /// A mime type.
     public let mimeType: String?
     /// A file size formatter.
-    nonisolated(unsafe) public static let sizeFormatter = ByteCountFormatter()
+    public nonisolated(unsafe) static let sizeFormatter = ByteCountFormatter()
 
     // TODO: This should be deprecated in the future. UI Formatting should not belong to domain models.
     // All formatting logic should come from `Appearance.formatters`.
@@ -190,7 +190,7 @@ public struct AttachmentFile: Codable, Hashable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         mimeType = try? container.decodeIfPresent(String.self, forKey: .mimeType)
 
-        if let mimeType = mimeType {
+        if let mimeType {
             type = AttachmentFileType(mimeType: mimeType)
         } else {
             type = .generic
@@ -306,9 +306,9 @@ public enum AttachmentFileType: String, Codable, Equatable, CaseIterable, Sendab
     public var isAudio: Bool {
         switch self {
         case .mp3, .wav, .ogg, .m4a, .aac:
-            return true
+            true
         default:
-            return false
+            false
         }
     }
 
