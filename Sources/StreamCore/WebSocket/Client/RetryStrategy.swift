@@ -40,20 +40,20 @@ extension RetryStrategy {
 public struct DefaultRetryStrategy: RetryStrategy {
     static let maximumReconnectionDelay: TimeInterval = 25
     
-    @Atomic private(set) public var consecutiveFailuresCount = 0
+    @Atomic public private(set) var consecutiveFailuresCount = 0
     
-    mutating public func incrementConsecutiveFailures() {
+    public mutating func incrementConsecutiveFailures() {
         _consecutiveFailuresCount.mutate { $0 + 1 }
     }
     
-    mutating public func resetConsecutiveFailures() {
+    public mutating func resetConsecutiveFailures() {
         consecutiveFailuresCount = 0
     }
     
     public func nextRetryDelay() -> TimeInterval {
         var delay: TimeInterval = 0
 
-        let consecutiveFailuresCount = self.consecutiveFailuresCount
+        let consecutiveFailuresCount = consecutiveFailuresCount
         /// The first time we get to retry, we do it without any delay. Any subsequent time will
         /// be delayed by a random interval.
         guard consecutiveFailuresCount > 0 else { return delay }

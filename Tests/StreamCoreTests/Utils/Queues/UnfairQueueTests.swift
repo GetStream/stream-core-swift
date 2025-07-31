@@ -6,7 +6,6 @@
 import XCTest
 
 final class UnfairQueueTests: XCTestCase, @unchecked Sendable {
-
     private lazy var taskWaitIntervalRange: ClosedRange<TimeInterval>! = 0.2...0.5
     private lazy var subject: UnfairQueue! = .init()
     private var sharedResource: Int! = 0

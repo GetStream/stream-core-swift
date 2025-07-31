@@ -6,10 +6,10 @@ import Foundation
 
 /// A builder for objects requiring @MainActor.
 public final class StateBuilder<State: Sendable>: Sendable {
-    @MainActor private var builder: ((@Sendable @MainActor() -> State))?
+    @MainActor private var builder: ((@Sendable @MainActor () -> State))?
     @MainActor private var _state: State?
     
-    public init(builder: (@escaping @Sendable @MainActor() -> State)) {
+    public init(builder: (@escaping @Sendable @MainActor () -> State)) {
         self.builder = builder
     }
     

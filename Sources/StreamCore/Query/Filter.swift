@@ -8,7 +8,7 @@ import Foundation
 ///
 /// Filters are used to specify conditions for retrieving data from Stream's API.
 /// Each filter consists of a field, an operator, and a value to compare against.
-/// 
+///
 /// - Note: Filters can be combined using logical operators (AND/OR) to create complex queries.
 public protocol Filter: FilterValue, Sendable {
     /// The associated type representing the field that this filter operates on.
@@ -24,7 +24,7 @@ public protocol Filter: FilterValue, Sendable {
     var filterOperator: FilterOperator { get }
     
     /// Creates a new filter with the specified operator, field, and value.
-    /// 
+    ///
     /// - Parameters:
     ///   - filterOperator: The comparison operator to use.
     ///   - field: The field to filter on.
@@ -33,12 +33,12 @@ public protocol Filter: FilterValue, Sendable {
 }
 
 /// A protocol that defines values that can be used in filters.
-/// 
+///
 /// This protocol is automatically conformed to by common Swift types like `String`, `Int`, `Bool`, etc.
 public protocol FilterValue: Sendable {}
 
 /// A protocol that defines how filter fields are represented as strings.
-/// 
+///
 /// This protocol allows for type-safe field names while maintaining the ability to convert to string values
 /// for API communication.
 public protocol FilterFieldRepresentable: Sendable {
@@ -46,7 +46,7 @@ public protocol FilterFieldRepresentable: Sendable {
     var value: String { get }
     
     /// Creates a field representation from a string value.
-    /// 
+    ///
     /// - Parameter value: The string value representing the field.
     init(value: String)
 }
@@ -63,7 +63,7 @@ extension FilterFieldRepresentable {
 
 extension Filter {
     /// Creates a filter that checks if a field equals a specific value.
-    /// 
+    ///
     /// - Parameters:
     ///   - field: The field to compare.
     ///   - value: The value to check equality against.
@@ -73,7 +73,7 @@ extension Filter {
     }
     
     /// Creates a filter that checks if a field is greater than a specific value.
-    /// 
+    ///
     /// - Parameters:
     ///   - field: The field to compare.
     ///   - value: The value to compare against.
@@ -83,7 +83,7 @@ extension Filter {
     }
     
     /// Creates a filter that checks if a field is greater than or equal to a specific value.
-    /// 
+    ///
     /// - Parameters:
     ///   - field: The field to compare.
     ///   - value: The value to compare against.
@@ -93,7 +93,7 @@ extension Filter {
     }
     
     /// Creates a filter that checks if a field is less than a specific value.
-    /// 
+    ///
     /// - Parameters:
     ///   - field: The field to compare.
     ///   - value: The value to compare against.
@@ -103,7 +103,7 @@ extension Filter {
     }
     
     /// Creates a filter that checks if a field is less than or equal to a specific value.
-    /// 
+    ///
     /// - Parameters:
     ///   - field: The field to compare.
     ///   - value: The value to compare against.
@@ -113,7 +113,7 @@ extension Filter {
     }
     
     /// Creates a filter that checks if a field's value is in a specific array of values.
-    /// 
+    ///
     /// - Parameters:
     ///   - field: The field to check.
     ///   - values: An array of values to check against.
@@ -123,7 +123,7 @@ extension Filter {
     }
     
     /// Creates a filter that checks if a field exists or doesn't exist.
-    /// 
+    ///
     /// - Parameters:
     ///   - field: The field to check for existence.
     ///   - value: `true` to check if the field exists, `false` to check if it doesn't exist.
@@ -133,7 +133,7 @@ extension Filter {
     }
     
     /// Creates a filter that checks if a field contains a specific string value.
-    /// 
+    ///
     /// - Parameters:
     ///   - field: The field to search in.
     ///   - value: The string to search for.
@@ -143,7 +143,7 @@ extension Filter {
     }
     
     /// Creates a filter that checks if a field contains specific key-value pairs.
-    /// 
+    ///
     /// - Parameters:
     ///   - field: The field to search in.
     ///   - value: A dictionary of key-value pairs to search for.
@@ -153,7 +153,7 @@ extension Filter {
     }
     
     /// Creates a filter that checks if a specific path exists within a field.
-    /// 
+    ///
     /// - Parameters:
     ///   - field: The field to check.
     ///   - value: The path to check for existence.
@@ -163,7 +163,7 @@ extension Filter {
     }
     
     /// Creates a filter that performs autocomplete matching on a field.
-    /// 
+    ///
     /// - Parameters:
     ///   - field: The field to perform autocomplete on.
     ///   - value: The string to autocomplete against.
@@ -173,7 +173,7 @@ extension Filter {
     }
 
     /// Creates a filter that performs a full-text query on a field.
-    /// 
+    ///
     /// - Parameters:
     ///   - field: The field to query.
     ///   - value: The query string to search for.
@@ -183,7 +183,7 @@ extension Filter {
     }
     
     /// Creates a filter that combines multiple filters with a logical AND operation.
-    /// 
+    ///
     /// - Parameter filters: An array of filters to combine.
     /// - Returns: A filter that matches when all the specified filters match.
     public static func and<F>(_ filters: [F]) -> F where F: Filter, F.FilterField == FilterField {
@@ -191,7 +191,7 @@ extension Filter {
     }
     
     /// Creates a filter that combines multiple filters with a logical OR operation.
-    /// 
+    ///
     /// - Parameter filters: An array of filters to combine.
     /// - Returns: A filter that matches when any of the specified filters match.
     public static func or<F>(_ filters: [F]) -> F where F: Filter, F.FilterField == FilterField {
@@ -236,9 +236,9 @@ extension Dictionary: FilterValue where Key == String, Value == RawJSON {}
 
 extension Filter {
     /// Converts the filter to a `RawJSON` representation for API communication.
-    /// 
+    ///
     /// This method handles both regular filters and group filters (AND/OR combinations).
-    /// 
+    ///
     /// - Returns: A dictionary representation of the filter in `RawJSON` format.
     public func toRawJSON() -> [String: RawJSON] {
         if filterOperator.isGroup {
@@ -260,27 +260,27 @@ extension Filter {
 
 extension FilterValue {
     /// Converts the filter value to its `RawJSON` representation.
-    /// 
+    ///
     /// This property handles the conversion of various Swift types to their appropriate JSON representation
     /// for API communication.
     var rawJSON: RawJSON {
         switch self {
         case let boolValue as Bool:
-            return .bool(boolValue)
+            .bool(boolValue)
         case let dateValue as Date:
-            return .string(RFC3339DateFormatter.string(from: dateValue))
+            .string(RFC3339DateFormatter.string(from: dateValue))
         case let doubleValue as Double:
-            return .number(doubleValue)
+            .number(doubleValue)
         case let intValue as Int:
-            return .number(Double(intValue))
+            .number(Double(intValue))
         case let stringValue as String:
-            return .string(stringValue)
+            .string(stringValue)
         case let urlValue as URL:
-            return .string(urlValue.absoluteString)
+            .string(urlValue.absoluteString)
         case let arrayValue as [any FilterValue]:
-            return .array(arrayValue.map { $0.rawJSON })
+            .array(arrayValue.map(\.rawJSON))
         case let dictionaryValue as [String: RawJSON]:
-            return .dictionary(dictionaryValue)
+            .dictionary(dictionaryValue)
         default:
             fatalError("Unimplemented type: \(self)")
         }

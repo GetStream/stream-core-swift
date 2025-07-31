@@ -84,12 +84,12 @@ extension VideoAttachmentPayload: Decodable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: AttachmentCodingKeys.self)
 
-        self.init(
-            title: try container.decodeIfPresent(String.self, forKey: .title),
-            videoRemoteURL: try container.decode(URL.self, forKey: .assetURL),
-            thumbnailURL: try container.decodeIfPresent(URL.self, forKey: .thumbURL),
-            file: try AttachmentFile(from: decoder),
-            extraData: try Self.decodeExtraData(from: decoder)
+        try self.init(
+            title: container.decodeIfPresent(String.self, forKey: .title),
+            videoRemoteURL: container.decode(URL.self, forKey: .assetURL),
+            thumbnailURL: container.decodeIfPresent(URL.self, forKey: .thumbURL),
+            file: AttachmentFile(from: decoder),
+            extraData: Self.decodeExtraData(from: decoder)
         )
     }
 }

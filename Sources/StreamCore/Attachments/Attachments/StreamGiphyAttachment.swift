@@ -74,11 +74,11 @@ extension GiphyAttachmentPayload: Decodable {
         let giphyAttachmentContainer = try decoder.container(keyedBy: GiphyAttachmentSpecificCodingKeys.self)
         let actions = try giphyAttachmentContainer.decodeIfPresent([AttachmentAction].self, forKey: .actions) ?? []
 
-        self.init(
-            title: try container.decodeIfPresent(String.self, forKey: .title),
-            previewURL: try container.decode(URL.self, forKey: .thumbURL),
+        try self.init(
+            title: container.decodeIfPresent(String.self, forKey: .title),
+            previewURL: container.decode(URL.self, forKey: .thumbURL),
             actions: actions,
-            extraData: try Self.decodeExtraData(from: decoder)
+            extraData: Self.decodeExtraData(from: decoder)
         )
     }
 }

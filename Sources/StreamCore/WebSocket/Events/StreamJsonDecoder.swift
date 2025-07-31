@@ -52,7 +52,8 @@ public final class StreamJSONDecoder: JSONDecoder, @unchecked Sendable {
                 
                 // Fail
                 throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid date: \(dateString)")
-            }        }
+            }
+        }
     }
 }
 
@@ -61,9 +62,7 @@ extension JSONDecoder {
     public static let `default`: JSONDecoder = stream
     
     /// A Stream Chat JSON decoder.
-    static let stream: StreamJSONDecoder = {
-        StreamJSONDecoder()
-    }()
+    static let stream: StreamJSONDecoder = StreamJSONDecoder()
 }
 
 // MARK: - JSONEncoder Stream

@@ -5,7 +5,6 @@
 import Foundation
 
 public final class WSAuthMessageRequest: @unchecked Sendable, Codable, JSONEncodable, Hashable {
-    
     public var products: [String]?
     public var token: String
     public var userDetails: ConnectUserDetailsRequest

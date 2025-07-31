@@ -31,7 +31,7 @@ public enum APIHelper {
     }
 
     public static func convertBoolToString(_ source: [String: Any]?) -> [String: Any]? {
-        guard let source = source else {
+        guard let source else {
             return nil
         }
 
@@ -46,7 +46,7 @@ public enum APIHelper {
     }
 
     public static func convertAnyToString(_ value: Any?) -> String? {
-        guard let value = value else { return nil }
+        guard let value else { return nil }
         if let value = value as? any RawRepresentable {
             return "\(value.rawValue)"
         } else {
@@ -69,7 +69,6 @@ public enum APIHelper {
     public static func mapValuesToQueryItems(_ source: [String: (wrappedValue: Any?, isExplode: Bool)]) -> [URLQueryItem]? {
         let destination = source.filter { $0.value.wrappedValue != nil }.reduce(into: [URLQueryItem]()) { result, item in
             if let collection = item.value.wrappedValue as? [Any?] {
-
                 let collectionValues: [String] = collection.compactMap { value in convertAnyToString(value) }
 
                 if !item.value.isExplode {

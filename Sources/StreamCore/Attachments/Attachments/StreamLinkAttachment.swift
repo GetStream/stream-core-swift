@@ -90,18 +90,18 @@ extension LinkAttachmentPayload: Decodable {
             return try container.decodeIfPresent(URL.self, forKey: .assetURL)
         }()
 
-        self.init(
-            originalURL: try container.decode(URL.self, forKey: .ogURL),
-            title: try container
+        try self.init(
+            originalURL: container.decode(URL.self, forKey: .ogURL),
+            title: container
                 .decodeIfPresent(String.self, forKey: .title)?
                 .trimmingCharacters(in: .whitespacesAndNewlines),
-            text: try container
+            text: container
                 .decodeIfPresent(String.self, forKey: .text)?
                 .trimmingCharacters(in: .whitespacesAndNewlines),
-            author: try container.decodeIfPresent(String.self, forKey: .author),
-            titleLink: try container.decodeIfPresent(URL.self, forKey: .titleLink),
+            author: container.decodeIfPresent(String.self, forKey: .author),
+            titleLink: container.decodeIfPresent(URL.self, forKey: .titleLink),
             assetURL: assetURL,
-            previewURL: try container.decodeIfPresent(URL.self, forKey: .thumbURL) ?? assetURL
+            previewURL: container.decodeIfPresent(URL.self, forKey: .thumbURL) ?? assetURL
         )
     }
 }

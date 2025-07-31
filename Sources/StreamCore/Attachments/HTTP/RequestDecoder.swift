@@ -19,7 +19,6 @@ public protocol RequestDecoder: Sendable {
 
 /// The default implementation of `RequestDecoder`.
 public struct DefaultRequestDecoder: RequestDecoder {
-    
     public init() {}
     
     public func decodeRequestResponse<ResponseType: Decodable>(data: Data?, response: URLResponse?, error: Error?) throws -> ResponseType {
@@ -42,7 +41,7 @@ public struct DefaultRequestDecoder: RequestDecoder {
             throw ClientError.Unexpected("Expecting `HTTPURLResponse` but received: \(response?.description ?? "nil").")
         }
 
-        guard let data = data, !data.isEmpty else {
+        guard let data, !data.isEmpty else {
             throw ClientError.ResponseBodyEmpty()
         }
 
@@ -110,7 +109,6 @@ extension ClientError {
         return false
     }
 }
-
 
 extension ErrorPayload {
     /// Returns `true` if the code determines that the token is expired.

@@ -78,11 +78,11 @@ extension AudioAttachmentPayload: Decodable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: AttachmentCodingKeys.self)
 
-        self.init(
-            title: try container.decodeIfPresent(String.self, forKey: .title),
-            audioRemoteURL: try container.decode(URL.self, forKey: .assetURL),
-            file: try AttachmentFile(from: decoder),
-            extraData: try Self.decodeExtraData(from: decoder)
+        try self.init(
+            title: container.decodeIfPresent(String.self, forKey: .title),
+            audioRemoteURL: container.decode(URL.self, forKey: .assetURL),
+            file: AttachmentFile(from: decoder),
+            extraData: Self.decodeExtraData(from: decoder)
         )
     }
 }

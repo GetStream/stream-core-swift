@@ -25,17 +25,17 @@ public struct BoxedAny: Equatable, Sendable {
     
     public init<T: Equatable & Sendable>(_ value: T) {
         self.value = value
-        self.isEqual = { other in
+        isEqual = { other in
             guard let otherValue = other as? T else { return false }
             return value == otherValue
         }
     }
     
     public func getValue<T>() -> T? {
-        return value as? T
+        value as? T
     }
     
     public static func == (lhs: BoxedAny, rhs: BoxedAny) -> Bool {
-        return lhs.isEqual(rhs.value)
+        lhs.isEqual(rhs.value)
     }
 }

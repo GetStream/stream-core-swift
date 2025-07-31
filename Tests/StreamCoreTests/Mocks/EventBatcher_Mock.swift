@@ -4,16 +4,13 @@
 
 import Foundation
 @testable import StreamCore
-import protocol StreamCore.Timer
-
 final class EventBatcher_Mock: Batcher<Event>, @unchecked Sendable {
-
-    let handler: @Sendable(_ batch: [Event], _ completion: @escaping @Sendable() -> Void) -> Void
+    let handler: @Sendable (_ batch: [Event], _ completion: @escaping @Sendable() -> Void) -> Void
 
     override init(
         period: TimeInterval = 0,
         timerType: Timer.Type = DefaultTimer.self,
-        handler: @escaping @Sendable(_ batch: [Event], _ completion: @escaping @Sendable() -> Void) -> Void
+        handler: @escaping @Sendable (_ batch: [Event], _ completion: @escaping @Sendable() -> Void) -> Void
     ) {
         self.handler = handler
         super.init(period: period, timerType: timerType, handler: handler)

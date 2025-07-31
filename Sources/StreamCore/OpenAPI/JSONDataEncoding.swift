@@ -5,7 +5,6 @@
 import Foundation
 
 public struct JSONDataEncoding {
-
     // MARK: Properties
 
     private static let jsonDataKey = "jsonData"
@@ -39,7 +38,7 @@ public struct JSONDataEncoding {
 
     public static func encodingParameters(jsonData: Data?) -> [String: Any]? {
         var returnedParams: [String: Any]?
-        if let jsonData = jsonData, !jsonData.isEmpty {
+        if let jsonData, !jsonData.isEmpty {
             var params: [String: Any] = [:]
             params[jsonDataKey] = jsonData
             returnedParams = params

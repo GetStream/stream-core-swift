@@ -26,7 +26,7 @@ struct MultipartFormData {
         var data = "--\(Self.boundary)\(MultipartFormData.crlf)".data(using: .utf8, allowLossyConversion: false)!
         data.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\(MultipartFormData.crlf)")
 
-        if let mimeType = mimeType {
+        if let mimeType {
             data.append("Content-Type: \(mimeType)\(MultipartFormData.crlf)")
         }
 

@@ -6,10 +6,10 @@ import Foundation
 
 open class DevicesAPI: DevicesAPIEndpoints, @unchecked Sendable {
     public var middlewares: [DefaultAPIClientMiddleware]
-    internal var transport: DefaultAPITransport
-    internal var basePath: String
-    internal var jsonDecoder: JSONDecoder
-    internal var jsonEncoder: JSONEncoder
+    var transport: DefaultAPITransport
+    var basePath: String
+    var jsonDecoder: JSONDecoder
+    var jsonEncoder: JSONEncoder
 
     public init(
         basePath: String,
@@ -29,7 +29,6 @@ open class DevicesAPI: DevicesAPIEndpoints, @unchecked Sendable {
         request: Request,
         deserializer: (Data) throws -> Response
     ) async throws -> Response {
-
         // TODO: make this a bit nicer and create an API error to make it easier to handle stuff
         func makeError(_ error: Error) -> Error {
             error

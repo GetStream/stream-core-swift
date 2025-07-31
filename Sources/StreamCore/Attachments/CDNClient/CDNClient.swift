@@ -124,15 +124,15 @@ public class StreamCDNClient: CDNClient, @unchecked Sendable {
 
             let data = multipartFormData.getMultipartFormData()
             urlRequest.addValue("multipart/form-data; boundary=\(MultipartFormData.boundary)", forHTTPHeaderField: "Content-Type")
-            urlRequest.addValue("stream-feeds-swift-v0.0.1", forHTTPHeaderField: "X-Stream-Client") //TODO: fix this.
+            urlRequest.addValue("stream-feeds-swift-v0.0.1", forHTTPHeaderField: "X-Stream-Client") // TODO: fix this.
             urlRequest.httpBody = data
 
-            guard let self = self else {
+            guard let self else {
                 log.warning("Callback called while self is nil", subsystems: .httpRequests)
                 return
             }
             
-            let task = self.session.dataTask(with: urlRequest) { [decoder = self.decoder] (data, response, error) in
+            let task = session.dataTask(with: urlRequest) { [decoder = self.decoder] (data, response, error) in
                 do {
                     let response: FileUploadPayload = try decoder.decodeRequestResponse(
                         data: data,
@@ -149,7 +149,7 @@ public class StreamCDNClient: CDNClient, @unchecked Sendable {
 
             if let progressListener = progress {
                 let taskID = task.taskIdentifier
-                self._taskProgressObservers.mutate { observers in
+                _taskProgressObservers.mutate { observers in
                     var updatedObservers = observers
                     updatedObservers[taskID] = task.progress.observe(\.fractionCompleted) { [weak self] progress, _ in
                         progressListener(progress.fractionCompleted)

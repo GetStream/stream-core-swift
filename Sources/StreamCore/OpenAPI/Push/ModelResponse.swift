@@ -5,7 +5,6 @@
 import Foundation
 
 public final class ModelResponse: @unchecked Sendable, Codable, JSONEncodable, Hashable {
-    
     public var duration: String
 
     public init(duration: String) {

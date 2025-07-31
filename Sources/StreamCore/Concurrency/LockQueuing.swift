@@ -9,7 +9,6 @@ import Foundation
 /// Types conforming to `LockQueuing` provide thread-safe access to resources
 /// by executing blocks of code within a lock, ensuring mutual exclusion.
 protocol LockQueuing: Sendable {
-
     /// Executes a block within a lock, ensuring exclusive access.
     ///
     /// This method should guarantee that only one thread can execute the

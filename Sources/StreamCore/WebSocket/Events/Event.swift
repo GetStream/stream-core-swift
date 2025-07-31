@@ -12,11 +12,11 @@ public protocol Event: Sendable {
 
 public extension Event {
     func healthcheck() -> HealthCheckInfo? {
-        return nil
+        nil
     }
     
     func error() -> Error? {
-        return nil
+        nil
     }
 }
 

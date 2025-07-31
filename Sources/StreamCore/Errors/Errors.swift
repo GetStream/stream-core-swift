@@ -23,9 +23,9 @@ open class ClientError: Error, ReflectiveStringConvertible, @unchecked Sendable 
     
     var errorDescription: String? {
         if let apiError {
-            return apiError.message
+            apiError.message
         } else {
-            return underlyingError.map(String.init(describing:))
+            underlyingError.map(String.init(describing:))
         }
     }
     

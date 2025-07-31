@@ -354,7 +354,6 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
 }
 
 private final class HealthCheckEvent: @unchecked Sendable, Event, Codable, JSONEncodable, Hashable {
-    
     public var cid: String?
     public var connectionId: String
     public var createdAt: Date

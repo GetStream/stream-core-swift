@@ -5,7 +5,6 @@
 import Foundation
 
 public final class Device: @unchecked Sendable, Codable, JSONEncodable, Hashable {
-    
     public var createdAt: Date
     public var disabled: Bool?
     public var disabledReason: String?

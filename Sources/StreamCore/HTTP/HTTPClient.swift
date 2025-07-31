@@ -4,11 +4,10 @@
 
 import Foundation
 
-public typealias UserTokenProvider = @Sendable(@Sendable @escaping (Result<UserToken, Error>) -> Void) -> Void
-public typealias UserTokenUpdater = @Sendable(UserToken) -> Void
+public typealias UserTokenProvider = @Sendable (@Sendable @escaping (Result<UserToken, Error>) -> Void) -> Void
+public typealias UserTokenUpdater = @Sendable (UserToken) -> Void
 
 protocol HTTPClient: Sendable {
-    
     func execute(request: URLRequest) async throws -> Data
     
     func setTokenUpdater(_ tokenUpdater: @escaping UserTokenUpdater)
@@ -19,7 +18,6 @@ protocol HTTPClient: Sendable {
 }
 
 final class URLSessionClient: HTTPClient, @unchecked Sendable {
-    
     private let urlSession: URLSession
     private var tokenProvider: UserTokenProvider?
     private let updateQueue: DispatchQueue = .init(
@@ -44,7 +42,7 @@ final class URLSessionClient: HTTPClient, @unchecked Sendable {
             if error is ClientError.InvalidToken && tokenProvider != nil {
                 log.debug("Refreshing user token", subsystems: .httpRequests)
                 let token = try await refreshToken()
-                if let onTokenUpdate = onTokenUpdate {
+                if let onTokenUpdate {
                     onTokenUpdate(token)
                 }
                 let updated = update(request: request, with: token.rawValue)
@@ -84,7 +82,7 @@ final class URLSessionClient: HTTPClient, @unchecked Sendable {
     private func execute(request: URLRequest, isRetry: Bool) async throws -> Data {
         try await withCheckedThrowingContinuation { continuation in
             let task = urlSession.dataTask(with: request) { data, response, error in
-                if let error = error {
+                if let error {
                     log.error("Error executing request", subsystems: .httpRequests, error: error)
                     continuation.resume(throwing: error)
                     return
@@ -115,7 +113,7 @@ final class URLSessionClient: HTTPClient, @unchecked Sendable {
                         return
                     }
                 }
-                guard let data = data else {
+                guard let data else {
                     log.debug("Received empty response", subsystems: .httpRequests)
                     continuation.resume(throwing: ClientError.NetworkError())
                     return
@@ -134,7 +132,7 @@ final class URLSessionClient: HTTPClient, @unchecked Sendable {
     }
     
     private static func errorResponse(from data: Data?, response: HTTPURLResponse) -> Any {
-        guard let data = data else {
+        guard let data else {
             return response.description
         }
         do {

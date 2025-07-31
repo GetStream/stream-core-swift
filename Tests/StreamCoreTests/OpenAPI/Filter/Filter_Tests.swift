@@ -7,7 +7,6 @@ import Foundation
 import Testing
 
 struct Filter_Tests {
-    
     // MARK: - Test Filter Field
     
     struct TestFilterField: FilterFieldRepresentable {
@@ -42,7 +41,7 @@ struct Filter_Tests {
     // MARK: - Basic Filter Tests
     
     @Test("Equal filter with string value")
-    func testEqualFilterWithString() {
+    func equalFilterWithString() {
         let filter = TestFilter.equal(.name, "John")
         let json = filter.toRawJSON()
         
@@ -54,7 +53,7 @@ struct Filter_Tests {
     }
     
     @Test("Equal filter with integer value")
-    func testEqualFilterWithInteger() {
+    func equalFilterWithInteger() {
         let filter = TestFilter.equal(.age, 25)
         let json = filter.toRawJSON()
         
@@ -66,7 +65,7 @@ struct Filter_Tests {
     }
     
     @Test("Equal filter with boolean value")
-    func testEqualFilterWithBoolean() {
+    func equalFilterWithBoolean() {
         let filter = TestFilter.equal(.isActive, true)
         let json = filter.toRawJSON()
         
@@ -78,8 +77,8 @@ struct Filter_Tests {
     }
     
     @Test("Equal filter with date value")
-    func testEqualFilterWithDate() {
-        let date = Date(timeIntervalSince1970: 1640995200) // 2022-01-01 00:00:00 UTC
+    func equalFilterWithDate() {
+        let date = Date(timeIntervalSince1970: 1_640_995_200) // 2022-01-01 00:00:00 UTC
         let filter = TestFilter.equal(.createdAt, date)
         let json = filter.toRawJSON()
         
@@ -93,7 +92,7 @@ struct Filter_Tests {
     // MARK: - Comparison Filter Tests
     
     @Test("Greater than filter")
-    func testGreaterThanFilter() {
+    func greaterThanFilter() {
         let filter = TestFilter.greater(.age, 18)
         let json = filter.toRawJSON()
         
@@ -105,7 +104,7 @@ struct Filter_Tests {
     }
     
     @Test("Greater than or equal filter")
-    func testGreaterThanOrEqualFilter() {
+    func greaterThanOrEqualFilter() {
         let filter = TestFilter.greaterOrEqual(.age, 21)
         let json = filter.toRawJSON()
         
@@ -117,7 +116,7 @@ struct Filter_Tests {
     }
     
     @Test("Less than filter")
-    func testLessThanFilter() {
+    func lessThanFilter() {
         let filter = TestFilter.less(.age, 65)
         let json = filter.toRawJSON()
         
@@ -129,7 +128,7 @@ struct Filter_Tests {
     }
     
     @Test("Less than or equal filter")
-    func testLessThanOrEqualFilter() {
+    func lessThanOrEqualFilter() {
         let filter = TestFilter.lessOrEqual(.age, 30)
         let json = filter.toRawJSON()
         
@@ -143,7 +142,7 @@ struct Filter_Tests {
     // MARK: - Array and Collection Filter Tests
     
     @Test("In filter with array of strings")
-    func testInFilterWithStringArray() {
+    func inFilterWithStringArray() {
         let filter = TestFilter.in(.name, ["John", "Jane", "Bob"])
         let json = filter.toRawJSON()
         
@@ -155,7 +154,7 @@ struct Filter_Tests {
     }
     
     @Test("In filter with array of integers")
-    func testInFilterWithIntegerArray() {
+    func inFilterWithIntegerArray() {
         let filter = TestFilter.in(.age, [18, 21, 25, 30])
         let json = filter.toRawJSON()
         
@@ -167,7 +166,7 @@ struct Filter_Tests {
     }
     
     @Test("Contains filter")
-    func testContainsFilter() {
+    func containsFilter() {
         let filter = TestFilter.contains(.tags, "swift")
         let json = filter.toRawJSON()
         
@@ -181,7 +180,7 @@ struct Filter_Tests {
     // MARK: - Text Search Filter Tests
     
     @Test("Query filter")
-    func testQueryFilter() {
+    func queryFilter() {
         let filter = TestFilter.query(.name, "john")
         let json = filter.toRawJSON()
         
@@ -193,7 +192,7 @@ struct Filter_Tests {
     }
     
     @Test("Autocomplete filter")
-    func testAutocompleteFilter() {
+    func autocompleteFilter() {
         let filter = TestFilter.autocomplete(.name, "jo")
         let json = filter.toRawJSON()
         
@@ -207,7 +206,7 @@ struct Filter_Tests {
     // MARK: - Existence Filter Tests
     
     @Test("Exists filter")
-    func testExistsFilter() {
+    func existsFilter() {
         let filter = TestFilter.exists(.email, true)
         let json = filter.toRawJSON()
         
@@ -219,7 +218,7 @@ struct Filter_Tests {
     }
     
     @Test("Path exists filter")
-    func testPathExistsFilter() {
+    func pathExistsFilter() {
         let filter = TestFilter.pathExists(.tags, "custom.field")
         let json = filter.toRawJSON()
         
@@ -271,7 +270,7 @@ struct Filter_Tests {
     }
     
     @Test("Nested and/or filters")
-    func testNestedAndOrFilters() {
+    func nestedAndOrFilters() {
         let ageFilter = TestFilter.greater(.age, 18)
         let nameFilter1 = TestFilter.equal(.name, "John")
         let nameFilter2 = TestFilter.equal(.name, "Jane")
@@ -299,7 +298,7 @@ struct Filter_Tests {
     // MARK: - URL Filter Tests
     
     @Test("URL filter value")
-    func testURLFilterValue() {
+    func uRLFilterValue() {
         let url = URL(string: "https://example.com")!
         let filter = TestFilter.equal(.email, url)
         let json = filter.toRawJSON()
@@ -314,7 +313,7 @@ struct Filter_Tests {
     // MARK: - Dictionary Filter Tests
     
     @Test("Dictionary filter value")
-    func testDictionaryFilterValue() {
+    func dictionaryFilterValue() {
         let customData: [String: RawJSON] = [
             "key1": .string("value1"),
             "key2": .number(42.0)
@@ -332,7 +331,7 @@ struct Filter_Tests {
     // MARK: - Array Filter Tests
     
     @Test("Array filter value")
-    func testArrayFilterValue() {
+    func arrayFilterValue() {
         let arrayValue = ["item1", "item2"]
         let filter = TestFilter.equal(.tags, arrayValue)
         let json = filter.toRawJSON()
@@ -347,7 +346,7 @@ struct Filter_Tests {
     // MARK: - Edge Cases
     
     @Test("Empty array in filter")
-    func testEmptyArrayInFilter() {
+    func emptyArrayInFilter() {
         let arrayValue: [String] = []
         let filter = TestFilter.in(.tags, arrayValue)
         let json = filter.toRawJSON()
@@ -360,7 +359,7 @@ struct Filter_Tests {
     }
     
     @Test("Empty and filter")
-    func testEmptyAndFilter() {
+    func emptyAndFilter() {
         let subFilters: [TestFilter] = []
         let filter = TestFilter.and(subFilters)
         let json = filter.toRawJSON()
@@ -373,7 +372,7 @@ struct Filter_Tests {
     }
     
     @Test("Empty or filter")
-    func testEmptyOrFilter() {
+    func emptyOrFilter() {
         let subFilters: [TestFilter] = []
         let filter = TestFilter.or(subFilters)
         let json = filter.toRawJSON()
