@@ -19,6 +19,13 @@
 			remoteGlobalIDString = 8415DA0A2E462E9F00FEE25F;
 			remoteInfo = StreamCoreUI;
 		};
+		842BE6032E463FBB003E2219 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 845495172DBA3A1300211413 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8454951F2DBA3A1300211413;
+			remoteInfo = StreamCore;
+		};
 		8454952A2DBA3A1300211413 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 845495172DBA3A1300211413 /* Project object */;
@@ -181,6 +188,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				842BE6042E463FBB003E2219 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				8415DA0C2E462E9F00FEE25F /* StreamCoreUI */,
@@ -372,6 +380,11 @@
 			isa = PBXTargetDependency;
 			target = 8415DA0A2E462E9F00FEE25F /* StreamCoreUI */;
 			targetProxy = 8415DA1C2E462EEF00FEE25F /* PBXContainerItemProxy */;
+		};
+		842BE6042E463FBB003E2219 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8454951F2DBA3A1300211413 /* StreamCore */;
+			targetProxy = 842BE6032E463FBB003E2219 /* PBXContainerItemProxy */;
 		};
 		8454952B2DBA3A1300211413 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
