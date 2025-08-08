@@ -28,4 +28,12 @@ public protocol ImageCDN: Sendable {
     /// - Parameter imageURL: The URL of the loaded image.
     /// - Returns: A String to be used as an image cache key.
     func cachingKey(forImageUrl url: URL) -> String
+    
+    /// Enhance image URL with size parameters to get thumbnail
+    /// - Parameters:
+    ///   - originalURL: URL of the image to get the thumbnail for.
+    ///   - preferredSize: The requested thumbnail size.
+    ///
+    /// Use view size in points for `preferredSize`, point to pixel ratio (scale) of the device is applied inside of this function.
+    @MainActor func thumbnailURL(originalURL: URL, preferredSize: CGSize) -> URL
 }

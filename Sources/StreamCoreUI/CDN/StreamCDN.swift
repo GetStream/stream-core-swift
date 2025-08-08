@@ -62,6 +62,25 @@ open class StreamImageCDN: ImageCDN, @unchecked Sendable {
         components.queryItems = newParameters.isEmpty ? nil : newParameters
         return components.string ?? key
     }
+    
+    @MainActor open func thumbnailURL(originalURL: URL, preferredSize: CGSize) -> URL {
+        guard
+            var components = URLComponents(url: originalURL, resolvingAgainstBaseURL: true),
+            let host = components.host,
+            host.contains(StreamImageCDN.streamCDNURL)
+        else { return originalURL }
+
+        let scale = UIScreen.main.scale
+        components.queryItems = components.queryItems ?? []
+        components.queryItems?.append(contentsOf: [
+            URLQueryItem(name: "w", value: String(format: "%.0f", preferredSize.width * scale)),
+            URLQueryItem(name: "h", value: String(format: "%.0f", preferredSize.height * scale)),
+            URLQueryItem(name: "crop", value: "center"),
+            URLQueryItem(name: "resize", value: "fill"),
+            URLQueryItem(name: "ro", value: "0") // Required parameter.
+        ])
+        return components.url ?? originalURL
+    }
 }
 
 enum Screen {
