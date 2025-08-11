@@ -26,6 +26,7 @@ let package = Package(
         ),
         .target(
             name: "StreamCoreUI",
+            dependencies: "StreamCore",
             swiftSettings: [
                 .unsafeFlags(["-enable-library-evolution"])
             ]
