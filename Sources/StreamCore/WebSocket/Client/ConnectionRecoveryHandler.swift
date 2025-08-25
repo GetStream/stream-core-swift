@@ -205,7 +205,7 @@ private extension DefaultConnectionRecoveryHandler {
         let state = webSocketClient.connectionState
         
         switch state {
-        case .connecting, .authenticating, .connected:
+        case .connecting, .authenticating, .connected, .disconnecting:
             log.debug("Will disconnect automatically from \(state) state", subsystems: .webSocket)
             
             return true
