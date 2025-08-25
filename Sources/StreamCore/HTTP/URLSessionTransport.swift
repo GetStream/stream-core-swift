@@ -36,7 +36,7 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
         }
     }
 
-    func refreshToken() async throws -> UserToken {
+    public func refreshToken() async throws -> UserToken {
         try await withCheckedThrowingContinuation { continuation in
             tokenProvider? { result in
                 switch result {
