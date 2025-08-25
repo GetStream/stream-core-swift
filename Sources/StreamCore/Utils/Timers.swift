@@ -3,6 +3,7 @@
 //
 
 import Foundation
+import Combine
 
 public protocol Timer {
     /// Schedules a new timer.
@@ -74,6 +75,36 @@ public struct DefaultTimer: Timer {
         onFire: @escaping () -> Void
     ) -> RepeatingTimerControl {
         RepeatingTimer(timeInterval: timeInterval, queue: queue, onFire: onFire)
+    }
+    
+    /// Returns a Combine publisher that emits `Date` values at a fixed interval.
+    ///
+    /// The timer operates on a background queue and only emits values while
+    /// there are active subscribers. If the interval is less than or equal to
+    /// zero, a warning is logged and a single `Date` value is emitted instead.
+    ///
+    /// - Parameters:
+    ///   - interval: Time between emitted date values.
+    ///   - file: The file from which the method is called. Used for logging.
+    ///   - function: The function from which the method is called.
+    ///   - line: The line number from which the method is called.
+    /// - Returns: A publisher that emits dates while subscribed.
+    public static func publish(
+        every interval: TimeInterval,
+        file: StaticString = #file,
+        function: StaticString = #function,
+        line: UInt = #line
+    ) -> AnyPublisher<Date, Never> {
+        guard interval > 0 else {
+            log.warning(
+                "Interval cannot be 0 or less",
+                functionName: function,
+                fileName: file,
+                lineNumber: line
+            )
+            return Just(Date()).eraseToAnyPublisher()
+        }
+        return TimerPublisher(interval: interval).eraseToAnyPublisher()
     }
 }
 
