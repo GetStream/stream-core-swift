@@ -98,15 +98,15 @@ extension Sort: CustomStringConvertible {
 /// and direction handling internally.
 ///
 /// - Note: Both `Model` and `Value` must conform to `Sendable` for thread safety.
-public struct SortComparator<Model, Value>: Sendable where Model: Sendable, Value: Comparable {
+struct SortComparator<Model, Value>: Sendable where Model: Sendable, Value: Comparable {
     /// A closure that extracts a comparable value from a model instance.
-    let value: @Sendable (Model) -> Value
+    let localValue: @Sendable (Model) -> Value
     
     /// Creates a new comparator with the specified value extraction closure.
     ///
-    /// - Parameter value: A closure that extracts a comparable value from a model instance
-    public init(_ value: @escaping @Sendable (Model) -> Value) {
-        self.value = value
+    /// - Parameter localValue: A closure that extracts a comparable value from a model instance
+    init(localValue: @escaping @Sendable (Model) -> Value) {
+        self.localValue = localValue
     }
     
     /// Compares two model instances using the extracted values and sort direction.
@@ -116,19 +116,12 @@ public struct SortComparator<Model, Value>: Sendable where Model: Sendable, Valu
     ///   - b: The second model instance to compare
     ///   - direction: The direction of the sort
     /// - Returns: A comparison result indicating the relative ordering
-    public func compare(_ a: Model, _ b: Model, direction: SortDirection) -> ComparisonResult {
-        let valueA = value(a)
-        let valueB = value(b)
+    func compare(_ a: Model, _ b: Model, direction: SortDirection) -> ComparisonResult {
+        let valueA = localValue(a)
+        let valueB = localValue(b)
         if valueA < valueB { return direction == .forward ? .orderedAscending : .orderedDescending }
         if valueA > valueB { return direction == .forward ? .orderedDescending : .orderedAscending }
         return .orderedSame
-    }
-    
-    /// Converts this comparator to a type-erased version.
-    ///
-    /// - Returns: An `AnySortComparator` that wraps this comparator
-    public func toAny() -> AnySortComparator<Model> {
-        AnySortComparator(self)
     }
 }
 
@@ -149,8 +142,8 @@ public struct AnySortComparator<Model>: Sendable where Model: Sendable {
     /// Creates a type-erased comparator from a specific comparator instance.
     ///
     /// - Parameter sort: The specific comparator to wrap
-    init<Value: Comparable>(_ sort: SortComparator<Model, Value>) {
-        compare = sort.compare
+    public init<Value: Comparable>(localValue: @escaping @Sendable (Model) -> Value) {
+        compare = SortComparator(localValue: localValue).compare
     }
     
     /// Compares two model instances using the wrapped comparator.

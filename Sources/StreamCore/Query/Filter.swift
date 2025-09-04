@@ -14,7 +14,7 @@ public protocol Filter: FilterValue, Sendable {
     /// The associated type representing the field that this filter operates on.
     associatedtype FilterField: FilterFieldRepresentable
     
-    /// The field to filter on (e.g., "id", "fid", "user_id").
+    /// The field to filter on (e.g., "id", "feed", "user_id").
     var field: FilterField { get }
     
     /// The value to compare against the field.
@@ -42,21 +42,25 @@ public protocol FilterValue: Sendable {}
 /// This protocol allows for type-safe field names while maintaining the ability to convert to string values
 /// for API communication.
 public protocol FilterFieldRepresentable: Sendable {
-    /// The string representation of the field.
-    var value: String { get }
+    /// The model type that this filter field operates on.
+    associatedtype Model: Sendable
     
-    /// Creates a field representation from a string value.
+    /// A matcher that can be used for local matching operations.
+    var matcher: AnyFilterMatcher<Model> { get }
+    
+    /// The string representation of the field.
+    var remote: String { get }
+    
+    /// Creates a new filter field with the specified remote identifier and local value extractor.
     ///
-    /// - Parameter value: The string value representing the field.
-    init(value: String)
+    /// - Parameters:
+    ///   - remote: The string identifier used for remote API requests
+    ///   - localValue: A closure that extracts the comparable value from a model instance
+    init<Value>(remote: String, localValue: @escaping @Sendable (Model) -> Value?) where Value: FilterValue
 }
 
 extension FilterFieldRepresentable {
-    /// Logical AND operator for combining multiple filters.
-    static var and: Self { Self(value: "$and") }
-    
-    /// Logical OR operator for combining multiple filters.
-    static var or: Self { Self(value: "$or") }
+    static var groupField: Self { Self(remote: "", localValue: { _ in 0 }) }
 }
 
 // MARK: - Filter Building
@@ -187,7 +191,7 @@ extension Filter {
     /// - Parameter filters: An array of filters to combine.
     /// - Returns: A filter that matches when all the specified filters match.
     public static func and<F>(_ filters: [F]) -> F where F: Filter, F.FilterField == FilterField {
-        F(filterOperator: .and, field: .and, value: filters)
+        F(filterOperator: .and, field: .groupField, value: filters)
     }
     
     /// Creates a filter that combines multiple filters with a logical OR operation.
@@ -195,7 +199,7 @@ extension Filter {
     /// - Parameter filters: An array of filters to combine.
     /// - Returns: A filter that matches when any of the specified filters match.
     public static func or<F>(_ filters: [F]) -> F where F: Filter, F.FilterField == FilterField {
-        F(filterOperator: .or, field: .and, value: filters)
+        F(filterOperator: .or, field: .groupField, value: filters)
     }
 }
 
@@ -232,6 +236,8 @@ extension Array: FilterValue where Element: FilterValue {}
 /// This allows dictionaries to be used in filters for complex object matching.
 extension Dictionary: FilterValue where Key == String, Value == RawJSON {}
 
+extension Optional: FilterValue where Wrapped: FilterValue {}
+
 // MARK: - Filter to RawJSON Conversion
 
 extension Filter {
@@ -253,7 +259,7 @@ extension Filter {
         } else {
             // Normal filters are encoded in the following form:
             //  { field: { $<operator>: <value> } }
-            return [field.value: .dictionary([filterOperator.rawValue: value.rawJSON])]
+            return [field.remote: .dictionary([filterOperator.rawValue: value.rawJSON])]
         }
     }
 }
@@ -266,23 +272,23 @@ extension FilterValue {
     var rawJSON: RawJSON {
         switch self {
         case let boolValue as Bool:
-            .bool(boolValue)
+            return .bool(boolValue)
         case let dateValue as Date:
-            .string(RFC3339DateFormatter.string(from: dateValue))
+            return .string(RFC3339DateFormatter.string(from: dateValue))
         case let doubleValue as Double:
-            .number(doubleValue)
+            return .number(doubleValue)
         case let intValue as Int:
-            .number(Double(intValue))
+            return .number(Double(intValue))
         case let stringValue as String:
-            .string(stringValue)
+            return .string(stringValue)
         case let urlValue as URL:
-            .string(urlValue.absoluteString)
+            return .string(urlValue.absoluteString)
         case let arrayValue as [any FilterValue]:
-            .array(arrayValue.map(\.rawJSON))
+            return .array(arrayValue.map(\.rawJSON))
         case let dictionaryValue as [String: RawJSON]:
-            .dictionary(dictionaryValue)
+            return .dictionary(dictionaryValue)
         default:
-            fatalError("Unimplemented type: \(self)")
+            return .nil
         }
     }
 }
