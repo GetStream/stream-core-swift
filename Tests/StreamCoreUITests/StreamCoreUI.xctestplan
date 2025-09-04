@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "5A2B6D63-0972-4DF9-A346-C2380775F973",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:StreamCore.xcodeproj",
+        "identifier" : "8415DA162E462EEF00FEE25F",
+        "name" : "StreamCoreUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

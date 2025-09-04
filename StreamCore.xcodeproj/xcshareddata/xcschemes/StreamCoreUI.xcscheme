@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1640"
+   LastUpgradeVersion = "1610"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -15,9 +15,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "8454951F2DBA3A1300211413"
-               BuildableName = "StreamCore.framework"
-               BlueprintName = "StreamCore"
+               BlueprintIdentifier = "8415DA0A2E462E9F00FEE25F"
+               BuildableName = "StreamCoreUI.framework"
+               BlueprintName = "StreamCoreUI"
                ReferencedContainer = "container:StreamCore.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -30,7 +30,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:Tests/StreamCoreTests/StreamCore.xctestplan"
+            reference = "container:Tests/StreamCoreUITests/StreamCoreUI.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>
@@ -40,9 +40,9 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "845495272DBA3A1300211413"
-               BuildableName = "StreamCoreTests.xctest"
-               BlueprintName = "StreamCoreTests"
+               BlueprintIdentifier = "8415DA162E462EEF00FEE25F"
+               BuildableName = "StreamCoreUITests.xctest"
+               BlueprintName = "StreamCoreUITests"
                ReferencedContainer = "container:StreamCore.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -68,9 +68,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "8454951F2DBA3A1300211413"
-            BuildableName = "StreamCore.framework"
-            BlueprintName = "StreamCore"
+            BlueprintIdentifier = "8415DA0A2E462E9F00FEE25F"
+            BuildableName = "StreamCoreUI.framework"
+            BlueprintName = "StreamCoreUI"
             ReferencedContainer = "container:StreamCore.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

@@ -1,0 +1,13 @@
+coverage_service: sonarqube_xml
+xcodeproj: StreamCore.xcodeproj
+scheme: StreamCore
+configuration: Debug
+build_directory: derived_data/
+source_directory: Sources/
+output_directory: reports
+ignore:
+  - "**/*_Vendor.swift"
+  - "**/Generated/"
+  - "**/generated/"
+  - "**/protobuf/"
+  - "**/OpenApi/"

@@ -1,0 +1,25 @@
+{
+  "configurations" : [
+    {
+      "id" : "3E99132C-0631-473C-9396-C9A968076DFD",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:StreamCore.xcodeproj",
+        "identifier" : "845495272DBA3A1300211413",
+        "name" : "StreamCoreTests"
+      }
+    }
+  ],
+  "version" : 1
+}
