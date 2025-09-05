@@ -36,7 +36,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		829524532E69C70300AED807 /* StreamCore.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; name = StreamCore.xctestplan; path = Tests/StreamCoreTests/StreamCore.xctestplan; sourceTree = "<group>"; };
 		8415DA0B2E462E9F00FEE25F /* StreamCoreUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = StreamCoreUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8415DA172E462EEF00FEE25F /* StreamCoreUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StreamCoreUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		845495202DBA3A1300211413 /* StreamCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = StreamCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -139,7 +138,6 @@
 		845495162DBA3A1300211413 = {
 			isa = PBXGroup;
 			children = (
-				829524532E69C70300AED807 /* StreamCore.xctestplan */,
 				845495392DBA3A1E00211413 /* Sources */,
 				4F8C954A2DF8536400996F0D /* Tests */,
 				845495212DBA3A1300211413 /* Products */,
