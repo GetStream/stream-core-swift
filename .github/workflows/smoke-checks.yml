@@ -39,11 +39,11 @@ jobs:
     - name: Run LLC Tests (Debug)
       run: bundle exec fastlane test device:"${{ env.IOS_SIMULATOR_DEVICE }}"
       timeout-minutes: 40
-    # - name: Run Sonar analysis
-    #   run: bundle exec fastlane sonar_upload
-    #   env:
-    #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-    #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    - name: Run Sonar analysis
+      run: bundle exec fastlane sonar_upload
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     - uses: 8398a7/action-slack@v3
       with:
         status: ${{ job.status }}
@@ -65,11 +65,11 @@ jobs:
         path: |
           fastlane/test_output/logs/*/Diagnostics/**/*.txt
           fastlane/test_output/logs/*/Diagnostics/simctl_diagnostics/DiagnosticReports/*
-    # - name: Upload Test Coverage
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: test-coverage-${{ github.event.pull_request.number }}
-    #     path: reports/sonarqube-generic-coverage.xml
+    - name: Upload Test Coverage
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-coverage-${{ github.event.pull_request.number }}
+        path: reports/sonarqube-generic-coverage.xml
 
 
   test_ui:
