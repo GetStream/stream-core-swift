@@ -4,6 +4,7 @@
 
 import Foundation
 @testable import StreamCore
+
 struct VirtualTimeTimer: StreamCore.Timer {
     nonisolated(unsafe) static var time: VirtualTime!
 
@@ -13,7 +14,7 @@ struct VirtualTimeTimer: StreamCore.Timer {
     }
 
     static func schedule(timeInterval: TimeInterval, queue: DispatchQueue, onFire: @escaping () -> Void) -> TimerControl {
-        Self.time.scheduleTimer(
+        time.scheduleTimer(
             interval: timeInterval,
             repeating: false,
             callback: { _ in onFire() }
@@ -25,7 +26,7 @@ struct VirtualTimeTimer: StreamCore.Timer {
         queue: DispatchQueue,
         onFire: @escaping () -> Void
     ) -> RepeatingTimerControl {
-        Self.time.scheduleTimer(
+        time.scheduleTimer(
             interval: timeInterval,
             repeating: true,
             callback: { _ in onFire() }

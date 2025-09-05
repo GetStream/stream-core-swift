@@ -6,7 +6,6 @@
 import Foundation
 
 public extension Publisher where Output: Sendable {
-
     /// Converts the current publisher into an `AsyncStream` of its output.
     ///
     /// This allows you to consume any Combine publisher using Swift's `for await`
