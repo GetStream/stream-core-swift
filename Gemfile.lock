@@ -51,6 +51,7 @@ GEM
       cork
       nap
       open4 (~> 1.3)
+    clamp (1.3.3)
     coderay (1.1.3)
     colored (1.2)
     colored2 (3.1.2)
@@ -238,6 +239,8 @@ GEM
     nap (1.1.0)
     naturally (2.3.0)
     nkf (0.2.0)
+    nokogiri (1.18.9-arm64-darwin)
+      racc (~> 1.4)
     octokit (10.0.0)
       faraday (>= 1, < 3)
       sawyer (~> 0.9)
@@ -302,6 +305,12 @@ GEM
     simctl (1.6.10)
       CFPropertyList
       naturally
+    slather (2.8.5)
+      CFPropertyList (>= 2.2, < 4)
+      activesupport
+      clamp (~> 1.3)
+      nokogiri (>= 1.14.3)
+      xcodeproj (~> 1.27)
     sysrandom (1.0.5)
     terminal-notifier (2.0.0)
     terminal-table (3.0.2)
@@ -346,6 +355,7 @@ DEPENDENCIES
   rubocop (= 1.38)
   rubocop-performance
   rubocop-require_tools
+  slather
   xctest_list
 
 BUNDLED WITH
