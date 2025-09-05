@@ -6,7 +6,6 @@
 import XCTest
 
 final class StringExtensions_Tests: XCTestCase {
-
     func test_Levenshtein() throws {
         XCTAssertEqual("".levenshtein(""), "".levenshtein(""))
         XCTAssertEqual("".levenshtein(""), 0)

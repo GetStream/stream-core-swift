@@ -9,6 +9,7 @@ import XCTest
 
 final class StreamImageCDN_Tests: XCTestCase {
     let baseUrl = "https://www.\(StreamImageCDN.streamCDNURL)"
+    let displayScale = UITraitCollection.current.displayScale
 
     func test_cachingKey_whenHostIsNotStreamCDN() {
         let streamCDN = StreamImageCDN()
@@ -92,8 +93,8 @@ final class StreamImageCDN_Tests: XCTestCase {
             )
         )
 
-        let w: Int = Int(40 * UIScreen.main.scale)
-        let h: Int = Int(60 * UIScreen.main.scale)
+        let w: Int = Int(40 * displayScale)
+        let h: Int = Int(60 * displayScale)
 
         AssertEqualURL(
             processedURLRequest.url!,
@@ -114,8 +115,8 @@ final class StreamImageCDN_Tests: XCTestCase {
             )
         )
 
-        let w: Int = Int(40 * UIScreen.main.scale)
-        let h: Int = Int(60 * UIScreen.main.scale)
+        let w: Int = Int(40 * displayScale)
+        let h: Int = Int(60 * displayScale)
 
         AssertEqualURL(
             processedURLRequest.url!,
