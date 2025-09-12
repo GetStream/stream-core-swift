@@ -14,20 +14,20 @@ struct Filter_Tests {
         let matcher: AnyFilterMatcher<TestUser>
         let remote: String
         
-        init<Value>(_ remote: String, localValue: @escaping @Sendable (TestUser) -> Value?) where Value: FilterValue {
+        init<Value>(remote: String, localValue: @escaping @Sendable (TestUser) -> Value?) where Value: FilterValue {
             self.remote = remote
             self.matcher = AnyFilterMatcher(localValue: localValue)
         }
         
-        static let name = Self("name", localValue: \.name)
-        static let age = Self("age", localValue: \.age)
-        static let height = Self("height", localValue: \.height)
-        static let email = Self("email", localValue: \.email)
-        static let homepage = Self("homepage", localValue: \.homepage)
-        static let tags = Self("tags", localValue: \.tags)
-        static let createdAt = Self("created_at", localValue: \.createdAt)
-        static let isActive = Self("is_active", localValue: \.isActive)
-        static let searchData = Self("search_data", localValue: \.searchData)
+        static let name = Self(remote: "name", localValue: \.name)
+        static let age = Self(remote: "age", localValue: \.age)
+        static let height = Self(remote: "height", localValue: \.height)
+        static let email = Self(remote: "email", localValue: \.email)
+        static let homepage = Self(remote: "homepage", localValue: \.homepage)
+        static let tags = Self(remote: "tags", localValue: \.tags)
+        static let createdAt = Self(remote: "created_at", localValue: \.createdAt)
+        static let isActive = Self(remote: "is_active", localValue: \.isActive)
+        static let searchData = Self(remote: "search_data", localValue: \.searchData)
     }
     
     struct TestFilter: Filter {
@@ -421,11 +421,17 @@ struct Filter_Tests {
         #expect(nameFilter.matches(TestUser(name: "John")))
         #expect(!nameFilter.matches(TestUser(name: "Jane")))
         
-        // Test diacritic string comparison
+        // Test case-sensitive string comparison
+        let caseSensitiveNameFilter = TestFilter.equal(.name, "John")
+        #expect(caseSensitiveNameFilter.matches(TestUser(name: "John")))
+        #expect(!caseSensitiveNameFilter.matches(TestUser(name: "john")))
+        #expect(!caseSensitiveNameFilter.matches(TestUser(name: "JOHN")))
+        
+        // Test diacritic string comparison (case-sensitive)
         let diacriticNameFilter = TestFilter.equal(.name, "José")
         #expect(diacriticNameFilter.matches(TestUser(name: "José")))
         #expect(!diacriticNameFilter.matches(TestUser(name: "Jose")))
-        #expect(!diacriticNameFilter.matches(TestUser(name: "Jose")))
+        #expect(!diacriticNameFilter.matches(TestUser(name: "josé")))
         
         let emailFilter = TestFilter.equal(.email, "john@getstream.io")
         #expect(emailFilter.matches(TestUser(email: "john@getstream.io")))
@@ -496,14 +502,22 @@ struct Filter_Tests {
         #expect(!createdAtFilter.matches(TestUser(createdAt: testDate)))     // testDate == testDate (not greater)
         #expect(!createdAtFilter.matches(TestUser(createdAt: earlierDate))) // earlierDate < testDate
         
-        // Test diacritic string comparison
+        // Test lexicographic string comparison
+        let lexicographicNameFilter = TestFilter.greater(.name, "John")
+        #expect(lexicographicNameFilter.matches(TestUser(name: "Johnny")))  // "Johnny" > "John" (lexicographic)
+        #expect(lexicographicNameFilter.matches(TestUser(name: "Mike")))    // "Mike" > "John" (lexicographic)
+        #expect(lexicographicNameFilter.matches(TestUser(name: "john")))    // "john" > "John" (lexicographic: lowercase > uppercase)
+        #expect(!lexicographicNameFilter.matches(TestUser(name: "John")))   // "John" == "John" (not greater)
+        #expect(!lexicographicNameFilter.matches(TestUser(name: "JOHN")))   // "JOHN" < "John" (lexicographic: uppercase < lowercase)
+        #expect(!lexicographicNameFilter.matches(TestUser(name: "Alice")))  // "Alice" < "John" (lexicographic)
+        
+        // Test diacritic string comparison (lexicographic)
         let diacriticNameFilter = TestFilter.greater(.name, "José")
-        #expect(diacriticNameFilter.matches(TestUser(name: "Joséa")))     // "Joséa" is greater than "José"
-        #expect(diacriticNameFilter.matches(TestUser(name: "joséa")))     // "joséa" is greater than "José"
-        #expect(!diacriticNameFilter.matches(TestUser(name: "José")))      // "José" is equal
-        #expect(!diacriticNameFilter.matches(TestUser(name: "José")))      // "José" is equal
-        #expect(!diacriticNameFilter.matches(TestUser(name: "Jose")))     // "Jose" is less than "José" (no accent)
-        #expect(!diacriticNameFilter.matches(TestUser(name: "jose")))     // "jose" is less than "José" (no accent)
+        #expect(diacriticNameFilter.matches(TestUser(name: "Joséa")))     // "Joséa" > "José" (lexicographic)
+        #expect(diacriticNameFilter.matches(TestUser(name: "joséa")))     // "joséa" > "José" (lexicographic: lowercase > uppercase)
+        #expect(!diacriticNameFilter.matches(TestUser(name: "José")))     // "José" == "José" (not greater)
+        #expect(!diacriticNameFilter.matches(TestUser(name: "Jose")))     // "Jose" < "José" (no accent)
+        #expect(diacriticNameFilter.matches(TestUser(name: "jose")))      // "jose" > "José" (lexicographic: lowercase > uppercase)
     }
     
     @Test func filterMatchingIsGreaterOrEqual() {
@@ -533,14 +547,22 @@ struct Filter_Tests {
         #expect(createdAtFilter.matches(TestUser(createdAt: testDate)))      // testDate >= testDate
         #expect(!createdAtFilter.matches(TestUser(createdAt: earlierDate))) // earlierDate < testDate
         
-        // Test diacritic string comparison
+        // Test lexicographic string comparison
+        let lexicographicNameFilter = TestFilter.greaterOrEqual(.name, "John")
+        #expect(lexicographicNameFilter.matches(TestUser(name: "Johnny")))  // "Johnny" > "John" (lexicographic)
+        #expect(lexicographicNameFilter.matches(TestUser(name: "Mike")))    // "Mike" > "John" (lexicographic)
+        #expect(lexicographicNameFilter.matches(TestUser(name: "john")))    // "john" > "John" (lexicographic: lowercase > uppercase)
+        #expect(lexicographicNameFilter.matches(TestUser(name: "John")))    // "John" == "John" (equal)
+        #expect(!lexicographicNameFilter.matches(TestUser(name: "JOHN")))   // "JOHN" < "John" (lexicographic: uppercase < lowercase)
+        #expect(!lexicographicNameFilter.matches(TestUser(name: "Alice")))  // "Alice" < "John" (lexicographic)
+        
+        // Test diacritic string comparison (lexicographic)
         let diacriticNameFilter = TestFilter.greaterOrEqual(.name, "José")
-        #expect(diacriticNameFilter.matches(TestUser(name: "Joséa")))     // "Joséa" is greater than "José"
-        #expect(diacriticNameFilter.matches(TestUser(name: "joséa")))     // "joséa" is greater than "José"
-        #expect(diacriticNameFilter.matches(TestUser(name: "José")))      // "José" is equal
-        #expect(diacriticNameFilter.matches(TestUser(name: "José")))      // "José" is equal
-        #expect(!diacriticNameFilter.matches(TestUser(name: "Jose")))     // "Jose" is less than "José" (no accent)
-        #expect(!diacriticNameFilter.matches(TestUser(name: "jose")))     // "jose" is less than "José" (no accent)
+        #expect(diacriticNameFilter.matches(TestUser(name: "Joséa")))     // "Joséa" > "José" (lexicographic)
+        #expect(diacriticNameFilter.matches(TestUser(name: "joséa")))     // "joséa" > "José" (lexicographic: lowercase > uppercase)
+        #expect(diacriticNameFilter.matches(TestUser(name: "José")))      // "José" == "José" (equal)
+        #expect(!diacriticNameFilter.matches(TestUser(name: "Jose")))     // "Jose" < "José" (no accent)
+        #expect(diacriticNameFilter.matches(TestUser(name: "jose")))      // "jose" > "José" (lexicographic: lowercase > uppercase)
     }
     
     @Test func filterMatchingIsLess() {
@@ -570,14 +592,22 @@ struct Filter_Tests {
         #expect(!createdAtFilter.matches(TestUser(createdAt: laterDate)))     // laterDate > testDate
         #expect(!createdAtFilter.matches(TestUser(createdAt: evenLaterDate))) // evenLaterDate > testDate
         
-        // Test diacritic string comparison
+        // Test lexicographic string comparison
+        let lexicographicNameFilter = TestFilter.less(.name, "John")
+        #expect(!lexicographicNameFilter.matches(TestUser(name: "Johnny"))) // "Johnny" > "John" (not less)
+        #expect(!lexicographicNameFilter.matches(TestUser(name: "Mike")))   // "Mike" > "John" (not less)
+        #expect(!lexicographicNameFilter.matches(TestUser(name: "john")))   // "john" > "John" (not less: lowercase > uppercase)
+        #expect(!lexicographicNameFilter.matches(TestUser(name: "John")))   // "John" == "John" (not less)
+        #expect(lexicographicNameFilter.matches(TestUser(name: "JOHN")))    // "JOHN" < "John" (lexicographic: uppercase < lowercase)
+        #expect(lexicographicNameFilter.matches(TestUser(name: "Alice")))   // "Alice" < "John" (lexicographic)
+        
+        // Test diacritic string comparison (lexicographic)
         let diacriticNameFilter = TestFilter.less(.name, "José")
-        #expect(!diacriticNameFilter.matches(TestUser(name: "Joséa")))     // "Joséa" is greater than "José"
-        #expect(!diacriticNameFilter.matches(TestUser(name: "joséa")))     // "joséa" is greater than "José"
-        #expect(!diacriticNameFilter.matches(TestUser(name: "José")))      // "José" is equal
-        #expect(!diacriticNameFilter.matches(TestUser(name: "José")))      // "José" is equal
-        #expect(diacriticNameFilter.matches(TestUser(name: "Jose")))     // "Jose" is less than "José" (no accent)
-        #expect(diacriticNameFilter.matches(TestUser(name: "jose")))     // "jose" is less than "José" (no accent)
+        #expect(!diacriticNameFilter.matches(TestUser(name: "Joséa")))     // "Joséa" > "José" (not less)
+        #expect(!diacriticNameFilter.matches(TestUser(name: "joséa")))     // "joséa" > "José" (not less: lowercase > uppercase)
+        #expect(!diacriticNameFilter.matches(TestUser(name: "José")))      // "José" == "José" (not less)
+        #expect(diacriticNameFilter.matches(TestUser(name: "Jose")))       // "Jose" < "José" (no accent)
+        #expect(!diacriticNameFilter.matches(TestUser(name: "jose")))      // "jose" > "José" (not less: lowercase > uppercase)
     }
     
     @Test func filterMatchingIsLessOrEqual() {
@@ -607,14 +637,22 @@ struct Filter_Tests {
         #expect(!createdAtFilter.matches(TestUser(createdAt: laterDate)))     // laterDate > testDate
         #expect(!createdAtFilter.matches(TestUser(createdAt: evenLaterDate))) // evenLaterDate > testDate
         
-        // Test diacritic string comparison
+        // Test lexicographic string comparison
+        let lexicographicNameFilter = TestFilter.lessOrEqual(.name, "John")
+        #expect(!lexicographicNameFilter.matches(TestUser(name: "Johnny"))) // "Johnny" > "John" (not less or equal)
+        #expect(!lexicographicNameFilter.matches(TestUser(name: "Mike")))   // "Mike" > "John" (not less or equal)
+        #expect(!lexicographicNameFilter.matches(TestUser(name: "john")))   // "john" > "John" (not less or equal: lowercase > uppercase)
+        #expect(lexicographicNameFilter.matches(TestUser(name: "John")))    // "John" == "John" (equal)
+        #expect(lexicographicNameFilter.matches(TestUser(name: "JOHN")))    // "JOHN" < "John" (lexicographic: uppercase < lowercase)
+        #expect(lexicographicNameFilter.matches(TestUser(name: "Alice")))   // "Alice" < "John" (lexicographic)
+        
+        // Test diacritic string comparison (lexicographic)
         let diacriticNameFilter = TestFilter.lessOrEqual(.name, "José")
-        #expect(!diacriticNameFilter.matches(TestUser(name: "Joséa")))     // "Joséa" is greater than "José"
-        #expect(!diacriticNameFilter.matches(TestUser(name: "joséa")))     // "joséa" is greater than "José"
-        #expect(diacriticNameFilter.matches(TestUser(name: "José")))      // "José" is equal
-        #expect(diacriticNameFilter.matches(TestUser(name: "José")))      // "José" is equal
-        #expect(diacriticNameFilter.matches(TestUser(name: "Jose")))     // "Jose" is less than "José" (no accent)
-        #expect(diacriticNameFilter.matches(TestUser(name: "jose")))     // "jose" is less than "José" (no accent)
+        #expect(!diacriticNameFilter.matches(TestUser(name: "Joséa")))     // "Joséa" > "José" (not less or equal)
+        #expect(!diacriticNameFilter.matches(TestUser(name: "joséa")))     // "joséa" > "José" (not less or equal: lowercase > uppercase)
+        #expect(diacriticNameFilter.matches(TestUser(name: "José")))      // "José" == "José" (equal)
+        #expect(diacriticNameFilter.matches(TestUser(name: "Jose")))       // "Jose" < "José" (no accent)
+        #expect(!diacriticNameFilter.matches(TestUser(name: "jose")))      // "jose" > "José" (not less or equal: lowercase > uppercase)
     }
     
     @Test func filterMatchingIn() {
@@ -645,12 +683,21 @@ struct Filter_Tests {
         #expect(!nameFilter.matches(TestUser(name: "Mike"))) // "Mike" is not in ["John", "Jane", "Bob", "Alice"]
         #expect(!nameFilter.matches(TestUser(name: "Sarah"))) // "Sarah" is not in ["John", "Jane", "Bob", "Alice"]
         
-        // Test diacritic string comparison
+        // Test case-sensitive string comparison
+        let caseSensitiveNameFilter = TestFilter.in(.name, ["John", "Jane", "Bob"])
+        #expect(caseSensitiveNameFilter.matches(TestUser(name: "John")))  // "John" is in ["John", "Jane", "Bob"]
+        #expect(caseSensitiveNameFilter.matches(TestUser(name: "Jane")))  // "Jane" is in ["John", "Jane", "Bob"]
+        #expect(caseSensitiveNameFilter.matches(TestUser(name: "Bob")))   // "Bob" is in ["John", "Jane", "Bob"]
+        #expect(!caseSensitiveNameFilter.matches(TestUser(name: "john"))) // "john" (lowercase) is not in the array
+        #expect(!caseSensitiveNameFilter.matches(TestUser(name: "JOHN"))) // "JOHN" (uppercase) is not in the array
+        
+        // Test diacritic string comparison (case-sensitive)
         let diacriticNameFilter = TestFilter.in(.name, ["José", "François", "Müller"])
         #expect(diacriticNameFilter.matches(TestUser(name: "José")))      // "José" is in ["José", "François", "Müller"]
         #expect(diacriticNameFilter.matches(TestUser(name: "François")))  // "François" is in ["José", "François", "Müller"]
         #expect(diacriticNameFilter.matches(TestUser(name: "Müller")))    // "Müller" is in ["José", "François", "Müller"]
         #expect(!diacriticNameFilter.matches(TestUser(name: "Jose")))     // "Jose" (no accent) is not in the array
+        #expect(!diacriticNameFilter.matches(TestUser(name: "josé")))     // "josé" (lowercase with accent) is not in the array
         #expect(!diacriticNameFilter.matches(TestUser(name: "Francois"))) // "Francois" (no accent) is not in the array
         
         // Test Bool property (isActive) with array of booleans
@@ -765,8 +812,8 @@ struct Filter_Tests {
     }
     
     @Test func filterMatchingAutocomplete() {
-        // Test case-insensitive autocomplete with name property
-        // $autocomplete should match from the beginning of the field value (anchored search)
+        // Test PostgreSQL-style full-text search autocomplete with name property
+        // $autocomplete should match at word boundaries (PostgreSQL-style)
         let nameAutocompleteFilter = TestFilter.autocomplete(.name, "jo")
         #expect(nameAutocompleteFilter.matches(TestUser(name: "John")))      // "John" starts with "jo" (case-insensitive)
         #expect(nameAutocompleteFilter.matches(TestUser(name: "JOHN")))      // "JOHN" starts with "jo" (case-insensitive)
@@ -819,16 +866,63 @@ struct Filter_Tests {
         let endSubstringFilter = TestFilter.autocomplete(.name, "ny")
         #expect(!endSubstringFilter.matches(TestUser(name: "Johnny")))      // "Johnny" does not start with "ny"
         #expect(!endSubstringFilter.matches(TestUser(name: "JOHNNY")))      // "JOHNNY" does not start with "ny"
+        
+        // Test PostgreSQL-style word boundary matching with multi-word text
+        let multiWordFilter = TestFilter.autocomplete(.name, "john")
+        #expect(multiWordFilter.matches(TestUser(name: "John Smith")))      // "John Smith" - "John" starts with "john"
+        #expect(multiWordFilter.matches(TestUser(name: "JOHN DOE")))        // "JOHN DOE" - "JOHN" starts with "john"
+        #expect(multiWordFilter.matches(TestUser(name: "john-doe")))        // "john-doe" - "john" starts with "john"
+        #expect(multiWordFilter.matches(TestUser(name: "john.doe")))        // "john.doe" - "john" starts with "john"
+        #expect(multiWordFilter.matches(TestUser(name: "Smith John")))     // "Smith John" - "John" starts with "john" (case insensitive)
+        #expect(multiWordFilter.matches(TestUser(name: "Johnson")))        // "Johnson" - "Johnson" starts with "john" (case insensitive)
+        
+        // Test word boundary matching with partial words
+        let partialWordFilter = TestFilter.autocomplete(.name, "smi")
+        #expect(partialWordFilter.matches(TestUser(name: "John Smith")))    // "John Smith" - "Smith" starts with "smi"
+        #expect(partialWordFilter.matches(TestUser(name: "SMITH JOHN")))    // "SMITH JOHN" - "SMITH" starts with "smi"
+        #expect(partialWordFilter.matches(TestUser(name: "smith-jones")))   // "smith-jones" - "smith" starts with "smi"
+        #expect(!partialWordFilter.matches(TestUser(name: "Johnson")))      // "Johnson" - "Johnson" does not start with "smi"
+        
+        // Test case-insensitive word boundary matching
+        let caseInsensitiveFilter = TestFilter.autocomplete(.name, "JANE")
+        #expect(caseInsensitiveFilter.matches(TestUser(name: "Jane Doe")))  // "Jane Doe" - "Jane" starts with "JANE" (case-insensitive)
+        #expect(caseInsensitiveFilter.matches(TestUser(name: "jane smith"))) // "jane smith" - "jane" starts with "JANE" (case-insensitive)
+        #expect(caseInsensitiveFilter.matches(TestUser(name: "JANE DOE")))  // "JANE DOE" - "JANE" starts with "JANE"
+        #expect(caseInsensitiveFilter.matches(TestUser(name: "John Jane"))) // "John Jane" - Second word starts with "JANE"
+        
+        // Test punctuation handling in word boundaries
+        let punctuationFilter = TestFilter.autocomplete(.name, "o'connor")
+        #expect(punctuationFilter.matches(TestUser(name: "O'Connor Smith"))) // "O'Connor Smith" - "O'Connor" starts with "o'connor"
+        #expect(punctuationFilter.matches(TestUser(name: "o'connor-jones"))) // "o'connor-jones" - "o'connor" starts with "o'connor"
+        #expect(!punctuationFilter.matches(TestUser(name: "Connor O'Brien"))) // "Connor O'Brien" - "Connor" does not start with "o'connor"
+        
+        // Test empty query (should not match)
+        let emptyQueryFilter = TestFilter.autocomplete(.name, "")
+        #expect(!emptyQueryFilter.matches(TestUser(name: "John")))          // Empty query should not match anything
+        
+        // Test single character word boundary matching
+        let singleCharWordFilter = TestFilter.autocomplete(.name, "a")
+        #expect(singleCharWordFilter.matches(TestUser(name: "Alice Smith"))) // "Alice Smith" - "Alice" starts with "a"
+        #expect(singleCharWordFilter.matches(TestUser(name: "John Adams")))  // "John Adams" - "Adams" starts with "a"
+        #expect(!singleCharWordFilter.matches(TestUser(name: "John Smith"))) // "John Smith" - no word starts with "a"
     }
     
     @Test func filterMatchingContains() {
-        // Test contains filter with array property (tags)
+        // Test contains filter with array property (tags) - single value
         let tagsContainsFilter = TestFilter.contains(.tags, "orange")
         #expect(tagsContainsFilter.matches(TestUser(tags: ["orange", "yellow"]))) // ["orange", "yellow"] contains "orange"
         #expect(tagsContainsFilter.matches(TestUser(tags: ["orange"])))         // ["orange"] contains "orange"
         #expect(tagsContainsFilter.matches(TestUser(tags: ["red", "orange", "blue"]))) // ["red", "orange", "blue"] contains "orange"
         #expect(!tagsContainsFilter.matches(TestUser(tags: ["red", "blue"])))  // ["red", "blue"] does not contain "orange"
         #expect(!tagsContainsFilter.matches(TestUser(tags: [])))              // [] does not contain "orange"
+        
+        // Test contains filter with array property (tags) - array of values
+        let tagsArrayContainsFilter = TestFilter.contains(.tags, ["orange", "yellow"])
+        #expect(tagsArrayContainsFilter.matches(TestUser(tags: ["orange", "yellow", "red"]))) // ["orange", "yellow", "red"] contains ["orange", "yellow"]
+        #expect(tagsArrayContainsFilter.matches(TestUser(tags: ["red", "orange", "yellow", "blue"]))) // ["red", "orange", "yellow", "blue"] contains ["orange", "yellow"]
+        #expect(!tagsArrayContainsFilter.matches(TestUser(tags: ["orange", "red"]))) // ["orange", "red"] does not contain ["orange", "yellow"]
+        #expect(!tagsArrayContainsFilter.matches(TestUser(tags: ["yellow"]))) // ["yellow"] does not contain ["orange", "yellow"]
+        #expect(!tagsArrayContainsFilter.matches(TestUser(tags: []))) // [] does not contain ["orange", "yellow"]
         
         // Test contains filter with dictionary property (searchData)
         let searchDataContainsFilter = TestFilter.contains(.searchData, [
@@ -851,13 +945,6 @@ struct Filter_Tests {
                 "street": .string("Kleine-Gartmanplantsoen 21-6")
             ])
         ]))) // searchData contains the specified address dictionary
-        
-        #expect(searchDataContainsFilter.matches(TestUser(searchData: [
-            "Address": .dictionary([
-                "Country": .string("NL"),
-                "City": .string("Amsterdam")
-            ])
-        ]))) // searchData caseinsesitive match
         
         #expect(!searchDataContainsFilter.matches(TestUser(searchData: [
             "address": .dictionary([
@@ -895,13 +982,20 @@ struct Filter_Tests {
         #expect(!emptyDictContainsFilter.matches(TestUser(searchData: [
             "field": .string("value")
         ]))) // ["field": "value"] does not contain [:]
+        
+        // Test contains filter with non-array, non-dictionary values (should return false)
+        let stringContainsFilter = TestFilter.contains(.name, "test")
+        #expect(!stringContainsFilter.matches(TestUser(name: "test"))) // String values don't support contains
+        
+        let intContainsFilter = TestFilter.contains(.age, 25)
+        #expect(!intContainsFilter.matches(TestUser(age: 25))) // Int values don't support contains
     }
     
     @Test func filterMatchingPathExists() {
         // Test pathExists filter with simple nested path
         let simplePathFilter = TestFilter.pathExists(.searchData, "address")
         #expect(simplePathFilter.matches(TestUser(searchData: [
-            "Address": .dictionary([
+            "address": .dictionary([
                 "country": .string("NL"),
                 "city": .string("Amsterdam")
             ])
@@ -993,5 +1087,159 @@ struct Filter_Tests {
                 "name": .string("Jose")
             ])
         ]))) // searchData does not contain "user.nom" path (different field name)
+    }
+    
+    @Test func filterMatchingAnd() {
+        // Test AND filter with multiple conditions that all match
+        let ageFilter = TestFilter.greater(.age, 18)
+        let nameFilter = TestFilter.equal(.name, "John")
+        let activeFilter = TestFilter.equal(.isActive, true)
+        
+        let andFilter = TestFilter.and([ageFilter, nameFilter, activeFilter])
+        #expect(andFilter.matches(TestUser(name: "John", age: 25, isActive: true))) // All conditions match
+        
+        // Test AND filter with one condition that doesn't match
+        #expect(!andFilter.matches(TestUser(name: "John", age: 17, isActive: true))) // Age condition fails
+        #expect(!andFilter.matches(TestUser(name: "Jane", age: 25, isActive: true))) // Name condition fails
+        #expect(!andFilter.matches(TestUser(name: "John", age: 25, isActive: false))) // Active condition fails
+        
+        // Test AND filter with multiple conditions that don't match
+        #expect(!andFilter.matches(TestUser(name: "Jane", age: 17, isActive: false))) // All conditions fail
+        
+        // Test nested AND filters
+        let nestedAgeFilter = TestFilter.greater(.age, 20)
+        let nestedHeightFilter = TestFilter.greater(.height, 170.0)
+        let nestedAndFilter = TestFilter.and([nestedAgeFilter, nestedHeightFilter])
+        let combinedAndFilter = TestFilter.and([andFilter, nestedAndFilter])
+        
+        #expect(combinedAndFilter.matches(TestUser(name: "John", age: 25, height: 180.0, isActive: true))) // All conditions match
+        #expect(!combinedAndFilter.matches(TestUser(name: "John", age: 25, height: 160.0, isActive: true))) // Height condition fails
+    }
+    
+    @Test func filterMatchingOr() {
+        // Test OR filter with multiple conditions where one matches
+        let nameFilter1 = TestFilter.equal(.name, "John")
+        let nameFilter2 = TestFilter.equal(.name, "Jane")
+        let ageFilter = TestFilter.greater(.age, 30)
+        
+        let orFilter = TestFilter.or([nameFilter1, nameFilter2, ageFilter])
+        #expect(orFilter.matches(TestUser(name: "John"))) // First condition matches
+        #expect(orFilter.matches(TestUser(name: "Jane"))) // Second condition matches
+        #expect(orFilter.matches(TestUser(age: 35))) // Third condition matches
+        #expect(orFilter.matches(TestUser(name: "John", age: 35))) // Multiple conditions match
+        
+        // Test OR filter with no conditions that match
+        #expect(!orFilter.matches(TestUser(name: "Bob", age: 25))) // No conditions match
+        
+        // Test nested OR filters
+        let nestedNameFilter = TestFilter.equal(.name, "Bob")
+        let nestedOrFilter = TestFilter.or([nameFilter1, nestedNameFilter])
+        let combinedOrFilter = TestFilter.or([orFilter, nestedOrFilter])
+        
+        #expect(combinedOrFilter.matches(TestUser(name: "John"))) // Matches through first OR
+        #expect(combinedOrFilter.matches(TestUser(name: "Bob"))) // Matches through second OR
+        #expect(!combinedOrFilter.matches(TestUser(name: "Alice", age: 25))) // No conditions match
+    }
+    
+    @Test func filterMatchingTypeMismatches() {
+        // Test type mismatches in comparison operators - should return false
+        
+        // String vs Number comparisons
+        let stringVsNumberFilter = TestFilter.greater(.name, 25)
+        #expect(!stringVsNumberFilter.matches(TestUser(name: "John"))) // String vs Number should not match
+        
+        let numberVsStringFilter = TestFilter.greater(.age, "25")
+        #expect(!numberVsStringFilter.matches(TestUser(age: 30))) // Number vs String should not match
+        
+        // Test lexicographic string comparison edge cases
+        let stringComparisonFilter = TestFilter.greater(.name, "John")
+        #expect(!stringComparisonFilter.matches(TestUser(name: "John"))) // Equal strings should not be greater
+        #expect(stringComparisonFilter.matches(TestUser(name: "john"))) // Lowercase > uppercase lexicographically
+        #expect(!stringComparisonFilter.matches(TestUser(name: "JOHN"))) // Uppercase < lowercase lexicographically
+        
+        // Test number comparison edge cases
+        let numberComparisonFilter = TestFilter.greater(.age, 25)
+        #expect(!numberComparisonFilter.matches(TestUser(age: 25))) // Equal numbers should not be greater
+        #expect(numberComparisonFilter.matches(TestUser(age: 26))) // 26 > 25
+        #expect(!numberComparisonFilter.matches(TestUser(age: 24))) // 24 < 25
+        
+        // Test double comparison edge cases
+        let doubleComparisonFilter = TestFilter.greater(.height, 175.0)
+        #expect(!doubleComparisonFilter.matches(TestUser(height: 175.0))) // Equal doubles should not be greater
+        #expect(doubleComparisonFilter.matches(TestUser(height: 175.1))) // 175.1 > 175.0
+        #expect(!doubleComparisonFilter.matches(TestUser(height: 174.9))) // 174.9 < 175.0
+    }
+    
+    @Test func filterMatchingEdgeCases() {
+        // Test empty string comparisons
+        let emptyStringFilter = TestFilter.equal(.name, "")
+        #expect(emptyStringFilter.matches(TestUser(name: ""))) // Empty string should match empty string
+        #expect(!emptyStringFilter.matches(TestUser(name: "John"))) // Non-empty should not match empty
+        
+        // Test zero value comparisons
+        let zeroAgeFilter = TestFilter.equal(.age, 0)
+        #expect(zeroAgeFilter.matches(TestUser(age: 0))) // Zero should match zero
+        #expect(!zeroAgeFilter.matches(TestUser(age: 1))) // Non-zero should not match zero
+        
+        let zeroHeightFilter = TestFilter.equal(.height, 0.0)
+        #expect(zeroHeightFilter.matches(TestUser(height: 0.0))) // Zero double should match zero double
+        #expect(!zeroHeightFilter.matches(TestUser(height: 0.1))) // Non-zero should not match zero
+        
+        // Test boolean comparisons
+        let trueFilter = TestFilter.equal(.isActive, true)
+        #expect(trueFilter.matches(TestUser(isActive: true))) // True should match true
+        #expect(!trueFilter.matches(TestUser(isActive: false))) // False should not match true
+        
+        let falseFilter = TestFilter.equal(.isActive, false)
+        #expect(falseFilter.matches(TestUser(isActive: false))) // False should match false
+        #expect(!falseFilter.matches(TestUser(isActive: true))) // True should not match false
+                
+        // Test URL edge cases
+        let urlFilter = TestFilter.equal(.homepage, URL(string: "https://example.com")!)
+        #expect(urlFilter.matches(TestUser(homepage: URL(string: "https://example.com")!))) // Same URL should match
+        #expect(!urlFilter.matches(TestUser(homepage: URL(string: "https://different.com")!))) // Different URL should not match
+        
+        // Test nil URL (optional)
+        let nilURLFilter = TestFilter.equal(.homepage, URL(string: "https://example.com")!)
+        #expect(!nilURLFilter.matches(TestUser(homepage: nil))) // Nil URL should not match non-nil URL
+    }
+    
+    @Test func filterMatchingAutocompleteEdgeCases() {
+        // Test empty query (should not match anything)
+        let emptyQueryFilter = TestFilter.autocomplete(.name, "")
+        #expect(!emptyQueryFilter.matches(TestUser(name: "John"))) // Empty query should not match
+        #expect(!emptyQueryFilter.matches(TestUser(name: ""))) // Empty query should not match empty string
+        
+        // Test single character matching
+        let singleCharFilter = TestFilter.autocomplete(.name, "a")
+        #expect(singleCharFilter.matches(TestUser(name: "Alice"))) // Should match "Alice"
+        #expect(singleCharFilter.matches(TestUser(name: "a"))) // Should match single "a"
+        #expect(!singleCharFilter.matches(TestUser(name: "Bob"))) // Should not match "Bob"
+        
+        // Test punctuation in word boundaries
+        let punctuationFilter = TestFilter.autocomplete(.name, "o'connor")
+        #expect(punctuationFilter.matches(TestUser(name: "O'Connor"))) // Should match with apostrophe
+        #expect(!punctuationFilter.matches(TestUser(name: "OConnor"))) // Should not match without apostrophe
+        
+        // Test non-string values (should return false)
+        let nonStringFilter = TestFilter.autocomplete(.age, "25")
+        #expect(!nonStringFilter.matches(TestUser(age: 25))) // Non-string values should not match autocomplete
+    }
+    
+    @Test func filterMatchingQueryEdgeCases() {
+        // Test empty query (should not match anything)
+        let emptyQueryFilter = TestFilter.query(.name, "")
+        #expect(!emptyQueryFilter.matches(TestUser(name: "John"))) // Empty query should not match
+        #expect(!emptyQueryFilter.matches(TestUser(name: ""))) // Empty query should not match empty string
+        
+        // Test non-string values (should return false)
+        let nonStringFilter = TestFilter.query(.age, "25")
+        #expect(!nonStringFilter.matches(TestUser(age: 25))) // Non-string values should not match query
+        
+        // Test exact match
+        let exactMatchFilter = TestFilter.query(.name, "John")
+        #expect(exactMatchFilter.matches(TestUser(name: "John"))) // Exact match should work
+        #expect(exactMatchFilter.matches(TestUser(name: "JOHN"))) // Case-insensitive exact match should work
+        #expect(exactMatchFilter.matches(TestUser(name: "john"))) // Case-insensitive exact match should work
     }
 }

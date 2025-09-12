@@ -4,7 +4,7 @@
 
 import Foundation
 
-public struct AnyFilterMatcher<Model>: Sendable, Equatable where Model: Sendable {
+public struct AnyFilterMatcher<Model>: Sendable where Model: Sendable {
     private let match: @Sendable (Model, any FilterValue, FilterOperator) -> Bool
 
     public init<Value>(localValue: @escaping @Sendable (Model) -> Value?) where Value: FilterValue {
@@ -13,10 +13,6 @@ public struct AnyFilterMatcher<Model>: Sendable, Equatable where Model: Sendable
     
     func match(_ model: Model, to value: any FilterValue, filterOperator: FilterOperator) -> Bool {
         match(model, value, filterOperator)
-    }
-    
-    public static func == (lhs: AnyFilterMatcher<Model>, rhs: AnyFilterMatcher<Model>) -> Bool {
-        return true
     }
 }
 
@@ -105,16 +101,13 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
     }
 
     static func isEqual(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
-        switch (localRawJSONValue, filterRawJSONValue) {
-        case (.string(let lhsValue), .string(let rhsValue)): lhsValue.localizedCaseInsensitiveCompare(rhsValue) == .orderedSame
-        default: localRawJSONValue == filterRawJSONValue
-        }
+        localRawJSONValue == filterRawJSONValue
     }
     
     static func isGreater(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
         switch (localRawJSONValue, filterRawJSONValue) {
         case (.number(let lhsValue), .number(let rhsValue)): lhsValue > rhsValue
-        case (.string(let lhsValue), .string(let rhsValue)): lhsValue.localizedCaseInsensitiveCompare(rhsValue) == .orderedDescending
+        case (.string(let lhsValue), .string(let rhsValue)): rhsValue.lexicographicallyPrecedes(lhsValue)
         default: false
         }
     }
@@ -122,7 +115,7 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
     static func isGreaterOrEqual(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
         switch (localRawJSONValue, filterRawJSONValue) {
         case (.number(let lhsValue), .number(let rhsValue)): lhsValue >= rhsValue
-        case (.string(let lhsValue), .string(let rhsValue)): lhsValue.localizedCaseInsensitiveCompare(rhsValue) != .orderedAscending
+        case (.string(let lhsValue), .string(let rhsValue)): rhsValue.lexicographicallyPrecedes(lhsValue) || rhsValue == lhsValue
         default: false
         }
     }
@@ -130,7 +123,7 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
     static func isLess(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
         switch (localRawJSONValue, filterRawJSONValue) {
         case (.number(let lhsValue), .number(let rhsValue)): lhsValue < rhsValue
-        case (.string(let lhsValue), .string(let rhsValue)): lhsValue.localizedCaseInsensitiveCompare(rhsValue) == .orderedAscending
+        case (.string(let lhsValue), .string(let rhsValue)): lhsValue.lexicographicallyPrecedes(rhsValue)
         default: false
         }
     }
@@ -138,7 +131,7 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
     static func isLessOrEqual(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
         switch (localRawJSONValue, filterRawJSONValue) {
         case (.number(let lhsValue), .number(let rhsValue)): lhsValue <= rhsValue
-        case (.string(let lhsValue), .string(let rhsValue)): lhsValue.localizedCaseInsensitiveCompare(rhsValue) != .orderedDescending
+        case (.string(let lhsValue), .string(let rhsValue)): lhsValue.lexicographicallyPrecedes(rhsValue) || lhsValue == rhsValue
         default: false
         }
     }
@@ -146,7 +139,7 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
     static func autocomplete(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
         switch (localRawJSONValue, filterRawJSONValue) {
         case (.string(let localStringValue), .string(let filterStringValue)):
-            return localStringValue.range(of: filterStringValue, options: [.anchored, .caseInsensitive], locale: .autoupdatingCurrent) != nil
+            return Self.postgreSQLFullTextSearch(anchored: true, text: localStringValue, query: filterStringValue)
         default:
             return false
         }
@@ -155,7 +148,7 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
     static func query(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
         switch (localRawJSONValue, filterRawJSONValue) {
         case (.string(let localStringValue), .string(let filterStringValue)):
-            return localStringValue.localizedCaseInsensitiveContains(filterStringValue)
+            return Self.postgreSQLFullTextSearch(anchored: false, text: localStringValue, query: filterStringValue)
         default:
             return false
         }
@@ -163,19 +156,21 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
     
     static func contains(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
         switch (localRawJSONValue, filterRawJSONValue) {
-        case (.array(let localArrayValue), _):
-            return localArrayValue.containsLocalizedCaseInsensitive(filterRawJSONValue)
+        case (.array(let localArrayValue), .array(let filterArrayValue)):
+            return filterArrayValue.allSatisfy { localArrayValue.contains($0) }
+        case (.array(let localArrayValue), _): // string, number etc
+            return localArrayValue.contains(filterRawJSONValue)
         case (.dictionary(let localDictionaryValue), .dictionary(let filterDictionaryValue)):
             if filterDictionaryValue.isEmpty {
                 return localDictionaryValue.isEmpty
             }
             // Partial matching
             return filterDictionaryValue.allSatisfy { (filterKey, filterValue) in
-                guard let localValue = localDictionaryValue.valueForLocalizedCaseInsensitive(filterKey) else { return false }
-                if contains(localValue, filterValue) {
+                guard let localValue = localDictionaryValue[filterKey] else { return false }
+                if contains(localValue, filterValue) { // array & dictionary
                     return true
                 }
-                // Match single values since dictionary values should be compared
+                // Match single values: strings, numbers
                 return isEqual(localValue, filterValue)
             }
         default:
@@ -186,7 +181,7 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
     static func isIn(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
         switch filterRawJSONValue {
         case .array(let rawJSONArrayValue):
-            return rawJSONArrayValue.containsLocalizedCaseInsensitive(localRawJSONValue)
+            return rawJSONArrayValue.contains(localRawJSONValue)
         default:
             return false
         }
@@ -200,7 +195,7 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
 
             var next: [String: RawJSON]? = dictionaryValue
             for component in components {
-                if let nextValue = next?.valueForLocalizedCaseInsensitive(component) {
+                if let nextValue = next?[component] {
                     next = nextValue.dictionaryValue
                 } else {
                     return false
@@ -211,27 +206,20 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
             return false
         }
     }
-}
-
-private extension Array where Element == RawJSON {
-    func containsLocalizedCaseInsensitive(_ searchElement: Element) -> Bool {
-        switch searchElement {
-        case .string(let stringValue):
-            self.contains(where: { $0.stringValue?.localizedCaseInsensitiveCompare(stringValue) == .orderedSame })
-        default:
-            self.contains(searchElement)
+    
+    // MARK: -
+    
+    /// PostgreSQL-style full-text search for tokenized text and word boundary matching
+    ///
+    /// - Important: This is simplified implementation.
+    private static func postgreSQLFullTextSearch(anchored: Bool, text: String, query: String) -> Bool {
+        guard !query.isEmpty else { return false }
+        let options: String.CompareOptions = anchored ? [.anchored, .caseInsensitive] : [.caseInsensitive]
+        // Entire text starts with the query (single or phrase)
+        if text.range(of: query, options: options) != nil {
+            return true
         }
-    }
-}
-
-private extension Dictionary where Key: StringProtocol {
-    func valueForLocalizedCaseInsensitive(_ searchKey: Key) -> Value? {
-        if let value = self[searchKey] {
-            return value
-        }
-        if let matchingKey = keys.first(where: { $0.localizedCaseInsensitiveCompare(searchKey) == .orderedSame }) {
-            return self[matchingKey]
-        }
-        return nil
+        let words = text.components(separatedBy: CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters))
+        return words.contains(where: { $0.range(of: query, options: options) != nil })
     }
 }

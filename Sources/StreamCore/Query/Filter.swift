@@ -60,7 +60,11 @@ public protocol FilterFieldRepresentable: Sendable {
 }
 
 extension FilterFieldRepresentable {
-    static var groupField: Self { Self(remote: "", localValue: { _ in 0 }) }
+    /// Placeholder value for compound filters.
+    ///
+    /// $and and $or ignore the field itself because the operation does not compare any actual data like other operators are
+    /// This placeholder allows the public API to not have optional field parameter. Note how field is ignored in ``Filter.matches(_:)`` for compound operators.
+    static var compoundOperatorPlaceholderField: Self { Self(remote: "", localValue: { _ in 0 }) }
 }
 
 // MARK: - Filter Building
@@ -140,10 +144,20 @@ extension Filter {
     ///
     /// - Parameters:
     ///   - field: The field to search in.
-    ///   - value: The string to search for.
-    /// - Returns: A filter that matches when the field contains the specified string.
-    public static func contains(_ field: FilterField, _ value: String) -> Self {
+    ///   - value: The value to search for.
+    /// - Returns: A filter that matches when the field contains the specified value.
+    public static func contains<Value>(_ field: FilterField, _ value: Value) -> Self where Value: FilterValue {
         Self(filterOperator: .contains, field: field, value: value)
+    }
+    
+    /// Creates a filter that checks if a field contains specific key-value pairs.
+    ///
+    /// - Parameters:
+    ///   - field: The field to search in.
+    ///   - value: An array of values to search for.
+    /// - Returns: A filter that matches when the field contains the specified key-value pairs.
+    public static func contains<Value>(_ field: FilterField, _ values: [Value]) -> Self where Value: FilterValue {
+        Self(filterOperator: .contains, field: field, value: values)
     }
     
     /// Creates a filter that checks if a field contains specific key-value pairs.
@@ -191,7 +205,7 @@ extension Filter {
     /// - Parameter filters: An array of filters to combine.
     /// - Returns: A filter that matches when all the specified filters match.
     public static func and<F>(_ filters: [F]) -> F where F: Filter, F.FilterField == FilterField {
-        F(filterOperator: .and, field: .groupField, value: filters)
+        F(filterOperator: .and, field: .compoundOperatorPlaceholderField, value: filters)
     }
     
     /// Creates a filter that combines multiple filters with a logical OR operation.
@@ -199,7 +213,7 @@ extension Filter {
     /// - Parameter filters: An array of filters to combine.
     /// - Returns: A filter that matches when any of the specified filters match.
     public static func or<F>(_ filters: [F]) -> F where F: Filter, F.FilterField == FilterField {
-        F(filterOperator: .or, field: .groupField, value: filters)
+        F(filterOperator: .or, field: .compoundOperatorPlaceholderField, value: filters)
     }
 }
 
