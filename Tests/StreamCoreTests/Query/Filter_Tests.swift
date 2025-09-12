@@ -12,22 +12,22 @@ struct Filter_Tests {
     struct TestFilterField: FilterFieldRepresentable {
         typealias Model = TestUser
         let matcher: AnyFilterMatcher<TestUser>
-        let remote: String
+        let rawValue: String
         
-        init<Value>(remote: String, localValue: @escaping @Sendable (TestUser) -> Value?) where Value: FilterValue {
-            self.remote = remote
+        init<Value>(_ rawValue: String, localValue: @escaping @Sendable (TestUser) -> Value?) where Value: FilterValue {
+            self.rawValue = rawValue
             matcher = AnyFilterMatcher(localValue: localValue)
         }
         
-        static let name = Self(remote: "name", localValue: \.name)
-        static let age = Self(remote: "age", localValue: \.age)
-        static let height = Self(remote: "height", localValue: \.height)
-        static let email = Self(remote: "email", localValue: \.email)
-        static let homepage = Self(remote: "homepage", localValue: \.homepage)
-        static let tags = Self(remote: "tags", localValue: \.tags)
-        static let createdAt = Self(remote: "created_at", localValue: \.createdAt)
-        static let isActive = Self(remote: "is_active", localValue: \.isActive)
-        static let searchData = Self(remote: "search_data", localValue: \.searchData)
+        static let name = Self("name", localValue: \.name)
+        static let age = Self("age", localValue: \.age)
+        static let height = Self("height", localValue: \.height)
+        static let email = Self("email", localValue: \.email)
+        static let homepage = Self("homepage", localValue: \.homepage)
+        static let tags = Self("tags", localValue: \.tags)
+        static let createdAt = Self("created_at", localValue: \.createdAt)
+        static let isActive = Self("is_active", localValue: \.isActive)
+        static let searchData = Self("search_data", localValue: \.searchData)
     }
     
     struct TestFilter: Filter {

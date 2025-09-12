@@ -19,14 +19,14 @@ public protocol SortField: Sendable {
     var comparator: AnySortComparator<Model> { get }
     
     /// The string identifier used when sending sort parameters to the remote API.
-    var remote: String { get }
+    var rawValue: String { get }
     
     /// Creates a new sort field with the specified remote identifier and local value extractor.
     ///
     /// - Parameters:
-    ///   - remote: The string identifier used for remote API requests
+    ///   - rawValue: The string identifier used for remote API requests
     ///   - localValue: A closure that extracts the comparable value from a model instance
-    init<Value>(_ remote: String, localValue: @escaping @Sendable (Model) -> Value) where Value: Comparable
+    init<Value>(_ rawValue: String, localValue: @escaping @Sendable (Model) -> Value) where Value: Comparable
 }
 
 /// A sort configuration that combines a sort field with a direction.
@@ -86,7 +86,7 @@ public enum SortDirection: Int, CustomStringConvertible, Sendable {
 
 extension Sort: CustomStringConvertible {
     /// A string representation of the sort configuration in the format "field:direction".
-    public var description: String { "\(field.remote):\(direction)" }
+    public var description: String { "\(field.rawValue):\(direction)" }
 }
 
 // MARK: - Local Sorting Support

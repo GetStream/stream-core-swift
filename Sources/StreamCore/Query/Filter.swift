@@ -49,14 +49,14 @@ public protocol FilterFieldRepresentable: Sendable {
     var matcher: AnyFilterMatcher<Model> { get }
     
     /// The string representation of the field.
-    var remote: String { get }
+    var rawValue: String { get }
     
     /// Creates a new filter field with the specified remote identifier and local value extractor.
     ///
     /// - Parameters:
-    ///   - remote: The string identifier used for remote API requests
+    ///   - rawValue: The string identifier used for remote API requests
     ///   - localValue: A closure that extracts the comparable value from a model instance
-    init<Value>(remote: String, localValue: @escaping @Sendable (Model) -> Value?) where Value: FilterValue
+    init<Value>(_ rawValue: String, localValue: @escaping @Sendable (Model) -> Value?) where Value: FilterValue
 }
 
 extension FilterFieldRepresentable {
@@ -64,7 +64,7 @@ extension FilterFieldRepresentable {
     ///
     /// $and and $or ignore the field itself because the operation does not compare any actual data like other operators are
     /// This placeholder allows the public API to not have optional field parameter. Note how field is ignored in ``Filter.matches(_:)`` for compound operators.
-    static var compoundOperatorPlaceholderField: Self { Self(remote: "", localValue: { _ in 0 }) }
+    static var compoundOperatorPlaceholderField: Self { Self("", localValue: { _ in 0 }) }
 }
 
 // MARK: - Filter Building
@@ -273,7 +273,7 @@ extension Filter {
         } else {
             // Normal filters are encoded in the following form:
             //  { field: { $<operator>: <value> } }
-            return [field.remote: .dictionary([filterOperator.rawValue: value.rawJSON])]
+            return [field.rawValue: .dictionary([filterOperator.rawValue: value.rawJSON])]
         }
     }
 }
