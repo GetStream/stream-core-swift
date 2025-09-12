@@ -4,6 +4,10 @@
 
 import Foundation
 
+/// A filter matcher which rrases the type of the value the filter matches against.
+///
+/// Allows avoiding generics in individual ``Filter`` instances with the cost of manual type matching using `RawJSON`.
+/// ``AnyFilterMatcher`` instances are used by ``FilterFieldRepresentable`` and allow matching values based on the field and operator.
 public struct AnyFilterMatcher<Model>: Sendable where Model: Sendable {
     private let match: @Sendable (Model, any FilterValue, FilterOperator) -> Bool
 
@@ -211,7 +215,7 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
     
     /// PostgreSQL-style full-text search for tokenized text and word boundary matching
     ///
-    /// - Important: This is simplified implementation.
+    /// - Important: This is a simplified implementation.
     private static func postgreSQLFullTextSearch(anchored: Bool, text: String, query: String) -> Bool {
         guard !query.isEmpty else { return false }
         let options: String.CompareOptions = anchored ? [.anchored, .caseInsensitive] : [.caseInsensitive]
