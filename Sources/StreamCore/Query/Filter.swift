@@ -286,23 +286,23 @@ extension FilterValue {
     var rawJSON: RawJSON {
         switch self {
         case let boolValue as Bool:
-            return .bool(boolValue)
+            .bool(boolValue)
         case let dateValue as Date:
-            return .string(RFC3339DateFormatter.string(from: dateValue))
+            .string(RFC3339DateFormatter.string(from: dateValue))
         case let doubleValue as Double:
-            return .number(doubleValue)
+            .number(doubleValue)
         case let intValue as Int:
-            return .number(Double(intValue))
+            .number(Double(intValue))
         case let stringValue as String:
-            return .string(stringValue)
+            .string(stringValue)
         case let urlValue as URL:
-            return .string(urlValue.absoluteString)
+            .string(urlValue.absoluteString)
         case let arrayValue as [any FilterValue]:
-            return .array(arrayValue.map(\.rawJSON))
+            .array(arrayValue.map(\.rawJSON))
         case let dictionaryValue as [String: RawJSON]:
-            return .dictionary(dictionaryValue)
+            .dictionary(dictionaryValue)
         default:
-            return .nil
+            .nil
         }
     }
 }

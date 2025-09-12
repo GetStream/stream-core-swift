@@ -139,18 +139,18 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
     static func autocomplete(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
         switch (localRawJSONValue, filterRawJSONValue) {
         case (.string(let localStringValue), .string(let filterStringValue)):
-            return Self.postgreSQLFullTextSearch(anchored: true, text: localStringValue, query: filterStringValue)
+            Self.postgreSQLFullTextSearch(anchored: true, text: localStringValue, query: filterStringValue)
         default:
-            return false
+            false
         }
     }
     
     static func query(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
         switch (localRawJSONValue, filterRawJSONValue) {
         case (.string(let localStringValue), .string(let filterStringValue)):
-            return Self.postgreSQLFullTextSearch(anchored: false, text: localStringValue, query: filterStringValue)
+            Self.postgreSQLFullTextSearch(anchored: false, text: localStringValue, query: filterStringValue)
         default:
-            return false
+            false
         }
     }
     
@@ -181,9 +181,9 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
     static func isIn(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
         switch filterRawJSONValue {
         case .array(let rawJSONArrayValue):
-            return rawJSONArrayValue.contains(localRawJSONValue)
+            rawJSONArrayValue.contains(localRawJSONValue)
         default:
-            return false
+            false
         }
     }
     
