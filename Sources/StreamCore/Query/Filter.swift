@@ -14,7 +14,7 @@ public protocol Filter: FilterValue, Sendable {
     /// The associated type representing the field that this filter operates on.
     associatedtype FilterField: FilterFieldRepresentable
     
-    /// The field to filter on (e.g., "id", "fid", "user_id").
+    /// The field to filter on (e.g., "id", "feed", "user_id").
     var field: FilterField { get }
     
     /// The value to compare against the field.
@@ -42,21 +42,29 @@ public protocol FilterValue: Sendable {}
 /// This protocol allows for type-safe field names while maintaining the ability to convert to string values
 /// for API communication.
 public protocol FilterFieldRepresentable: Sendable {
-    /// The string representation of the field.
-    var value: String { get }
+    /// The model type that this filter field operates on.
+    associatedtype Model: Sendable
     
-    /// Creates a field representation from a string value.
+    /// A matcher that can be used for local matching operations.
+    var matcher: AnyFilterMatcher<Model> { get }
+    
+    /// The string representation of the field.
+    var rawValue: String { get }
+    
+    /// Creates a new filter field with the specified remote identifier and local value extractor.
     ///
-    /// - Parameter value: The string value representing the field.
-    init(value: String)
+    /// - Parameters:
+    ///   - rawValue: The string identifier used for remote API requests
+    ///   - localValue: A closure that extracts the comparable value from a model instance
+    init<Value>(_ rawValue: String, localValue: @escaping @Sendable (Model) -> Value?) where Value: FilterValue
 }
 
 extension FilterFieldRepresentable {
-    /// Logical AND operator for combining multiple filters.
-    static var and: Self { Self(value: "$and") }
-    
-    /// Logical OR operator for combining multiple filters.
-    static var or: Self { Self(value: "$or") }
+    /// Placeholder value for compound filters.
+    ///
+    /// $and and $or ignore the field itself because the operation does not compare any actual data like other operators are
+    /// This placeholder allows the public API to not have optional field parameter. Note how field is ignored in ``Filter.matches(_:)`` for compound operators.
+    static var compoundOperatorPlaceholderField: Self { Self("", localValue: { _ in 0 }) }
 }
 
 // MARK: - Filter Building
@@ -136,10 +144,20 @@ extension Filter {
     ///
     /// - Parameters:
     ///   - field: The field to search in.
-    ///   - value: The string to search for.
-    /// - Returns: A filter that matches when the field contains the specified string.
-    public static func contains(_ field: FilterField, _ value: String) -> Self {
+    ///   - value: The value to search for.
+    /// - Returns: A filter that matches when the field contains the specified value.
+    public static func contains<Value>(_ field: FilterField, _ value: Value) -> Self where Value: FilterValue {
         Self(filterOperator: .contains, field: field, value: value)
+    }
+    
+    /// Creates a filter that checks if a field contains specific key-value pairs.
+    ///
+    /// - Parameters:
+    ///   - field: The field to search in.
+    ///   - value: An array of values to search for.
+    /// - Returns: A filter that matches when the field contains the specified key-value pairs.
+    public static func contains<Value>(_ field: FilterField, _ values: [Value]) -> Self where Value: FilterValue {
+        Self(filterOperator: .contains, field: field, value: values)
     }
     
     /// Creates a filter that checks if a field contains specific key-value pairs.
@@ -187,7 +205,7 @@ extension Filter {
     /// - Parameter filters: An array of filters to combine.
     /// - Returns: A filter that matches when all the specified filters match.
     public static func and<F>(_ filters: [F]) -> F where F: Filter, F.FilterField == FilterField {
-        F(filterOperator: .and, field: .and, value: filters)
+        F(filterOperator: .and, field: .compoundOperatorPlaceholderField, value: filters)
     }
     
     /// Creates a filter that combines multiple filters with a logical OR operation.
@@ -195,7 +213,7 @@ extension Filter {
     /// - Parameter filters: An array of filters to combine.
     /// - Returns: A filter that matches when any of the specified filters match.
     public static func or<F>(_ filters: [F]) -> F where F: Filter, F.FilterField == FilterField {
-        F(filterOperator: .or, field: .and, value: filters)
+        F(filterOperator: .or, field: .compoundOperatorPlaceholderField, value: filters)
     }
 }
 
@@ -232,6 +250,8 @@ extension Array: FilterValue where Element: FilterValue {}
 /// This allows dictionaries to be used in filters for complex object matching.
 extension Dictionary: FilterValue where Key == String, Value == RawJSON {}
 
+extension Optional: FilterValue where Wrapped: FilterValue {}
+
 // MARK: - Filter to RawJSON Conversion
 
 extension Filter {
@@ -253,7 +273,7 @@ extension Filter {
         } else {
             // Normal filters are encoded in the following form:
             //  { field: { $<operator>: <value> } }
-            return [field.value: .dictionary([filterOperator.rawValue: value.rawJSON])]
+            return [field.rawValue: .dictionary([filterOperator.rawValue: value.rawJSON])]
         }
     }
 }
@@ -282,7 +302,7 @@ extension FilterValue {
         case let dictionaryValue as [String: RawJSON]:
             .dictionary(dictionaryValue)
         default:
-            fatalError("Unimplemented type: \(self)")
+            .nil
         }
     }
 }
