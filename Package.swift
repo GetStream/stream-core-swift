@@ -19,11 +19,17 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "StreamCore"
+            name: "StreamCore",
+            swiftSettings: [
+                .unsafeFlags(["-enable-library-evolution"])
+            ]
         ),
         .target(
             name: "StreamCoreUI",
-            dependencies: ["StreamCore"]
+            dependencies: ["StreamCore"],
+            swiftSettings: [
+                .unsafeFlags(["-enable-library-evolution"])
+            ]
         ),
         .testTarget(
             name: "StreamCoreTests",
