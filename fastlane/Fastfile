@@ -40,7 +40,8 @@ lane :release do |options|
     sdk_names: sdk_names,
     github_repo: github_repo,
     extra_changes: extra_changes,
-    create_pull_request: true
+    create_pull_request: true,
+    use_changelog: false
   )
 end
 
@@ -69,7 +70,8 @@ lane :publish_release do |options|
   publish_ios_sdk(
     skip_git_status_check: false,
     version: release_version,
-    github_repo: github_repo
+    github_repo: github_repo,
+    use_changelog: false
   )
 end
 

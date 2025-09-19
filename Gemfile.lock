@@ -164,7 +164,7 @@ GEM
       bundler
       fastlane
       pry
-    fastlane-plugin-stream_actions (0.3.90)
+    fastlane-plugin-stream_actions (0.3.91)
       xctest_list (= 1.2.1)
     fastlane-plugin-versioning (0.7.1)
     fastlane-sirp (1.0.0)
@@ -348,7 +348,7 @@ DEPENDENCIES
   danger-commit_lint
   fastlane
   fastlane-plugin-lizard
-  fastlane-plugin-stream_actions (= 0.3.90)
+  fastlane-plugin-stream_actions (= 0.3.91)
   fastlane-plugin-versioning
   json
   lefthook
