@@ -641,7 +641,6 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_EMIT_MODULE_INTERFACE = YES;
 				SWIFT_VERSION = 6.0;
 				OTHER_SWIFT_FLAGS = "-enable-library-evolution";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -703,7 +702,6 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_EMIT_MODULE_INTERFACE = YES;
 				SWIFT_VERSION = 6.0;
 				OTHER_SWIFT_FLAGS = "-enable-library-evolution";
 				VALIDATE_PRODUCT = YES;
