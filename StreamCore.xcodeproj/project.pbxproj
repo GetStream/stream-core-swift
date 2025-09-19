@@ -643,6 +643,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_EMIT_MODULE_INTERFACE = YES;
 				SWIFT_VERSION = 6.0;
+				OTHER_SWIFT_FLAGS = "-enable-library-evolution";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -704,6 +705,7 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_MODULE_INTERFACE = YES;
 				SWIFT_VERSION = 6.0;
+				OTHER_SWIFT_FLAGS = "-enable-library-evolution";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
