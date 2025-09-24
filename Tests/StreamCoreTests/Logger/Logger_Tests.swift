@@ -1,8 +1,5 @@
 //
-//  Logger_Tests.swift
-//  StreamCoreTests
-//
-//  Created by Toomas Vahter on 24.09.2025.
+// Copyright © 2025 Stream.io Inc. All rights reserved.
 //
 
 import Testing
