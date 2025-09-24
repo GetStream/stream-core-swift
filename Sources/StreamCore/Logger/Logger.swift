@@ -130,91 +130,157 @@ public struct LogSubsystem: OptionSet, CustomStringConvertible, Sendable {
 }
 
 public enum LogConfig {
+    struct Configuration {
+        var identifier: String = ""
+        var level: LogLevel = .error
+        var dateFormatter: DateFormatter = {
+            let df = DateFormatter()
+            df.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+            return df
+        }()
+        var formatters: [LogFormatter] = []
+        var showDate: Bool = true
+        var showLevel: Bool = true
+        var showIdentifier: Bool = false
+        var showThreadName: Bool = true
+        var showFileName: Bool = true
+        var showLineNumber: Bool = true
+        var showFunctionName: Bool = true
+        var subsystems: LogSubsystem = .all
+        var destinationTypes: [LogDestination.Type] = LogConfig.defaultDestinations
+    }
+    
+    static let configuration = AllocatedUnfairLock<Configuration>(Configuration())
+    
     /// Identifier for the logger. Defaults to empty.
-    public nonisolated(unsafe) static var identifier = "" {
-        didSet {
+    public static var identifier: String {
+        get {
+            configuration.withLock { $0.identifier }
+        }
+        set {
+            configuration.withLock { $0.identifier = newValue }
             invalidateLogger()
         }
     }
     
     /// Output level for the logger.
-    public nonisolated(unsafe) static var level: LogLevel = .error {
-        didSet {
+    public static var level: LogLevel {
+        get {
+            configuration.withLock { $0.level }
+        }
+        set {
+            configuration.withLock { $0.level = newValue }
             invalidateLogger()
         }
     }
     
     /// Date formatter for the logger. Defaults to ISO8601
-    public nonisolated(unsafe) static var dateFormatter: DateFormatter = {
-        let df = DateFormatter()
-        df.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        return df
-    }() {
-        didSet {
+    public static var dateFormatter: DateFormatter {
+        get {
+            configuration.withLock { $0.dateFormatter }
+        }
+        set {
+            configuration.withLock { $0.dateFormatter = newValue }
             invalidateLogger()
         }
     }
     
     /// Log formatters to be applied in order before logs are outputted. Defaults to empty (no formatters).
     /// Please see `LogFormatter` for more info.
-    public nonisolated(unsafe) static var formatters = [LogFormatter]() {
-        didSet {
+    public static var formatters: [LogFormatter] {
+        get {
+            configuration.withLock { $0.formatters }
+        }
+        set {
+            configuration.withLock { $0.formatters = newValue }
             invalidateLogger()
         }
     }
     
     /// Toggle for showing date in logs
-    public nonisolated(unsafe) static var showDate = true {
-        didSet {
+    public static var showDate: Bool {
+        get {
+            configuration.withLock { $0.showDate }
+        }
+        set {
+            configuration.withLock { $0.showDate = newValue }
             invalidateLogger()
         }
     }
     
     /// Toggle for showing log level in logs
-    public nonisolated(unsafe) static var showLevel = true {
-        didSet {
+    public static var showLevel: Bool {
+        get {
+            configuration.withLock { $0.showLevel }
+        }
+        set {
+            configuration.withLock { $0.showLevel = newValue }
             invalidateLogger()
         }
     }
     
     /// Toggle for showing identifier in logs
-    public nonisolated(unsafe) static var showIdentifier = false {
-        didSet {
+    public static var showIdentifier: Bool {
+        get {
+            configuration.withLock { $0.showIdentifier }
+        }
+        set {
+            configuration.withLock { $0.showIdentifier = newValue }
             invalidateLogger()
         }
     }
     
     /// Toggle for showing thread name in logs
-    public nonisolated(unsafe) static var showThreadName = true {
-        didSet {
+    public static var showThreadName: Bool {
+        get {
+            configuration.withLock { $0.showThreadName }
+        }
+        set {
+            configuration.withLock { $0.showThreadName = newValue }
             invalidateLogger()
         }
     }
     
     /// Toggle for showing file name in logs
-    public nonisolated(unsafe) static var showFileName = true {
-        didSet {
+    public static var showFileName: Bool {
+        get {
+            configuration.withLock { $0.showFileName }
+        }
+        set {
+            configuration.withLock { $0.showFileName = newValue }
             invalidateLogger()
         }
     }
     
     /// Toggle for showing line number in logs
-    public nonisolated(unsafe) static var showLineNumber = true {
-        didSet {
+    public static var showLineNumber: Bool {
+        get {
+            configuration.withLock { $0.showLineNumber }
+        }
+        set {
+            configuration.withLock { $0.showLineNumber = newValue }
             invalidateLogger()
         }
     }
     
     /// Toggle for showing function name in logs
-    public nonisolated(unsafe) static var showFunctionName = true {
-        didSet {
+    public static var showFunctionName: Bool {
+        get {
+            configuration.withLock { $0.showFunctionName }
+        }
+        set {
+            configuration.withLock { $0.showFunctionName = newValue }
             invalidateLogger()
         }
     }
     
     /// Subsystems for the logger
-    public nonisolated(unsafe) static var subsystems: LogSubsystem = .all {
-        didSet {
+    public static var subsystems: LogSubsystem {
+        get {
+            configuration.withLock { $0.subsystems }
+        }
+        set {
+            configuration.withLock { $0.subsystems = newValue }
             invalidateLogger()
         }
     }
@@ -223,8 +289,12 @@ public enum LogConfig {
     ///
     /// Logger will initialize the destinations with its own parameters. If you want full control on the parameters, use `destinations` directly,
     /// where you can pass parameters to destination initializers yourself.
-    public nonisolated(unsafe) static var destinationTypes: [LogDestination.Type] = Self.defaultDestinations {
-        didSet {
+    public static var destinationTypes: [LogDestination.Type] {
+        get {
+            configuration.withLock { $0.destinationTypes }
+        }
+        set {
+            configuration.withLock { $0.destinationTypes = newValue }
             invalidateLogger()
         }
     }
@@ -237,7 +307,7 @@ public enum LogConfig {
         }
     }
     
-    private nonisolated(unsafe) static var _destinations: [LogDestination]?
+    private static let _destinations = AllocatedUnfairLock<[LogDestination]?>(nil)
 
     /// Destinations for the default logger. Please see `LogDestination`.
     /// Defaults to only `ConsoleLogDestination`, which only prints the messages.
@@ -245,58 +315,66 @@ public enum LogConfig {
     /// - Important: Other options in `ChatClientConfig.Logging` will not take affect if this is changed.
     public static var destinations: [LogDestination] {
         get {
-            if let destinations = _destinations {
-                return destinations
-            } else {
-                _destinations = destinationTypes.map {
-                    $0.init(
-                        identifier: identifier,
-                        level: level,
-                        subsystems: subsystems,
-                        showDate: showDate,
-                        dateFormatter: dateFormatter,
-                        formatters: formatters,
-                        showLevel: showLevel,
-                        showIdentifier: showIdentifier,
-                        showThreadName: showThreadName,
-                        showFileName: showFileName,
-                        showLineNumber: showLineNumber,
-                        showFunctionName: showFunctionName
-                    )
+            _destinations.withLock { destinations in
+                if let destinations = destinations {
+                    return destinations
+                } else {
+                    let state = configuration.withLock { $0 }
+                    let newDestinations = state.destinationTypes.map {
+                        $0.init(
+                            identifier: state.identifier,
+                            level: state.level,
+                            subsystems: state.subsystems,
+                            showDate: state.showDate,
+                            dateFormatter: state.dateFormatter,
+                            formatters: state.formatters,
+                            showLevel: state.showLevel,
+                            showIdentifier: state.showIdentifier,
+                            showThreadName: state.showThreadName,
+                            showFileName: state.showFileName,
+                            showLineNumber: state.showLineNumber,
+                            showFunctionName: state.showFunctionName
+                        )
+                    }
+                    destinations = newDestinations
+                    return newDestinations
                 }
-                return _destinations!
             }
         }
         set {
+            _destinations.withLock { $0 = newValue }
             invalidateLogger()
-            _destinations = newValue
         }
     }
     
     /// Underlying logger instance to control singleton.
-    private nonisolated(unsafe) static var _logger: Logger?
+    private static let _logger = AllocatedUnfairLock<Logger?>(nil)
 
     /// Logger instance to be used by StreamChat.
     ///
     /// - Important: Other options in `LogConfig` will not take affect if this is changed.
     public static var logger: Logger {
         get {
-            if let logger = _logger {
-                return logger
-            } else {
-                _logger = Logger(identifier: identifier, destinations: destinations)
-                return _logger!
+            _logger.withLock { logger in
+                if let logger {
+                    return logger
+                } else {
+                    let state = configuration.withLock { $0 }
+                    let newLogger = Logger(identifier: state.identifier, destinations: destinations)
+                    logger = newLogger
+                    return newLogger
+                }
             }
         }
         set {
-            _logger = newValue
+            _logger.withLock { $0 = newValue }
         }
     }
     
     /// Invalidates the current logger instance so it can be recreated.
     private static func invalidateLogger() {
-        _logger = nil
-        _destinations = nil
+        _logger.withLock { $0 = nil }
+        _destinations.withLock { $0 = nil }
     }
 }
 
