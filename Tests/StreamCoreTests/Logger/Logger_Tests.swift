@@ -2,14 +2,13 @@
 // Copyright © 2025 Stream.io Inc. All rights reserved.
 //
 
-import Testing
 @testable import StreamCore
+import Testing
 
 struct Logger_Tests {
-
     // MARK: - Concurrent Logger Invalidation Tests
 
-    @Test func test_concurrentLoggerInvalidation() async throws {
+    @Test func concurrentLoggerInvalidation() async throws {
         let iterations = 50
         defer {
             resetLogConfig()
@@ -41,7 +40,7 @@ struct Logger_Tests {
         logger.info("Test message after concurrent invalidation")
     }
 
-    @Test func test_concurrentLoggerAccessDuringInvalidation() async throws {
+    @Test func concurrentLoggerAccessDuringInvalidation() async throws {
         let iterations = 100
         defer {
             resetLogConfig()
@@ -64,7 +63,7 @@ struct Logger_Tests {
         }
     }
 
-    @Test func test_concurrentLoggerInstanceReplacement() async throws {
+    @Test func concurrentLoggerInstanceReplacement() async throws {
         let iterations = 50
         defer {
             resetLogConfig()
@@ -84,7 +83,7 @@ struct Logger_Tests {
         logger.info("Test message after concurrent logger replacement")
     }
 
-    @Test func test_concurrentMixedOperations() async throws {
+    @Test func concurrentMixedOperations() async throws {
         let iterations = 40
         defer {
             resetLogConfig()
@@ -117,7 +116,7 @@ struct Logger_Tests {
         finalLogger.info("Final test message after mixed operations")
     }
 
-    @Test func test_loggerThreadSafetyHighContention() async throws {
+    @Test func loggerThreadSafetyHighContention() async throws {
         let iterations = 200
         defer {
             resetLogConfig()

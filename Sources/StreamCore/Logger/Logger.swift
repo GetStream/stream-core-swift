@@ -138,6 +138,7 @@ public enum LogConfig {
             df.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
             return df
         }()
+
         var formatters: [LogFormatter] = []
         var showDate: Bool = true
         var showLevel: Bool = true
@@ -316,7 +317,7 @@ public enum LogConfig {
     public static var destinations: [LogDestination] {
         get {
             _destinations.withLock { destinations in
-                if let destinations = destinations {
+                if let destinations {
                     return destinations
                 } else {
                     let state = configuration.withLock { $0 }
