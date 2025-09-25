@@ -138,6 +138,6 @@ struct Logger_Tests {
     // MARK: -
     
     private func resetLogConfig() {
-        LogConfig.configuration.withLock { $0 = LogConfig.Configuration() }
+        LogConfig.reset()
     }
 }
