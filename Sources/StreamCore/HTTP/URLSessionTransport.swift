@@ -50,10 +50,12 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
     }
 
     func execute(request: URLRequest) async throws -> (Data, URLResponse) {
-        log.debug(request.cURLRepresentation(in: urlSession))
+        log.debug(request.cURLRepresentation(in: urlSession), subsystems: .httpRequests)
         return try await executeTask(retryPolicy: .fastAndSimple) {
             do {
-                return try await execute(request: request, isRetry: false)
+                let result = try await execute(request: request, isRetry: false)
+                log.debug("URL request response: \(result.1), data:\n\(result.0.debugPrettyPrintedJSON))", subsystems: .httpRequests)
+                return result
             } catch {
                 if error.isTokenExpiredError && tokenProvider != nil {
                     log.debug("Refreshing user token", subsystems: .httpRequests)

@@ -691,7 +691,7 @@ extension Data {
     var debugPrettyPrintedJSON: String {
         do {
             let jsonObject = try JSONSerialization.jsonObject(with: self, options: [])
-            let prettyPrintedData = try JSONSerialization.data(withJSONObject: jsonObject, options: [.prettyPrinted])
+            let prettyPrintedData = try JSONSerialization.data(withJSONObject: jsonObject, options: [.prettyPrinted, .sortedKeys])
             return String(data: prettyPrintedData, encoding: .utf8) ?? "Error: Data to String decoding failed."
         } catch {
             return "<not available string representation>"
