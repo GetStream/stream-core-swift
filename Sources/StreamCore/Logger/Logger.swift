@@ -130,125 +130,39 @@ public struct LogSubsystem: OptionSet, CustomStringConvertible, Sendable {
 }
 
 public enum LogConfig {
-    /// Identifier for the logger. Defaults to empty.
-    public nonisolated(unsafe) static var identifier = "" {
-        didSet {
-            invalidateLogger()
-        }
-    }
-    
-    /// Output level for the logger.
-    public nonisolated(unsafe) static var level: LogLevel = .error {
-        didSet {
-            invalidateLogger()
-        }
-    }
-    
-    /// Date formatter for the logger. Defaults to ISO8601
-    public nonisolated(unsafe) static var dateFormatter: DateFormatter = {
-        let df = DateFormatter()
-        df.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        return df
-    }() {
-        didSet {
-            invalidateLogger()
-        }
-    }
-    
-    /// Log formatters to be applied in order before logs are outputted. Defaults to empty (no formatters).
-    /// Please see `LogFormatter` for more info.
-    public nonisolated(unsafe) static var formatters = [LogFormatter]() {
-        didSet {
-            invalidateLogger()
-        }
-    }
-    
-    /// Toggle for showing date in logs
-    public nonisolated(unsafe) static var showDate = true {
-        didSet {
-            invalidateLogger()
-        }
-    }
-    
-    /// Toggle for showing log level in logs
-    public nonisolated(unsafe) static var showLevel = true {
-        didSet {
-            invalidateLogger()
-        }
-    }
-    
-    /// Toggle for showing identifier in logs
-    public nonisolated(unsafe) static var showIdentifier = false {
-        didSet {
-            invalidateLogger()
-        }
-    }
-    
-    /// Toggle for showing thread name in logs
-    public nonisolated(unsafe) static var showThreadName = true {
-        didSet {
-            invalidateLogger()
-        }
-    }
-    
-    /// Toggle for showing file name in logs
-    public nonisolated(unsafe) static var showFileName = true {
-        didSet {
-            invalidateLogger()
-        }
-    }
-    
-    /// Toggle for showing line number in logs
-    public nonisolated(unsafe) static var showLineNumber = true {
-        didSet {
-            invalidateLogger()
-        }
-    }
-    
-    /// Toggle for showing function name in logs
-    public nonisolated(unsafe) static var showFunctionName = true {
-        didSet {
-            invalidateLogger()
-        }
-    }
-    
-    /// Subsystems for the logger
-    public nonisolated(unsafe) static var subsystems: LogSubsystem = .all {
-        didSet {
-            invalidateLogger()
-        }
-    }
-    
-    /// Destination types this logger will use.
-    ///
-    /// Logger will initialize the destinations with its own parameters. If you want full control on the parameters, use `destinations` directly,
-    /// where you can pass parameters to destination initializers yourself.
-    public nonisolated(unsafe) static var destinationTypes: [LogDestination.Type] = Self.defaultDestinations {
-        didSet {
-            invalidateLogger()
-        }
-    }
-    
-    static var defaultDestinations: [LogDestination.Type] {
-        if #available(iOS 14.0, *) {
+    private struct State {
+        var identifier: String = ""
+        var level: LogLevel = .error
+        var dateFormatter: DateFormatter = {
+            let df = DateFormatter()
+            df.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+            return df
+        }()
+
+        var formatters: [LogFormatter] = []
+        var showDate: Bool = true
+        var showLevel: Bool = true
+        var showIdentifier: Bool = false
+        var showThreadName: Bool = true
+        var showFileName: Bool = true
+        var showLineNumber: Bool = true
+        var showFunctionName: Bool = true
+        var subsystems: LogSubsystem = .all
+        
+        var destinationTypes: [LogDestination.Type] = if #available(iOS 14.0, *) {
             [OSLogDestination.self]
         } else {
             [ConsoleLogDestination.self]
         }
-    }
-    
-    private nonisolated(unsafe) static var _destinations: [LogDestination]?
-
-    /// Destinations for the default logger. Please see `LogDestination`.
-    /// Defaults to only `ConsoleLogDestination`, which only prints the messages.
-    ///
-    /// - Important: Other options in `ChatClientConfig.Logging` will not take affect if this is changed.
-    public static var destinations: [LogDestination] {
-        get {
-            if let destinations = _destinations {
-                return destinations
-            } else {
-                _destinations = destinationTypes.map {
+        
+        private var _destinations: [LogDestination]?
+        
+        var destinations: [LogDestination] {
+            mutating get {
+                if let _destinations {
+                    return _destinations
+                }
+                let newDestinations = destinationTypes.map {
                     $0.init(
                         identifier: identifier,
                         level: level,
@@ -264,39 +178,242 @@ public enum LogConfig {
                         showFunctionName: showFunctionName
                     )
                 }
-                return _destinations!
+                _destinations = newDestinations
+                return newDestinations
+            }
+            set {
+                _destinations = newValue
             }
         }
-        set {
-            invalidateLogger()
-            _destinations = newValue
+        
+        private var _logger: Logger?
+        
+        var logger: Logger {
+            mutating get {
+                if let _logger {
+                    return _logger
+                }
+                let logger = Logger(identifier: identifier, destinations: destinations)
+                _logger = logger
+                return logger
+            }
+            set {
+                _logger = newValue
+            }
+        }
+        
+        mutating func invalidateLogger() {
+            _destinations = nil
+            _logger = nil
         }
     }
     
-    /// Underlying logger instance to control singleton.
-    private nonisolated(unsafe) static var _logger: Logger?
+    private static let _state = AllocatedUnfairLock<State>(State())
+    
+    /// Identifier for the logger. Defaults to empty.
+    public static var identifier: String {
+        get {
+            _state.withLock { $0.identifier }
+        }
+        set {
+            _state.withLock {
+                $0.identifier = newValue
+                $0.invalidateLogger()
+            }
+        }
+    }
+    
+    /// Output level for the logger.
+    public static var level: LogLevel {
+        get {
+            _state.withLock { $0.level }
+        }
+        set {
+            _state.withLock {
+                $0.level = newValue
+                $0.invalidateLogger()
+            }
+        }
+    }
+    
+    /// Date formatter for the logger. Defaults to ISO8601
+    public static var dateFormatter: DateFormatter {
+        get {
+            _state.withLock { $0.dateFormatter }
+        }
+        set {
+            _state.withLock {
+                $0.dateFormatter = newValue
+                $0.invalidateLogger()
+            }
+        }
+    }
+    
+    /// Log formatters to be applied in order before logs are outputted. Defaults to empty (no formatters).
+    /// Please see `LogFormatter` for more info.
+    public static var formatters: [LogFormatter] {
+        get {
+            _state.withLock { $0.formatters }
+        }
+        set {
+            _state.withLock {
+                $0.formatters = newValue
+                $0.invalidateLogger()
+            }
+        }
+    }
+    
+    /// Toggle for showing date in logs
+    public static var showDate: Bool {
+        get {
+            _state.withLock { $0.showDate }
+        }
+        set {
+            _state.withLock {
+                $0.showDate = newValue
+                $0.invalidateLogger()
+            }
+        }
+    }
+    
+    /// Toggle for showing log level in logs
+    public static var showLevel: Bool {
+        get {
+            _state.withLock { $0.showLevel }
+        }
+        set {
+            _state.withLock {
+                $0.showLevel = newValue
+                $0.invalidateLogger()
+            }
+        }
+    }
+    
+    /// Toggle for showing identifier in logs
+    public static var showIdentifier: Bool {
+        get {
+            _state.withLock { $0.showIdentifier }
+        }
+        set {
+            _state.withLock {
+                $0.showIdentifier = newValue
+                $0.invalidateLogger()
+            }
+        }
+    }
+    
+    /// Toggle for showing thread name in logs
+    public static var showThreadName: Bool {
+        get {
+            _state.withLock { $0.showThreadName }
+        }
+        set {
+            _state.withLock {
+                $0.showThreadName = newValue
+                $0.invalidateLogger()
+            }
+        }
+    }
+    
+    /// Toggle for showing file name in logs
+    public static var showFileName: Bool {
+        get {
+            _state.withLock { $0.showFileName }
+        }
+        set {
+            _state.withLock {
+                $0.showFileName = newValue
+                $0.invalidateLogger()
+            }
+        }
+    }
+    
+    /// Toggle for showing line number in logs
+    public static var showLineNumber: Bool {
+        get {
+            _state.withLock { $0.showLineNumber }
+        }
+        set {
+            _state.withLock {
+                $0.showLineNumber = newValue
+                $0.invalidateLogger()
+            }
+        }
+    }
+    
+    /// Toggle for showing function name in logs
+    public static var showFunctionName: Bool {
+        get {
+            _state.withLock { $0.showFunctionName }
+        }
+        set {
+            _state.withLock {
+                $0.showFunctionName = newValue
+                $0.invalidateLogger()
+            }
+        }
+    }
+    
+    /// Subsystems for the logger
+    public static var subsystems: LogSubsystem {
+        get {
+            _state.withLock { $0.subsystems }
+        }
+        set {
+            _state.withLock {
+                $0.subsystems = newValue
+                $0.invalidateLogger()
+            }
+        }
+    }
+    
+    /// Destination types this logger will use.
+    ///
+    /// Logger will initialize the destinations with its own parameters. If you want full control on the parameters, use `destinations` directly,
+    /// where you can pass parameters to destination initializers yourself.
+    public static var destinationTypes: [LogDestination.Type] {
+        get {
+            _state.withLock { $0.destinationTypes }
+        }
+        set {
+            _state.withLock {
+                $0.destinationTypes = newValue
+                $0.invalidateLogger()
+            }
+        }
+    }
+
+    /// Destinations for the default logger. Please see `LogDestination`.
+    /// Defaults to only `ConsoleLogDestination`, which only prints the messages.
+    ///
+    /// - Important: Other options in `ChatClientConfig.Logging` will not take affect if this is changed.
+    public static var destinations: [LogDestination] {
+        get {
+            _state.withLock { $0.destinations }
+        }
+        set {
+            _state.withLock {
+                // Order is important
+                $0.invalidateLogger()
+                $0.destinations = newValue
+            }
+        }
+    }
 
     /// Logger instance to be used by StreamChat.
     ///
     /// - Important: Other options in `LogConfig` will not take affect if this is changed.
     public static var logger: Logger {
         get {
-            if let logger = _logger {
-                return logger
-            } else {
-                _logger = Logger(identifier: identifier, destinations: destinations)
-                return _logger!
-            }
+            _state.withLock { $0.logger }
         }
         set {
-            _logger = newValue
+            _state.withLock { $0.logger = newValue }
         }
     }
     
-    /// Invalidates the current logger instance so it can be recreated.
-    private static func invalidateLogger() {
-        _logger = nil
-        _destinations = nil
+    static func reset() {
+        _state.withLock { $0 = State() }
     }
 }
 
