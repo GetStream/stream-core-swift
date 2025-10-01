@@ -71,7 +71,6 @@ jobs:
         name: test-coverage-${{ github.event.pull_request.number }}
         path: reports/sonarqube-generic-coverage.xml
 
-
   test_ui:
     name: Test UI
     runs-on: macos-15
