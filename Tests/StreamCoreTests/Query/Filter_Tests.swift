@@ -1242,4 +1242,136 @@ struct Filter_Tests {
         #expect(exactMatchFilter.matches(TestUser(name: "JOHN"))) // Case-insensitive exact match should work
         #expect(exactMatchFilter.matches(TestUser(name: "john"))) // Case-insensitive exact match should work
     }
+    
+    // MARK: - Filter Field Containment Tests
+    
+    @Test func containsSimpleFilter() {
+        let nameFilter = TestFilter.equal(.name, "John")
+        let ageFilter = TestFilter.greater(.age, 25)
+        let emailFilter = TestFilter.equal(.email, "john@example.com")
+        
+        // Test that a simple filter contains its own field
+        #expect(nameFilter.contains(.name))
+        #expect(ageFilter.contains(.age))
+        #expect(emailFilter.contains(.email))
+        
+        // Test that a simple filter does not contain different fields
+        #expect(!nameFilter.contains(.age))
+        #expect(!nameFilter.contains(.email))
+        #expect(!ageFilter.contains(.name))
+        #expect(!ageFilter.contains(.email))
+        #expect(!emailFilter.contains(.name))
+        #expect(!emailFilter.contains(.age))
+    }
+    
+    @Test func containsAndFilter() {
+        let nameFilter = TestFilter.equal(.name, "John")
+        let ageFilter = TestFilter.greater(.age, 25)
+        let emailFilter = TestFilter.equal(.email, "john@example.com")
+        
+        let andFilter = TestFilter.and([nameFilter, ageFilter, emailFilter])
+        
+        // Test that AND filter contains all its subfilter fields
+        #expect(andFilter.contains(.name))
+        #expect(andFilter.contains(.age))
+        #expect(andFilter.contains(.email))
+        
+        // Test that AND filter does not contain fields not in its subfilters
+        #expect(!andFilter.contains(.height))
+        #expect(!andFilter.contains(.tags))
+        #expect(!andFilter.contains(.isActive))
+    }
+    
+    @Test func containsOrFilter() {
+        let nameFilter = TestFilter.equal(.name, "John")
+        let ageFilter = TestFilter.greater(.age, 25)
+        let emailFilter = TestFilter.equal(.email, "john@example.com")
+        
+        let orFilter = TestFilter.or([nameFilter, ageFilter, emailFilter])
+        
+        // Test that OR filter contains all its subfilter fields
+        #expect(orFilter.contains(.name))
+        #expect(orFilter.contains(.age))
+        #expect(orFilter.contains(.email))
+        
+        // Test that OR filter does not contain fields not in its subfilters
+        #expect(!orFilter.contains(.height))
+        #expect(!orFilter.contains(.tags))
+        #expect(!orFilter.contains(.isActive))
+    }
+    
+    @Test func containsNestedCompoundFilters() {
+        let nameFilter = TestFilter.equal(.name, "John")
+        let ageFilter = TestFilter.greater(.age, 25)
+        let emailFilter = TestFilter.equal(.email, "john@example.com")
+        let heightFilter = TestFilter.less(.height, 200.0)
+        let tagsFilter = TestFilter.contains(.tags, "developer")
+        
+        // Create nested AND filter
+        let innerAndFilter = TestFilter.and([nameFilter, ageFilter])
+        let outerAndFilter = TestFilter.and([innerAndFilter, emailFilter, heightFilter])
+        
+        // Test that nested AND filter contains all fields from all levels
+        #expect(outerAndFilter.contains(.name))
+        #expect(outerAndFilter.contains(.age))
+        #expect(outerAndFilter.contains(.email))
+        #expect(outerAndFilter.contains(.height))
+        
+        // Test that nested AND filter does not contain fields not in any subfilter
+        #expect(!outerAndFilter.contains(.tags))
+        #expect(!outerAndFilter.contains(.isActive))
+        
+        // Create nested OR filter
+        let innerOrFilter = TestFilter.or([emailFilter, heightFilter])
+        let outerOrFilter = TestFilter.or([innerOrFilter, tagsFilter])
+        
+        // Test that nested OR filter contains all fields from all levels
+        #expect(outerOrFilter.contains(.email))
+        #expect(outerOrFilter.contains(.height))
+        #expect(outerOrFilter.contains(.tags))
+        
+        // Test that nested OR filter does not contain fields not in any subfilter
+        #expect(!outerOrFilter.contains(.name))
+        #expect(!outerOrFilter.contains(.age))
+        #expect(!outerOrFilter.contains(.isActive))
+    }
+    
+    @Test func containsMixedCompoundFilters() {
+        let nameFilter = TestFilter.equal(.name, "John")
+        let ageFilter = TestFilter.greater(.age, 25)
+        let emailFilter = TestFilter.equal(.email, "john@example.com")
+        let heightFilter = TestFilter.less(.height, 200.0)
+        let tagsFilter = TestFilter.contains(.tags, "developer")
+        
+        // Create mixed compound filter: AND containing OR
+        let orFilter = TestFilter.or([emailFilter, heightFilter])
+        let mixedFilter = TestFilter.and([nameFilter, ageFilter, orFilter, tagsFilter])
+        
+        // Test that mixed filter contains all fields from all levels
+        #expect(mixedFilter.contains(.name))
+        #expect(mixedFilter.contains(.age))
+        #expect(mixedFilter.contains(.email))
+        #expect(mixedFilter.contains(.height))
+        #expect(mixedFilter.contains(.tags))
+        
+        // Test that mixed filter does not contain fields not in any subfilter
+        #expect(!mixedFilter.contains(.isActive))
+        #expect(!mixedFilter.contains(.homepage))
+    }
+    
+    @Test func containsSingleElementCompoundFilters() {
+        let nameFilter = TestFilter.equal(.name, "John")
+        
+        // Test AND filter with single element
+        let singleAndFilter = TestFilter.and([nameFilter])
+        #expect(singleAndFilter.contains(.name))
+        #expect(!singleAndFilter.contains(.age))
+        #expect(!singleAndFilter.contains(.email))
+        
+        // Test OR filter with single element
+        let singleOrFilter = TestFilter.or([nameFilter])
+        #expect(singleOrFilter.contains(.name))
+        #expect(!singleOrFilter.contains(.age))
+        #expect(!singleOrFilter.contains(.email))
+    }
 }
