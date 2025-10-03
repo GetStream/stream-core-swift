@@ -55,6 +55,37 @@ extension Filter {
             return field.matcher.match(model, to: value, filterOperator: filterOperator)
         }
     }
+    
+    /// Checks whether this filter contains a specific field.
+    ///
+    /// This method recursively traverses compound filters (AND/OR) to determine if any subfilter
+    /// operates on the specified field.
+    ///
+    /// - Parameter field: The field to search for in the filter hierarchy.
+    /// - Returns: `true` if the filter contains the specified field, `false` otherwise.
+    ///
+    /// ## Example Usage
+    /// ```swift
+    /// let nameField = FilterField("name", localValue: { $0.name })
+    /// let ageField = FilterField("age", localValue: { $0.age })
+    ///
+    /// let filter = Filter.and([
+    ///     Filter.equal(nameField, "John"),
+    ///     Filter.greater(ageField, 25)
+    /// ])
+    ///
+    /// let containsName = filter.contains(nameField) // true
+    /// let containsEmail = filter.contains(emailField) // false
+    /// ```
+    public func contains<Field>(_ field: Field) -> Bool where Field == Self.FilterField {
+        switch filterOperator {
+        case .and, .or:
+            guard let subfilters = value as? [Self] else { return false }
+            return subfilters.contains(where: { $0.contains(field) })
+        default:
+            return self.field.rawValue == field.rawValue
+        }
+    }
 }
 
 private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Value: FilterValue {
