@@ -137,11 +137,9 @@ desc 'Run source code formatting/linting'
 lane :run_swift_format do |options|
   Dir.chdir('..') do
     strict = options[:strict] ? '--lint' : nil
-    sources_matrix[:swiftformat].each do |path|
-      sh("swiftformat #{strict} --config .swiftformat #{path}")
-      sh("swiftlint lint --config .swiftlint.yml --fix --progress --reporter json #{path}") unless strict
-      sh("swiftlint lint --config .swiftlint.yml --strict --progress --reporter json #{path}")
-    end
+    sh("swiftformat #{strict} --config .swiftformat .")
+    sh("swiftlint lint --config .swiftlint.yml --fix --progress --reporter json") unless strict
+    sh("swiftlint lint --config .swiftlint.yml --strict --progress --reporter json")
   end
 end
 
@@ -153,8 +151,7 @@ lane :sources_matrix do
   {
     llc: ['Sources/StreamCore/', 'Tests/StreamCoreTests'],
     ui: ['Sources/StreamCoreUI/', 'Tests/StreamCoreUITests'],
-    ruby: ['fastlane', 'Gemfile', 'Gemfile.lock'],
-    swiftformat: ['Sources', 'Tests', 'Package.swift']
+    ruby: ['fastlane', 'Gemfile', 'Gemfile.lock']
   }
 end
 
