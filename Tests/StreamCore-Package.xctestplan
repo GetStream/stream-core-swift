@@ -1,0 +1,46 @@
+{
+  "configurations" : [
+    {
+      "id" : "81446EE3-2D82-48EC-B604-733CABBFD39B",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "language" : "en",
+    "region" : "US"
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "StreamOpenAPITests",
+        "name" : "StreamOpenAPITests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "StreamCoreTests",
+        "name" : "StreamCoreTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "StreamCoreUITests",
+        "name" : "StreamCoreUITests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "StreamAttachmentsTests",
+        "name" : "StreamAttachmentsTests"
+      }
+    }
+  ],
+  "version" : 1
+}
