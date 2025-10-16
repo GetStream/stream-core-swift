@@ -106,13 +106,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		4F07626C2EA0CF6900E5FD18 /* Exceptions for "Tests" folder in "StreamOpenAPITests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				StreamOpenAPITests/Query/QueryFilter_Tests.swift,
-			);
-			target = 4F1E6A9E2E9FB59D00BA0F44 /* StreamOpenAPITests */;
-		};
 		4F1E6AAF2E9FB5C300BA0F44 /* Exceptions for "Tests" folder in "StreamAttachmentsTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -121,13 +114,20 @@
 			);
 			target = 4F1E6A842E9FB58700BA0F44 /* StreamAttachmentsTests */;
 		};
+		4F1E6AE62E9FB73D00BA0F44 /* Exceptions for "Tests" folder in "StreamOpenAPITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				StreamOpenAPITests/Query/Filter_Tests.swift,
+			);
+			target = 4F1E6A9E2E9FB59D00BA0F44 /* StreamOpenAPITests */;
+		};
 		829528D02E69CD5200AED807 /* Exceptions for "Tests" folder in "StreamCoreTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				StreamAttachmentsTests/StreamAttachments.xctestplan,
 				StreamAttachmentsTests/StreamAttachmentsTests.swift,
 				StreamCoreUITests/CDN/StreamImageCDN_Tests.swift,
-				StreamOpenAPITests/Query/QueryFilter_Tests.swift,
+				StreamOpenAPITests/Query/Filter_Tests.swift,
 			);
 			target = 845495272DBA3A1300211413 /* StreamCoreTests */;
 		};
@@ -157,7 +157,7 @@
 				829528D02E69CD5200AED807 /* Exceptions for "Tests" folder in "StreamCoreTests" target */,
 				8415DA382E4630F800FEE25F /* Exceptions for "Tests" folder in "StreamCoreUITests" target */,
 				4F1E6AAF2E9FB5C300BA0F44 /* Exceptions for "Tests" folder in "StreamAttachmentsTests" target */,
-				4F07626C2EA0CF6900E5FD18 /* Exceptions for "Tests" folder in "StreamOpenAPITests" target */,
+				4F1E6AE62E9FB73D00BA0F44 /* Exceptions for "Tests" folder in "StreamOpenAPITests" target */,
 			);
 			path = Tests;
 			sourceTree = "<group>";

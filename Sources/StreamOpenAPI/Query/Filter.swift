@@ -7,19 +7,19 @@ import StreamCore
 
 /// A protocol that defines a filter for querying data.
 ///
-/// QueryFilters are used to specify conditions for retrieving data from Stream's API.
+/// Filters are used to specify conditions for retrieving data from Stream's API.
 /// Each filter consists of a field, an operator, and a value to compare against.
 ///
-/// - Note: QueryFilters can be combined using logical operators (AND/OR) to create complex queries.
-public protocol QueryFilter: QueryFilterValue, Sendable {
+/// - Note: Filters can be combined using logical operators (AND/OR) to create complex queries.
+public protocol Filter: FilterValue, Sendable {
     /// The associated type representing the field that this filter operates on.
-    associatedtype FilterField: QueryFilterFieldRepresentable
+    associatedtype FilterField: FilterFieldRepresentable
     
     /// The field to filter on (e.g., "id", "feed", "user_id").
     var field: FilterField { get }
     
     /// The value to compare against the field.
-    var value: any QueryFilterValue { get }
+    var value: any FilterValue { get }
     
     /// The comparison operator to use (e.g., equal, greater, contains).
     var filterOperator: FilterOperator { get }
@@ -30,24 +30,24 @@ public protocol QueryFilter: QueryFilterValue, Sendable {
     ///   - filterOperator: The comparison operator to use.
     ///   - field: The field to filter on.
     ///   - value: The value to compare against.
-    init(filterOperator: FilterOperator, field: FilterField, value: any QueryFilterValue)
+    init(filterOperator: FilterOperator, field: FilterField, value: any FilterValue)
 }
 
 /// A protocol that defines values that can be used in filters.
 ///
 /// This protocol is automatically conformed to by common Swift types like `String`, `Int`, `Bool`, etc.
-public protocol QueryFilterValue: Sendable {}
+public protocol FilterValue: Sendable {}
 
 /// A protocol that defines how filter fields are represented as strings.
 ///
 /// This protocol allows for type-safe field names while maintaining the ability to convert to string values
 /// for API communication.
-public protocol QueryFilterFieldRepresentable: Sendable {
+public protocol FilterFieldRepresentable: Sendable {
     /// The model type that this filter field operates on.
     associatedtype Model: Sendable
     
     /// A matcher that can be used for local matching operations.
-    var matcher: AnyQueryFilterMatcher<Model> { get }
+    var matcher: AnyFilterMatcher<Model> { get }
     
     /// The string representation of the field.
     var rawValue: String { get }
@@ -57,10 +57,10 @@ public protocol QueryFilterFieldRepresentable: Sendable {
     /// - Parameters:
     ///   - rawValue: The string identifier used for remote API requests
     ///   - localValue: A closure that extracts the comparable value from a model instance
-    init<Value>(_ rawValue: String, localValue: @escaping @Sendable (Model) -> Value?) where Value: QueryFilterValue
+    init<Value>(_ rawValue: String, localValue: @escaping @Sendable (Model) -> Value?) where Value: FilterValue
 }
 
-extension QueryFilterFieldRepresentable {
+extension FilterFieldRepresentable {
     /// Placeholder value for compound filters.
     ///
     /// $and and $or ignore the field itself because the operation does not compare any actual data like other operators are
@@ -70,14 +70,14 @@ extension QueryFilterFieldRepresentable {
 
 // MARK: - Filter Building
 
-extension QueryFilter {
+extension Filter {
     /// Creates a filter that checks if a field equals a specific value.
     ///
     /// - Parameters:
     ///   - field: The field to compare.
     ///   - value: The value to check equality against.
     /// - Returns: A filter that matches when the field equals the specified value.
-    public static func equal(_ field: FilterField, _ value: any QueryFilterValue) -> Self {
+    public static func equal(_ field: FilterField, _ value: any FilterValue) -> Self {
         Self(filterOperator: .equal, field: field, value: value)
     }
     
@@ -87,7 +87,7 @@ extension QueryFilter {
     ///   - field: The field to compare.
     ///   - value: The value to compare against.
     /// - Returns: A filter that matches when the field is greater than the specified value.
-    public static func greater(_ field: FilterField, _ value: any QueryFilterValue) -> Self {
+    public static func greater(_ field: FilterField, _ value: any FilterValue) -> Self {
         Self(filterOperator: .greater, field: field, value: value)
     }
     
@@ -97,7 +97,7 @@ extension QueryFilter {
     ///   - field: The field to compare.
     ///   - value: The value to compare against.
     /// - Returns: A filter that matches when the field is greater than or equal to the specified value.
-    public static func greaterOrEqual(_ field: FilterField, _ value: any QueryFilterValue) -> Self {
+    public static func greaterOrEqual(_ field: FilterField, _ value: any FilterValue) -> Self {
         Self(filterOperator: .greaterOrEqual, field: field, value: value)
     }
     
@@ -107,7 +107,7 @@ extension QueryFilter {
     ///   - field: The field to compare.
     ///   - value: The value to compare against.
     /// - Returns: A filter that matches when the field is less than the specified value.
-    public static func less(_ field: FilterField, _ value: any QueryFilterValue) -> Self {
+    public static func less(_ field: FilterField, _ value: any FilterValue) -> Self {
         Self(filterOperator: .less, field: field, value: value)
     }
     
@@ -117,7 +117,7 @@ extension QueryFilter {
     ///   - field: The field to compare.
     ///   - value: The value to compare against.
     /// - Returns: A filter that matches when the field is less than or equal to the specified value.
-    public static func lessOrEqual(_ field: FilterField, _ value: any QueryFilterValue) -> Self {
+    public static func lessOrEqual(_ field: FilterField, _ value: any FilterValue) -> Self {
         Self(filterOperator: .lessOrEqual, field: field, value: value)
     }
     
@@ -127,7 +127,7 @@ extension QueryFilter {
     ///   - field: The field to check.
     ///   - values: An array of values to check against.
     /// - Returns: A filter that matches when the field's value is in the specified array.
-    public static func `in`<Value>(_ field: FilterField, _ values: [Value]) -> Self where Value: QueryFilterValue {
+    public static func `in`<Value>(_ field: FilterField, _ values: [Value]) -> Self where Value: FilterValue {
         Self(filterOperator: .in, field: field, value: values)
     }
     
@@ -147,7 +147,7 @@ extension QueryFilter {
     ///   - field: The field to search in.
     ///   - value: The value to search for.
     /// - Returns: A filter that matches when the field contains the specified value.
-    public static func contains<Value>(_ field: FilterField, _ value: Value) -> Self where Value: QueryFilterValue {
+    public static func contains<Value>(_ field: FilterField, _ value: Value) -> Self where Value: FilterValue {
         Self(filterOperator: .contains, field: field, value: value)
     }
     
@@ -157,7 +157,7 @@ extension QueryFilter {
     ///   - field: The field to search in.
     ///   - value: An array of values to search for.
     /// - Returns: A filter that matches when the field contains the specified key-value pairs.
-    public static func contains<Value>(_ field: FilterField, _ values: [Value]) -> Self where Value: QueryFilterValue {
+    public static func contains<Value>(_ field: FilterField, _ values: [Value]) -> Self where Value: FilterValue {
         Self(filterOperator: .contains, field: field, value: values)
     }
     
@@ -205,7 +205,7 @@ extension QueryFilter {
     ///
     /// - Parameter filters: An array of filters to combine.
     /// - Returns: A filter that matches when all the specified filters match.
-    public static func and<F>(_ filters: [F]) -> F where F: QueryFilter, F.FilterField == FilterField {
+    public static func and<F>(_ filters: [F]) -> F where F: Filter, F.FilterField == FilterField {
         F(filterOperator: .and, field: .compoundOperatorPlaceholderField, value: filters)
     }
     
@@ -213,49 +213,49 @@ extension QueryFilter {
     ///
     /// - Parameter filters: An array of filters to combine.
     /// - Returns: A filter that matches when any of the specified filters match.
-    public static func or<F>(_ filters: [F]) -> F where F: QueryFilter, F.FilterField == FilterField {
+    public static func or<F>(_ filters: [F]) -> F where F: Filter, F.FilterField == FilterField {
         F(filterOperator: .or, field: .compoundOperatorPlaceholderField, value: filters)
     }
 }
 
 // MARK: - Supported Filter Values
 
-/// Extends `Bool` to conform to `QueryFilterValue` for use in filters.
-extension Bool: QueryFilterValue {}
+/// Extends `Bool` to conform to `FilterValue` for use in filters.
+extension Bool: FilterValue {}
 
-/// Extends `Date` to conform to `QueryFilterValue` for use in filters.
+/// Extends `Date` to conform to `FilterValue` for use in filters.
 /// Dates are automatically converted to RFC3339 format when serialized.
-extension Date: QueryFilterValue {}
+extension Date: FilterValue {}
 
-/// Extends `Double` to conform to `QueryFilterValue` for use in filters.
-extension Double: QueryFilterValue {}
+/// Extends `Double` to conform to `FilterValue` for use in filters.
+extension Double: FilterValue {}
 
-/// Extends `Float` to conform to `QueryFilterValue` for use in filters.
-extension Float: QueryFilterValue {}
+/// Extends `Float` to conform to `FilterValue` for use in filters.
+extension Float: FilterValue {}
 
-/// Extends `Int` to conform to `QueryFilterValue` for use in filters.
-extension Int: QueryFilterValue {}
+/// Extends `Int` to conform to `FilterValue` for use in filters.
+extension Int: FilterValue {}
 
-/// Extends `String` to conform to `QueryFilterValue` for use in filters.
-extension String: QueryFilterValue {}
+/// Extends `String` to conform to `FilterValue` for use in filters.
+extension String: FilterValue {}
 
-/// Extends `URL` to conform to `QueryFilterValue` for use in filters.
+/// Extends `URL` to conform to `FilterValue` for use in filters.
 /// URLs are automatically converted to their absolute string representation when serialized.
-extension URL: QueryFilterValue {}
+extension URL: FilterValue {}
 
-/// Extends `Array` to conform to `QueryFilterValue` when its elements also conform to `QueryFilterValue`.
+/// Extends `Array` to conform to `FilterValue` when its elements also conform to `FilterValue`.
 /// This allows arrays of filter values to be used in filters (e.g., for the `in` operator).
-extension Array: QueryFilterValue where Element: QueryFilterValue {}
+extension Array: FilterValue where Element: FilterValue {}
 
-/// Extends `Dictionary` to conform to `QueryFilterValue` when the key is `String` and value is `RawJSON`.
+/// Extends `Dictionary` to conform to `FilterValue` when the key is `String` and value is `RawJSON`.
 /// This allows dictionaries to be used in filters for complex object matching.
-extension Dictionary: QueryFilterValue where Key == String, Value == RawJSON {}
+extension Dictionary: FilterValue where Key == String, Value == RawJSON {}
 
-extension Optional: QueryFilterValue where Wrapped: QueryFilterValue {}
+extension Optional: FilterValue where Wrapped: FilterValue {}
 
 // MARK: - Filter to RawJSON Conversion
 
-extension QueryFilter {
+extension Filter {
     /// Converts the filter to a `RawJSON` representation for API communication.
     ///
     /// This method handles both regular filters and group filters (AND/OR combinations).
@@ -265,7 +265,7 @@ extension QueryFilter {
         if filterOperator.isGroup {
             // Filters with group operators are encoded in the following form:
             //  { $<operator>: [ <filter 1>, <filter 2> ] }
-            guard let filters = value as? [any QueryFilter] else {
+            guard let filters = value as? [any Filter] else {
                 log.error("Unknown filter value used with \(filterOperator)")
                 return [:]
             }
@@ -279,7 +279,7 @@ extension QueryFilter {
     }
 }
 
-extension QueryFilterValue {
+extension FilterValue {
     /// Converts the filter value to its `RawJSON` representation.
     ///
     /// This property handles the conversion of various Swift types to their appropriate JSON representation
@@ -298,7 +298,7 @@ extension QueryFilterValue {
             .string(stringValue)
         case let urlValue as URL:
             .string(urlValue.absoluteString)
-        case let arrayValue as [any QueryFilterValue]:
+        case let arrayValue as [any FilterValue]:
             .array(arrayValue.map(\.rawJSON))
         case let dictionaryValue as [String: RawJSON]:
             .dictionary(dictionaryValue)

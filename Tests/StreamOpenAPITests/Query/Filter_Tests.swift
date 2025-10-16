@@ -7,17 +7,17 @@ import StreamCore
 @testable import StreamOpenAPI
 import Testing
 
-struct QueryFilter_Tests {
+struct Filter_Tests {
     // MARK: - Test Filter Field
     
-    struct TestFilterField: QueryFilterFieldRepresentable {
+    struct TestFilterField: FilterFieldRepresentable {
         typealias Model = TestUser
-        let matcher: AnyQueryFilterMatcher<TestUser>
+        let matcher: AnyFilterMatcher<TestUser>
         let rawValue: String
         
-        init<Value>(_ rawValue: String, localValue: @escaping @Sendable (TestUser) -> Value?) where Value: QueryFilterValue {
+        init<Value>(_ rawValue: String, localValue: @escaping @Sendable (TestUser) -> Value?) where Value: FilterValue {
             self.rawValue = rawValue
-            matcher = AnyQueryFilterMatcher(localValue: localValue)
+            matcher = AnyFilterMatcher(localValue: localValue)
         }
         
         static let name = Self("name", localValue: \.name)
@@ -31,17 +31,17 @@ struct QueryFilter_Tests {
         static let searchData = Self("search_data", localValue: \.searchData)
     }
     
-    struct TestFilter: QueryFilter {
+    struct TestFilter: Filter {
         typealias FilterField = TestFilterField
         
-        init(filterOperator: FilterOperator, field: TestFilterField, value: any QueryFilterValue) {
+        init(filterOperator: FilterOperator, field: TestFilterField, value: any FilterValue) {
             self.filterOperator = filterOperator
             self.field = field
             self.value = value
         }
         
         let field: TestFilterField
-        let value: any QueryFilterValue
+        let value: any FilterValue
         let filterOperator: FilterOperator
     }
     
