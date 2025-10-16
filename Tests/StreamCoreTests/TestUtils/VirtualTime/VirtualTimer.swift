@@ -5,7 +5,7 @@
 import Foundation
 @testable import StreamCore
 
-struct VirtualTimeTimer: StreamCore.Timer {
+struct VirtualTimeTimer: StreamTimer {
     nonisolated(unsafe) static var time: VirtualTime!
 
     static func invalidate() {

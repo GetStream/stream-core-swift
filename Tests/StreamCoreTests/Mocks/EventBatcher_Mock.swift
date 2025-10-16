@@ -10,7 +10,7 @@ final class EventBatcher_Mock: Batcher<Event>, @unchecked Sendable {
 
     override init(
         period: TimeInterval = 0,
-        timerType: StreamCore.Timer.Type = DefaultTimer.self,
+        timerType: StreamTimer.Type = DefaultTimer.self,
         handler: @escaping @Sendable (_ batch: [Event], _ completion: @escaping @Sendable () -> Void) -> Void
     ) {
         self.handler = handler
