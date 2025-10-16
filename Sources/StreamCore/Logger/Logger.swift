@@ -4,7 +4,7 @@
 
 import Foundation
 
-var log: Logger {
+public var log: Logger {
     LogConfig.logger
 }
 
