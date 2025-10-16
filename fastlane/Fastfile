@@ -81,36 +81,35 @@ end
 
 desc 'Runs StreamCore tests'
 lane :test_core do |options|
-  next unless is_check_required(sources: sources_matrix[:core], force_check: @force_check)
-
   options[:scheme] = 'StreamCore'
+  options[:sources] = sources_matrix[:core]
   run_library_tests(options)
-
-  slather unless options[:build_for_testing]
 end
 
 desc 'Runs StreamCoreUI tests'
 lane :test_ui do |options|
-  next unless is_check_required(sources: sources_matrix[:ui], force_check: @force_check)
   options[:scheme] = 'StreamCoreUI'
+  options[:sources] = sources_matrix[:ui]
   run_library_tests(options)
 end
 
 desc 'Runs StreamAttachments tests'
 lane :test_attachments do |options|
-  next unless is_check_required(sources: sources_matrix[:attachments], force_check: @force_check)
   options[:scheme] = 'StreamAttachments'
+  options[:sources] = sources_matrix[:attachments]
   run_library_tests(options)
 end
 
 desc 'Runs StreamOpenAPI tests'
 lane :test_openapi do |options|
-  next unless is_check_required(sources: sources_matrix[:openapi], force_check: @force_check)
   options[:scheme] = 'StreamOpenAPI'
+  options[:sources] = sources_matrix[:openapi]
   run_library_tests(options)
 end
 
 private_lane :run_library_tests do |options|
+  next unless is_check_required(sources: options[:sources], force_check: @force_check)
+
   scan_options = {
     project: xcode_project,
     scheme: options[:scheme],
@@ -125,6 +124,8 @@ private_lane :run_library_tests do |options|
   }
 
   scan(scan_options)
+
+  slather if options[:scheme] == 'StreamCore' && !options[:build_for_testing]
 end
 
 desc 'Run fastlane linting'
