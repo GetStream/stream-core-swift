@@ -7,21 +7,21 @@ import StreamCore
 
 /// A filter matcher which rrases the type of the value the filter matches against.
 ///
-/// Allows avoiding generics in individual ``Filter`` instances with the cost of manual type matching using `RawJSON`.
-/// ``AnyFilterMatcher`` instances are used by ``FilterFieldRepresentable`` and allow matching values based on the field and operator.
-public struct AnyFilterMatcher<Model>: Sendable where Model: Sendable {
-    private let match: @Sendable (Model, any FilterValue, FilterOperator) -> Bool
+/// Allows avoiding generics in individual ``QueryFilter`` instances with the cost of manual type matching using `RawJSON`.
+/// ``AnyQueryFilterMatcher`` instances are used by ``QueryFilterFieldRepresentable`` and allow matching values based on the field and operator.
+public struct AnyQueryFilterMatcher<Model>: Sendable where Model: Sendable {
+    private let match: @Sendable (Model, any QueryFilterValue, FilterOperator) -> Bool
 
-    public init<Value>(localValue: @escaping @Sendable (Model) -> Value?) where Value: FilterValue {
-        match = FilterMatcher(localValue: localValue).match
+    public init<Value>(localValue: @escaping @Sendable (Model) -> Value?) where Value: QueryFilterValue {
+        match = QueryFilterMatcher(localValue: localValue).match
     }
     
-    func match(_ model: Model, to value: any FilterValue, filterOperator: FilterOperator) -> Bool {
+    func match(_ model: Model, to value: any QueryFilterValue, filterOperator: FilterOperator) -> Bool {
         match(model, value, filterOperator)
     }
 }
 
-extension Filter {
+extension QueryFilter {
     /// Evaluates whether a model matches the current filter criteria.
     ///
     /// This method performs local filtering by evaluating the filter against a provided model.
@@ -34,15 +34,15 @@ extension Filter {
     ///
     /// ## Example Usage
     /// ```swift
-    /// let filter = Filter.equal("name", "John")
+    /// let filter = QueryFilter.equal("name", "John")
     /// let user = User(name: "John", age: 30)
     /// let matches = filter.matches(user) // true
     ///
-    /// let compoundFilter = Filter.and([
-    ///     Filter.equal("name", "John"),
-    ///     Filter.greater("age", 25)
+    /// let compoundQueryFilter = QueryFilter.and([
+    ///     QueryFilter.equal("name", "John"),
+    ///     QueryFilter.greater("age", 25)
     /// ])
-    /// let matches = compoundFilter.matches(user) // true
+    /// let matches = compoundQueryFilter.matches(user) // true
     /// ```
     public func matches<Model>(_ model: Model) -> Bool where Model == FilterField.Model {
         switch filterOperator {
@@ -67,12 +67,12 @@ extension Filter {
     ///
     /// ## Example Usage
     /// ```swift
-    /// let nameField = FilterField("name", localValue: { $0.name })
-    /// let ageField = FilterField("age", localValue: { $0.age })
+    /// let nameField = QueryFilterField("name", localValue: { $0.name })
+    /// let ageField = QueryFilterField("age", localValue: { $0.age })
     ///
-    /// let filter = Filter.and([
-    ///     Filter.equal(nameField, "John"),
-    ///     Filter.greater(ageField, 25)
+    /// let filter = QueryFilter.and([
+    ///     QueryFilter.equal(nameField, "John"),
+    ///     QueryFilter.greater(ageField, 25)
     /// ])
     ///
     /// let containsName = filter.contains(nameField) // true
@@ -89,14 +89,14 @@ extension Filter {
     }
 }
 
-private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Value: FilterValue {
+private struct QueryFilterMatcher<Model, Value>: Sendable where Model: Sendable, Value: QueryFilterValue {
     let localValue: @Sendable (Model) -> Value
     
     init(localValue: @escaping @Sendable (Model) -> Value) {
         self.localValue = localValue
     }
     
-    func match(_ model: Model, to value: any FilterValue, filterOperator: FilterOperator) -> Bool {
+    func match(_ model: Model, to value: any QueryFilterValue, filterOperator: FilterOperator) -> Bool {
         let localRawJSONValue = localValue(model).rawJSON
         let filterRawJSONValue = value.rawJSON
         

@@ -11,12 +11,12 @@ import Foundation
 /// sorting operations and a remote string identifier for API communication.
 ///
 /// - Note: The associated `Model` type must conform to `Sendable` to ensure thread safety.
-public protocol SortField: Sendable {
+public protocol QuerySortField: Sendable {
     /// The model type that this sort field operates on.
     associatedtype Model: Sendable
     
     /// A comparator that can be used for local sorting operations.
-    var comparator: AnySortComparator<Model> { get }
+    var comparator: AnyQuerySortComparator<Model> { get }
     
     /// The string identifier used when sending sort parameters to the remote API.
     var rawValue: String { get }
@@ -35,20 +35,20 @@ public protocol SortField: Sendable {
 /// of the associated model type. It provides both local sorting capabilities and the ability
 /// to generate remote API request parameters.
 ///
-/// - Note: The `Field` type must conform to `SortField` and be `Sendable`.
-public struct Sort<Field>: Sendable where Field: SortField {
+/// - Note: The `Field` type must conform to `QuerySortField` and be `Sendable`.
+public struct QuerySort<Field>: Sendable where Field: QuerySortField {
     /// The field to sort by.
     public let field: Field
     
     /// The direction of the sort (forward or reverse).
-    public let direction: SortDirection
+    public let direction: QuerySortDirection
 
     /// Creates a new sort configuration.
     ///
     /// - Parameters:
     ///   - field: The field to sort by
     ///   - direction: The direction of the sort
-    public init(field: Field, direction: SortDirection) {
+    public init(field: Field, direction: QuerySortDirection) {
         self.direction = direction
         self.field = field
     }
@@ -69,11 +69,11 @@ public struct Sort<Field>: Sendable where Field: SortField {
 /// This enum defines whether a sort should be performed in ascending (forward) or
 /// descending (reverse) order. The raw values correspond to the values expected by
 /// the remote API.
-public enum SortDirection: Int, CustomStringConvertible, Sendable {
-    /// Sort in ascending order (A to Z, 1 to 9, etc.).
+public enum QuerySortDirection: Int, CustomStringConvertible, Sendable {
+    /// QuerySort in ascending order (A to Z, 1 to 9, etc.).
     case forward = 1
     
-    /// Sort in descending order (Z to A, 9 to 1, etc.).
+    /// QuerySort in descending order (Z to A, 9 to 1, etc.).
     case reverse = -1
     
     public var description: String {
@@ -84,12 +84,12 @@ public enum SortDirection: Int, CustomStringConvertible, Sendable {
     }
 }
 
-extension Sort: CustomStringConvertible {
+extension QuerySort: CustomStringConvertible {
     /// A string representation of the sort configuration in the format "field:direction".
     public var description: String { "\(field.rawValue):\(direction)" }
 }
 
-// MARK: - Local Sorting Support
+// MARK: - Local QuerySorting Support
 
 /// A comparator that can sort model instances by extracting comparable values.
 ///
@@ -98,7 +98,7 @@ extension Sort: CustomStringConvertible {
 /// and direction handling internally.
 ///
 /// - Note: Both `Model` and `Value` must conform to `Sendable` for thread safety.
-struct SortComparator<Model, Value>: Sendable where Model: Sendable, Value: Comparable {
+struct QuerySortComparator<Model, Value>: Sendable where Model: Sendable, Value: Comparable {
     /// A closure that extracts a comparable value from a model instance.
     let localValue: @Sendable (Model) -> Value
     
@@ -116,7 +116,7 @@ struct SortComparator<Model, Value>: Sendable where Model: Sendable, Value: Comp
     ///   - b: The second model instance to compare
     ///   - direction: The direction of the sort
     /// - Returns: A comparison result indicating the relative ordering
-    func compare(_ a: Model, _ b: Model, direction: SortDirection) -> ComparisonResult {
+    func compare(_ a: Model, _ b: Model, direction: QuerySortDirection) -> ComparisonResult {
         let valueA = localValue(a)
         let valueB = localValue(b)
         if valueA < valueB { return direction == .forward ? .orderedAscending : .orderedDescending }
@@ -131,19 +131,19 @@ struct SortComparator<Model, Value>: Sendable where Model: Sendable, Value: Comp
 /// specific generic type parameters. It's useful for creating collections of different
 /// sort configurations that can all work with the same model type.
 ///
-/// - Important: Type erased type avoids making SortField generic while keeping the underlying
+/// - Important: Type erased type avoids making QuerySortField generic while keeping the underlying
 /// value type intact (no runtime type checks while sorting).
 ///
 /// - Note: The `Model` type must conform to `Sendable` for thread safety.
-public struct AnySortComparator<Model>: Sendable where Model: Sendable {
+public struct AnyQuerySortComparator<Model>: Sendable where Model: Sendable {
     /// A closure that performs the comparison operation.
-    private let compare: @Sendable (Model, Model, SortDirection) -> ComparisonResult
+    private let compare: @Sendable (Model, Model, QuerySortDirection) -> ComparisonResult
     
     /// Creates a type-erased comparator from a specific comparator instance.
     ///
     /// - Parameter sort: The specific comparator to wrap
     public init<Value: Comparable>(localValue: @escaping @Sendable (Model) -> Value) {
-        compare = SortComparator(localValue: localValue).compare
+        compare = QuerySortComparator(localValue: localValue).compare
     }
     
     /// Compares two model instances using the wrapped comparator.
@@ -153,7 +153,7 @@ public struct AnySortComparator<Model>: Sendable where Model: Sendable {
     ///   - rhs: The right-hand side model instance
     ///   - direction: The direction of the sort
     /// - Returns: A comparison result indicating the relative ordering
-    public func compare(_ lhs: Model, _ rhs: Model, direction: SortDirection) -> ComparisonResult {
+    public func compare(_ lhs: Model, _ rhs: Model, direction: QuerySortDirection) -> ComparisonResult {
         compare(lhs, rhs, direction)
     }
 }
@@ -166,9 +166,9 @@ extension Array {
     /// being considered if earlier sorts result in equality.
     ///
     /// - Returns: A closure that returns `true` if the first model should come before the second
-    /// - Note: This method is only available when the array contains `Sort<Field>` elements
-    ///   where `Field` conforms to `SortField`.
-    public func areInIncreasingOrder<Field>() -> (Field.Model, Field.Model) -> Bool where Element == Sort<Field>, Field: SortField {
+    /// - Note: This method is only available when the array contains `QuerySort<Field>` elements
+    ///   where `Field` conforms to `QuerySortField`.
+    public func areInIncreasingOrder<Field>() -> (Field.Model, Field.Model) -> Bool where Element == QuerySort<Field>, Field: QuerySortField {
         { lhs, rhs in
             for sort in self {
                 let result = sort.compare(lhs, rhs)
@@ -187,7 +187,7 @@ extension Array {
 }
 
 extension Array {
-    public func sorted<Field>(using sorting: [Sort<Field>]) -> [Element] where Field: SortField, Element == Field.Model {
+    public func sorted<Field>(using sorting: [QuerySort<Field>]) -> [Element] where Field: QuerySortField, Element == Field.Model {
         sorted(by: { lhs, rhs in
             for sort in sorting {
                 let result = sort.compare(lhs, rhs)
