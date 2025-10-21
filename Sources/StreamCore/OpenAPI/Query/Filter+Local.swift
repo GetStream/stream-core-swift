@@ -3,7 +3,6 @@
 //
 
 import Foundation
-import StreamCore
 
 /// A filter matcher which rrases the type of the value the filter matches against.
 ///

@@ -8,7 +8,7 @@ import 'Sonarfile'
 
 xcode_version = ENV['XCODE_VERSION'] || '26.0.1'
 xcode_project = 'StreamCore.xcodeproj'
-sdk_names = ['StreamCore', 'StreamCoreUI', 'StreamAttachments', 'StreamOpenAPI']
+sdk_names = ['StreamCore', 'StreamCoreUI', 'StreamAttachments']
 github_repo = ENV['GITHUB_REPOSITORY'] || 'GetStream/stream-core-swift'
 derived_data_path = 'derived_data'
 source_packages_path = 'spm_cache'
@@ -100,13 +100,6 @@ lane :test_attachments do |options|
   run_library_tests(options)
 end
 
-desc 'Runs StreamOpenAPI tests'
-lane :test_openapi do |options|
-  options[:scheme] = 'StreamOpenAPI'
-  options[:sources] = sources_matrix[:openapi]
-  run_library_tests(options)
-end
-
 private_lane :run_library_tests do |options|
   next unless is_check_required(sources: options[:sources], force_check: @force_check)
 
@@ -159,7 +152,6 @@ lane :sources_matrix do
     core: ['Sources/StreamCore/', 'Tests/StreamCoreTests'],
     ui: ['Sources/StreamCoreUI/', 'Tests/StreamCoreUITests'],
     attachments: ['Sources/StreamAttachments/', 'Tests/StreamAttachmentsTests'],
-    openapi: ['Sources/StreamOpenAPI/', 'Tests/StreamOpenAPITests'],
     ruby: ['fastlane', 'Gemfile', 'Gemfile.lock']
   }
 end

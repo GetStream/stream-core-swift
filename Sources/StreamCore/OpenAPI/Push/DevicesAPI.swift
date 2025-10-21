@@ -3,7 +3,6 @@
 //
 
 import Foundation
-import StreamCore
 
 open class DevicesAPI: DevicesAPIEndpoints, @unchecked Sendable {
     public var middlewares: [DefaultAPIClientMiddleware]

@@ -16,13 +16,6 @@
     {
       "target" : {
         "containerPath" : "container:",
-        "identifier" : "StreamOpenAPITests",
-        "name" : "StreamOpenAPITests"
-      }
-    },
-    {
-      "target" : {
-        "containerPath" : "container:",
         "identifier" : "StreamCoreTests",
         "name" : "StreamCoreTests"
       }

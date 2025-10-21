@@ -3,7 +3,6 @@
 //
 
 import Foundation
-import StreamCore
 
 /// A protocol that defines a filter for querying data.
 ///

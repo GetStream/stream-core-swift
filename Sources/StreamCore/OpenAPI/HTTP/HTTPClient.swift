@@ -3,7 +3,6 @@
 //
 
 import Foundation
-import StreamCore
 
 public typealias UserTokenProvider = @Sendable (@Sendable @escaping (Result<UserToken, Error>) -> Void) -> Void
 public typealias UserTokenUpdater = @Sendable (UserToken) -> Void

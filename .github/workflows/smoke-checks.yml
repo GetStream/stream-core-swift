@@ -117,29 +117,6 @@ jobs:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       if: ${{ github.event_name == 'push' && failure() }}
 
-  test_openapi:
-    name: Test OpenAPI
-    runs-on: macos-15
-    steps:
-    - uses: actions/checkout@v4.1.1
-      with:
-        fetch-depth: 0
-    - uses: ./.github/actions/bootstrap
-      env:
-        INSTALL_YEETD: true
-    - name: Run OpenAPI Tests (Debug)
-      run: bundle exec fastlane test_openapi device:"${{ env.IOS_SIMULATOR_DEVICE }}"
-      timeout-minutes: 40
-    - uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        text: "You shall not pass!"
-        job_name: "Test OpenAPI (Debug)"
-        fields: repo,commit,author,workflow
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      if: ${{ github.event_name == 'push' && failure() }}
-
   automated-code-review:
     name: Automated Code Review
     runs-on: macos-15

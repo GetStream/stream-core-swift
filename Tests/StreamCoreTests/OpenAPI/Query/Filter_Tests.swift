@@ -3,8 +3,7 @@
 //
 
 import Foundation
-import StreamCore
-@testable import StreamOpenAPI
+@testable import StreamCore
 import Testing
 
 struct Filter_Tests {

@@ -20,10 +20,6 @@ let package = Package(
         .library(
             name: "StreamAttachments",
             targets: ["StreamAttachments"]
-        ),
-        .library(
-            name: "StreamOpenAPI",
-            targets: ["StreamOpenAPI"]
         )
     ],
     targets: [
@@ -50,14 +46,6 @@ let package = Package(
         .testTarget(
             name: "StreamAttachmentsTests",
             dependencies: ["StreamAttachments"]
-        ),
-        .target(
-            name: "StreamOpenAPI",
-            dependencies: ["StreamCore"]
-        ),
-        .testTarget(
-            name: "StreamOpenAPITests",
-            dependencies: ["StreamOpenAPI"]
         )
     ]
 )

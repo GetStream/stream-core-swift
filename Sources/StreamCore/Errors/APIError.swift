@@ -4,7 +4,7 @@
 
 import Foundation
 
-public final class APIError: @unchecked Sendable, Codable, Hashable, ReflectiveStringConvertible {
+public final class APIError: @unchecked Sendable, Codable, JSONEncodable, Hashable, ReflectiveStringConvertible {
     public var code: Int
     public var details: [Int]
     public var duration: String
