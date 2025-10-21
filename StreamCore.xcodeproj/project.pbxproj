@@ -84,12 +84,26 @@
 			);
 			target = 4F1E6A842E9FB58700BA0F44 /* StreamAttachmentsTests */;
 		};
-		4F911FCA2EA7BF040085A36B /* Exceptions for "StreamCore" folder in "StreamCore" target */ = {
+		4F911FD02EA7C2DD0085A36B /* Exceptions for "StreamCore" folder in "StreamCore" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 8454951F2DBA3A1300211413 /* StreamCore */;
+		};
+		4F911FD12EA7C2E90085A36B /* Exceptions for "StreamCoreUI" folder in "StreamCoreUI" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 8415DA0A2E462E9F00FEE25F /* StreamCoreUI */;
+		};
+		4F911FD22EA7C2EC0085A36B /* Exceptions for "StreamAttachments" folder in "StreamAttachments" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 4F1E6A7C2E9FB58600BA0F44 /* StreamAttachments */;
 		};
 		829528D02E69CD5200AED807 /* Exceptions for "Tests" folder in "StreamCoreTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -112,6 +126,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		4F1E6A7E2E9FB58600BA0F44 /* StreamAttachments */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4F911FD22EA7C2EC0085A36B /* Exceptions for "StreamAttachments" folder in "StreamAttachments" target */,
+			);
 			path = StreamAttachments;
 			sourceTree = "<group>";
 		};
@@ -127,13 +144,16 @@
 		};
 		8415DA0C2E462E9F00FEE25F /* StreamCoreUI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4F911FD12EA7C2E90085A36B /* Exceptions for "StreamCoreUI" folder in "StreamCoreUI" target */,
+			);
 			path = StreamCoreUI;
 			sourceTree = "<group>";
 		};
 		845495222DBA3A1300211413 /* StreamCore */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				4F911FCA2EA7BF040085A36B /* Exceptions for "StreamCore" folder in "StreamCore" target */,
+				4F911FD02EA7C2DD0085A36B /* Exceptions for "StreamCore" folder in "StreamCore" target */,
 			);
 			path = StreamCore;
 			sourceTree = "<group>";
@@ -577,7 +597,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/Sources/StreamAttachments/Info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -614,7 +634,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/Sources/StreamAttachments/Info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -690,7 +710,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/Sources/StreamCoreUI/Info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
@@ -721,7 +741,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/Sources/StreamCoreUI/Info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
