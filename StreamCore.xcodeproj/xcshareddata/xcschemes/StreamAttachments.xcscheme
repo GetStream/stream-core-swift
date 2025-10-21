@@ -15,9 +15,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "8454951F2DBA3A1300211413"
-               BuildableName = "StreamCore.framework"
-               BlueprintName = "StreamCore"
+               BlueprintIdentifier = "4F1E6A7C2E9FB58600BA0F44"
+               BuildableName = "StreamAttachments.framework"
+               BlueprintName = "StreamAttachments"
                ReferencedContainer = "container:StreamCore.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -30,7 +30,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:Tests/StreamCoreTests/StreamCore.xctestplan"
+            reference = "container:Tests/StreamAttachmentsTests/StreamAttachments.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>
@@ -40,9 +40,9 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "845495272DBA3A1300211413"
-               BuildableName = "StreamCoreTests.xctest"
-               BlueprintName = "StreamCoreTests"
+               BlueprintIdentifier = "4F1E6A842E9FB58700BA0F44"
+               BuildableName = "StreamAttachmentsTests.xctest"
+               BlueprintName = "StreamAttachmentsTests"
                ReferencedContainer = "container:StreamCore.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -68,9 +68,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "8454951F2DBA3A1300211413"
-            BuildableName = "StreamCore.framework"
-            BlueprintName = "StreamCore"
+            BlueprintIdentifier = "4F1E6A7C2E9FB58600BA0F44"
+            BuildableName = "StreamAttachments.framework"
+            BlueprintName = "StreamAttachments"
             ReferencedContainer = "container:StreamCore.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

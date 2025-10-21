@@ -15,23 +15,37 @@ let package = Package(
         .library(
             name: "StreamCoreUI",
             targets: ["StreamCoreUI"]
+        ),
+        // Features
+        .library(
+            name: "StreamAttachments",
+            targets: ["StreamAttachments"]
         )
     ],
     targets: [
         .target(
             name: "StreamCore"
         ),
+        .testTarget(
+            name: "StreamCoreTests",
+            dependencies: ["StreamCore"]
+        ),
         .target(
             name: "StreamCoreUI",
             dependencies: ["StreamCore"]
         ),
         .testTarget(
-            name: "StreamCoreTests",
+            name: "StreamCoreUITests",
+            dependencies: ["StreamCoreUI"]
+        ),
+        // Features
+        .target(
+            name: "StreamAttachments",
             dependencies: ["StreamCore"]
         ),
         .testTarget(
-            name: "StreamCoreUITests",
-            dependencies: ["StreamCoreUI"]
+            name: "StreamAttachmentsTests",
+            dependencies: ["StreamAttachments"]
         )
     ]
 )

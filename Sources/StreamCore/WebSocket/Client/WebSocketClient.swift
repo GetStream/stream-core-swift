@@ -158,7 +158,7 @@ public extension WebSocketClient {
     /// An object encapsulating all dependencies of `WebSocketClient`.
     struct Environment {
         typealias CreatePingController = (
-            _ timerType: Timer.Type,
+            _ timerType: StreamTimer.Type,
             _ timerQueue: DispatchQueue,
             _ webSocketClientType: WebSocketClientType
         ) -> WebSocketPingController
@@ -169,7 +169,7 @@ public extension WebSocketClient {
             _ callbackQueue: DispatchQueue
         ) -> WebSocketEngine
 
-        var timerType: Timer.Type = DefaultTimer.self
+        var timerType: StreamTimer.Type = DefaultTimer.self
 
         var createPingController: CreatePingController = WebSocketPingController.init
 
@@ -186,7 +186,7 @@ public extension WebSocketClient {
         public init() {}
         
         init(
-            timerType: Timer.Type = DefaultTimer.self,
+            timerType: StreamTimer.Type = DefaultTimer.self,
             createPingController: @escaping CreatePingController,
             createEngine: @escaping CreateEngine,
             eventBatcherBuilder: @escaping (

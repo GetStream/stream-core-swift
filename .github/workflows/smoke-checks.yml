@@ -25,8 +25,8 @@ env:
   GITHUB_PR_NUM: ${{ github.event.pull_request.number }}
 
 jobs:
-  test_llc:
-    name: Test LLC
+  test_core:
+    name: Test Core
     runs-on: macos-15
     steps:
     - uses: actions/checkout@v4.1.1
@@ -36,8 +36,8 @@ jobs:
       env:
         INSTALL_YEETD: true
         INSTALL_SONAR: true
-    - name: Run LLC Tests (Debug)
-      run: bundle exec fastlane test device:"${{ env.IOS_SIMULATOR_DEVICE }}"
+    - name: Run Core Tests (Debug)
+      run: bundle exec fastlane test_core device:"${{ env.IOS_SIMULATOR_DEVICE }}"
       timeout-minutes: 40
     - name: Run Sonar analysis
       run: bundle exec fastlane sonar_upload
@@ -48,7 +48,7 @@ jobs:
       with:
         status: ${{ job.status }}
         text: "You shall not pass!"
-        job_name: "Test LLC (Debug)"
+        job_name: "Test Core (Debug)"
         fields: repo,commit,author,workflow
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -61,7 +61,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: failure()
       with:
-        name: Test Data LLC
+        name: Test Data Core
         path: |
           fastlane/test_output/logs/*/Diagnostics/**/*.txt
           fastlane/test_output/logs/*/Diagnostics/simctl_diagnostics/DiagnosticReports/*
@@ -88,7 +88,30 @@ jobs:
       with:
         status: ${{ job.status }}
         text: "You shall not pass!"
-        job_name: "Test LLC (Debug)"
+        job_name: "Test UI (Debug)"
+        fields: repo,commit,author,workflow
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      if: ${{ github.event_name == 'push' && failure() }}
+  
+  test_attachments:
+    name: Test Attachments
+    runs-on: macos-15
+    steps:
+    - uses: actions/checkout@v4.1.1
+      with:
+        fetch-depth: 0
+    - uses: ./.github/actions/bootstrap
+      env:
+        INSTALL_YEETD: true
+    - name: Run Attachments Tests (Debug)
+      run: bundle exec fastlane test_attachments device:"${{ env.IOS_SIMULATOR_DEVICE }}"
+      timeout-minutes: 40
+    - uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: "You shall not pass!"
+        job_name: "Test Attachments (Debug)"
         fields: repo,commit,author,workflow
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

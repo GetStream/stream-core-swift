@@ -8,7 +8,7 @@ import 'Sonarfile'
 
 xcode_version = ENV['XCODE_VERSION'] || '26.0.1'
 xcode_project = 'StreamCore.xcodeproj'
-sdk_names = ['StreamCore', 'StreamCoreUI']
+sdk_names = ['StreamCore', 'StreamCoreUI', 'StreamAttachments']
 github_repo = ENV['GITHUB_REPOSITORY'] || 'GetStream/stream-core-swift'
 derived_data_path = 'derived_data'
 source_packages_path = 'spm_cache'
@@ -80,35 +80,33 @@ lane :get_sdk_version_from_environment do
 end
 
 desc 'Runs StreamCore tests'
-lane :test do |options|
-  next unless is_check_required(sources: sources_matrix[:llc], force_check: @force_check)
-
-  scan_options = {
-    project: xcode_project,
-    scheme: 'StreamCore',
-    testplan: 'StreamCore',
-    clean: is_localhost,
-    derived_data_path: derived_data_path,
-    cloned_source_packages_path: source_packages_path,
-    devices: options[:device],
-    number_of_retries: 3,
-    skip_build: options[:skip_build],
-    build_for_testing: options[:build_for_testing]
-  }
-
-  scan(scan_options)
-
-  slather unless options[:build_for_testing]
+lane :test_core do |options|
+  options[:scheme] = 'StreamCore'
+  options[:sources] = sources_matrix[:core]
+  run_library_tests(options)
 end
 
 desc 'Runs StreamCoreUI tests'
 lane :test_ui do |options|
-  next unless is_check_required(sources: sources_matrix[:ui], force_check: @force_check)
+  options[:scheme] = 'StreamCoreUI'
+  options[:sources] = sources_matrix[:ui]
+  run_library_tests(options)
+end
+
+desc 'Runs StreamAttachments tests'
+lane :test_attachments do |options|
+  options[:scheme] = 'StreamAttachments'
+  options[:sources] = sources_matrix[:attachments]
+  run_library_tests(options)
+end
+
+private_lane :run_library_tests do |options|
+  next unless is_check_required(sources: options[:sources], force_check: @force_check)
 
   scan_options = {
     project: xcode_project,
-    scheme: 'StreamCoreUI',
-    testplan: 'StreamCoreUI',
+    scheme: options[:scheme],
+    testplan: options[:scheme],
     clean: is_localhost,
     derived_data_path: derived_data_path,
     cloned_source_packages_path: source_packages_path,
@@ -119,6 +117,8 @@ lane :test_ui do |options|
   }
 
   scan(scan_options)
+
+  slather if options[:scheme] == 'StreamCore' && !options[:build_for_testing]
 end
 
 desc 'Run fastlane linting'
@@ -149,8 +149,9 @@ end
 
 lane :sources_matrix do
   {
-    llc: ['Sources/StreamCore/', 'Tests/StreamCoreTests'],
+    core: ['Sources/StreamCore/', 'Tests/StreamCoreTests'],
     ui: ['Sources/StreamCoreUI/', 'Tests/StreamCoreUITests'],
+    attachments: ['Sources/StreamAttachments/', 'Tests/StreamAttachmentsTests'],
     ruby: ['fastlane', 'Gemfile', 'Gemfile.lock']
   }
 end

@@ -3,6 +3,7 @@
 //
 
 import Foundation
+import StreamCore
 
 /// A type representing a content attachment.
 /// `StreamAttachment<Payload>` is an immutable snapshot of the attachment at the given time.

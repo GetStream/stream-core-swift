@@ -32,7 +32,10 @@ public struct LogSubsystem: OptionSet, CustomStringConvertible, Sendable {
         .audioSession,
         .videoCapturer,
         .pictureInPicture,
-        .callKit
+        .callKit,
+        .authentication,
+        .audioPlayback,
+        .audioRecording
     ]
 
     /// All subsystems within the SDK.
@@ -52,7 +55,10 @@ public struct LogSubsystem: OptionSet, CustomStringConvertible, Sendable {
         .audioSession,
         .videoCapturer,
         .pictureInPicture,
-        .callKit
+        .callKit,
+        .authentication,
+        .audioPlayback,
+        .audioRecording
     ]
     
     /// The subsystem responsible for any other part of the SDK.
@@ -88,6 +94,12 @@ public struct LogSubsystem: OptionSet, CustomStringConvertible, Sendable {
     public static let pictureInPicture = Self(rawValue: 1 << 14)
     /// The subsystem responsible for PicutreInPicture.
     public static let callKit = Self(rawValue: 1 << 15)
+    /// The subsystem responsible for authentication.
+    public static let authentication = Self(rawValue: 1 << 16)
+    /// The subsystem responsible for audio playback.
+    public static let audioPlayback = Self(rawValue: 1 << 17)
+    /// The subsystem responsible for audio recording.
+    public static let audioRecording = Self(rawValue: 1 << 18)
 
     public var description: String {
         switch rawValue {
@@ -123,6 +135,12 @@ public struct LogSubsystem: OptionSet, CustomStringConvertible, Sendable {
             "picture-in-picture"
         case LogSubsystem.callKit.rawValue:
             "CallKit"
+        case LogSubsystem.authentication.rawValue:
+            "authentication"
+        case LogSubsystem.audioPlayback.rawValue:
+            "audio-playback"
+        case LogSubsystem.audioRecording.rawValue:
+            "audio-recording"
         default:
             "unknown(rawValue:\(rawValue)"
         }
@@ -418,7 +436,7 @@ public enum LogConfig {
 }
 
 /// Entity used for logging messages.
-public class Logger {
+open class Logger {
     /// Identifier of the Logger. Will be visible if a destination has `showIdentifiers` enabled.
     public let identifier: String
     
@@ -619,7 +637,7 @@ public class Logger {
     /// - Parameters:
     ///   - condition: The condition to test.
     ///   - message: A custom message to log if `condition` is evaluated to false.
-    public func assert(
+    open func assert(
         _ condition: @autoclosure () -> Bool,
         _ message: @autoclosure () -> Any,
         subsystems: LogSubsystem = .other,
@@ -647,7 +665,7 @@ public class Logger {
     ///
     /// - Parameters:
     ///   - message: A custom message to log if `condition` is evaluated to false.
-    public func assertionFailure(
+    open func assertionFailure(
         _ message: @autoclosure () -> Any,
         subsystems: LogSubsystem = .other,
         functionName: StaticString = #function,
@@ -688,7 +706,7 @@ private extension Logger {
 
 extension Data {
     /// Converts the data into a pretty-printed JSON string. Use only for debug purposes since this operation can be expensive.
-    var debugPrettyPrintedJSON: String {
+    public var debugPrettyPrintedJSON: String {
         do {
             let jsonObject = try JSONSerialization.jsonObject(with: self, options: [])
             let prettyPrintedData = try JSONSerialization.data(withJSONObject: jsonObject, options: [.prettyPrinted, .sortedKeys])

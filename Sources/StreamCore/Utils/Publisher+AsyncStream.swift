@@ -52,14 +52,14 @@ public extension Publisher where Output: Sendable {
         function: StaticString = #function,
         line: UInt = #line
     ) async throws -> Output {
-        nonisolated(unsafe) let selfReference = self
+        let erased = self.eraseToAnyPublisher()
         return try await Task(
             timeoutInSeconds: timeoutInSeconds,
             file: file,
             function: function,
             line: line
-        ) {
-            try await selfReference.firstValue(file: file, line: line)
+        ) { [erased] in
+            try await erased.firstValue(file: file, line: line)
         }.value
     }
 

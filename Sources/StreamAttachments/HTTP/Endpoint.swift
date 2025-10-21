@@ -3,6 +3,7 @@
 //
 
 import Foundation
+import StreamCore
 
 public struct Endpoint<ResponseType: Decodable>: Codable {
     let path: EndpointPath

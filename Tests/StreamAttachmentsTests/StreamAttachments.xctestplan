@@ -1,7 +1,7 @@
 {
   "configurations" : [
     {
-      "id" : "5A2B6D63-0972-4DF9-A346-C2380775F973",
+      "id" : "6B7E5F09-1B38-488C-BAEA-9BCF041BAB2D",
       "name" : "Configuration 1",
       "options" : {
 
@@ -10,14 +10,15 @@
   ],
   "defaultOptions" : {
     "language" : "en",
-    "region" : "US"
+    "region" : "US",
+    "testTimeoutsEnabled" : true
   },
   "testTargets" : [
     {
       "target" : {
         "containerPath" : "container:StreamCore.xcodeproj",
-        "identifier" : "8415DA162E462EEF00FEE25F",
-        "name" : "StreamCoreUITests"
+        "identifier" : "4F1E6A842E9FB58700BA0F44",
+        "name" : "StreamAttachmentsTests"
       }
     }
   ],
