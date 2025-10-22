@@ -55,6 +55,7 @@ public protocol TimerControl {
 }
 
 extension DispatchWorkItem: TimerControl {}
+extension DispatchWorkItem: @retroactive @unchecked Sendable {}
 
 /// Default real-world implementations of timers.
 public struct DefaultTimer: StreamTimer {
@@ -116,7 +117,11 @@ private class RepeatingTimer: RepeatingTimerControl, @unchecked Sendable {
 
     private let queue = DispatchQueue(label: "io.getstream.repeating-timer")
     private var state: State = .suspended
+    #if compiler(>=6.1)
     private let timer: DispatchSourceTimer
+    #else
+    private nonisolated(unsafe) let timer: DispatchSourceTimer
+    #endif
 
     init(timeInterval: TimeInterval, queue: DispatchQueue, onFire: @escaping () -> Void) {
         timer = DispatchSource.makeTimerSource(queue: queue)

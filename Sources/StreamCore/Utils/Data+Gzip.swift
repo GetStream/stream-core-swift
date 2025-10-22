@@ -35,7 +35,7 @@ extension Data {
     ///
     /// - Returns: Gzip-compressed `Data` instance.
     /// - Throws: `GzipError`
-    func gzipped() throws -> Data {
+    public func gzipped() throws -> Data {
         guard !isEmpty else {
             return Data()
         }
