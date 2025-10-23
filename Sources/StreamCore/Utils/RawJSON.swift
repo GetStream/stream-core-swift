@@ -15,7 +15,7 @@ public indirect enum RawJSON: Codable, Hashable, Sendable {
     case array([RawJSON])
     case `nil`
     
-    static let double = number
+    public static let double = number
     
     public init(from decoder: Decoder) throws {
         let singleValueContainer = try decoder.singleValueContainer()
@@ -294,7 +294,7 @@ extension RawJSON {
     /// let price = customData["flight"]?["price"].numberValue
     /// let destination = customData["flight"]?["destination"].stringValue
     /// ```
-    subscript(key: String) -> RawJSON? {
+    public subscript(key: String) -> RawJSON? {
         get {
             guard case let .dictionary(dict) = self else {
                 return nil
@@ -320,7 +320,7 @@ extension RawJSON {
     /// let customData = message.customData
     /// let secondFlightPrice = customData["flights"]?[1]?["price"] ?? 0
     /// ```
-    subscript(index: Int) -> RawJSON? {
+    public subscript(index: Int) -> RawJSON? {
         get {
             guard case let .array(array) = self else {
                 return nil
