@@ -7,17 +7,17 @@ import Foundation
 
 public class WebSocketClient: @unchecked Sendable {
     /// The notification center `WebSocketClient` uses to send notifications about incoming events.
-    let eventNotificationCenter: EventNotificationCenter
+    public let eventNotificationCenter: EventNotificationCenter
 
     /// The batch of events received via the web-socket that wait to be processed.
     private(set) lazy var eventsBatcher = environment.eventBatcherBuilder { [weak self] events, completion in
         guard let self else { return }
         events.forEach { [eventSubject] in eventSubject.send($0) }
-        eventNotificationCenter.process(events, completion: completion)
+        eventNotificationCenter.process(events, postNotifications: true, completion: completion)
     }
 
     /// The current state the web socket connection.
-    @Atomic public private(set) var connectionState: WebSocketConnectionState = .initialized {
+    @Atomic public internal(set) var connectionState: WebSocketConnectionState = .initialized {
         didSet {
             pingController.connectionStateDidChange(connectionState)
 
@@ -35,7 +35,7 @@ public class WebSocketClient: @unchecked Sendable {
 
     public weak var connectionStateDelegate: ConnectionStateDelegate?
 
-    public var connectURL: URL
+    public var connectRequest: URLRequest?
 
     var requiresAuth: Bool
 
@@ -58,8 +58,8 @@ public class WebSocketClient: @unchecked Sendable {
 
     let pingController: WebSocketPingController
 
-    private func createEngineIfNeeded(for connectURL: URL) -> WebSocketEngine {
-        let request = URLRequest(url: connectURL)
+    private func createEngineIfNeeded(for connectRequest: URLRequest) -> WebSocketEngine {
+        let request = connectRequest
 
         if let existedEngine = engine, existedEngine.request == request {
             return existedEngine
@@ -79,7 +79,7 @@ public class WebSocketClient: @unchecked Sendable {
         eventNotificationCenter: EventNotificationCenter,
         webSocketClientType: WebSocketClientType,
         environment: Environment = Environment(),
-        connectURL: URL,
+        connectRequest: URLRequest?,
         requiresAuth: Bool = true,
         pingRequestBuilder: (() -> any SendableEvent)? = nil
     ) {
@@ -87,7 +87,7 @@ public class WebSocketClient: @unchecked Sendable {
         self.sessionConfiguration = sessionConfiguration
         self.webSocketClientType = webSocketClientType
         self.eventDecoder = eventDecoder
-        self.connectURL = connectURL
+        self.connectRequest = connectRequest
         self.eventNotificationCenter = eventNotificationCenter
         self.requiresAuth = requiresAuth
         pingController = environment.createPingController(
@@ -98,6 +98,10 @@ public class WebSocketClient: @unchecked Sendable {
         pingController.pingRequestBuilder = pingRequestBuilder
         
         pingController.delegate = self
+    }
+    
+    public func initialize() {
+        connectionState = .initialized
     }
 
     /// Connects the web connect.
@@ -111,7 +115,12 @@ public class WebSocketClient: @unchecked Sendable {
         default: break
         }
 
-        engine = createEngineIfNeeded(for: connectURL)
+        guard let connectRequest else {
+            log.error("Connect request is not set for web-socket client while calling \(#function)")
+            return
+        }
+        
+        engine = createEngineIfNeeded(for: connectRequest)
 
         connectionState = .connecting
 
@@ -158,7 +167,7 @@ public extension WebSocketClient {
     /// An object encapsulating all dependencies of `WebSocketClient`.
     struct Environment {
         typealias CreatePingController = (
-            _ timerType: StreamTimer.Type,
+            _ timerType: TimerScheduling.Type,
             _ timerQueue: DispatchQueue,
             _ webSocketClientType: WebSocketClientType
         ) -> WebSocketPingController
@@ -169,7 +178,7 @@ public extension WebSocketClient {
             _ callbackQueue: DispatchQueue
         ) -> WebSocketEngine
 
-        var timerType: StreamTimer.Type = DefaultTimer.self
+        var timerType: TimerScheduling.Type = DefaultTimer.self
 
         var createPingController: CreatePingController = WebSocketPingController.init
 
@@ -179,19 +188,19 @@ public extension WebSocketClient {
 
         var eventBatcherBuilder: (
             _ handler: @Sendable @escaping ([Event], @Sendable @escaping () -> Void) -> Void
-        ) -> Batcher<Event> = {
+        ) -> EventBatcher = {
             Batcher<Event>(period: 0.0, handler: $0)
         }
         
         public init() {}
         
         init(
-            timerType: StreamTimer.Type = DefaultTimer.self,
+            timerType: TimerScheduling.Type = DefaultTimer.self,
             createPingController: @escaping CreatePingController,
             createEngine: @escaping CreateEngine,
             eventBatcherBuilder: @escaping (
                 _ handler: @Sendable @escaping ([Event], @Sendable @escaping () -> Void) -> Void
-            ) -> Batcher<Event>
+            ) -> EventBatcher
         ) {
             self.timerType = timerType
             self.createPingController = createPingController
@@ -305,7 +314,7 @@ extension WebSocketClient: WebSocketPingControllerDelegate {
     }
 
     func disconnectOnNoPongReceived() {
-        log.debug("disconnecting from \(connectURL)", subsystems: .webSocket)
+        log.debug("disconnecting from \(String(describing: connectRequest))", subsystems: .webSocket)
         disconnect(source: .noPongReceived) {
             log.debug("Websocket is disconnected because of no pong received", subsystems: .webSocket)
         }

@@ -29,13 +29,18 @@ public struct ErrorPayload: LocalizedError, Codable, CustomDebugStringConvertibl
 }
 
 extension ErrorPayload {
+    /// Returns `true` if the code determines that the token is expired.
+    public var isExpiredTokenError: Bool {
+        code == StreamErrorCode.expiredToken
+    }
+    
     /// Returns `true` if code is withing invalid token codes range.
-    var isInvalidTokenError: Bool {
-        ClosedRange.tokenInvalidErrorCodes ~= code
+    public var isInvalidTokenError: Bool {
+        ClosedRange.tokenInvalidErrorCodes ~= code || code == StreamErrorCode.accessKeyInvalid
     }
     
     /// Returns `true` if status code is withing client error codes range.
-    var isClientError: Bool {
+    public var isClientError: Bool {
         ClosedRange.clientErrorCodes ~= statusCode
     }
 }

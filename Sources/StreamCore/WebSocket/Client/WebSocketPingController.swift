@@ -26,7 +26,7 @@ class WebSocketPingController {
     /// The time interval for pong timeout.
     static let pongTimeoutTimeInterval: TimeInterval = 3
     
-    private let timerType: StreamTimer.Type
+    private let timerType: TimerScheduling.Type
     private let timerQueue: DispatchQueue
     
     /// The timer used for scheduling `ping` calls
@@ -51,7 +51,7 @@ class WebSocketPingController {
     ///   - timerType: a timer type.
     ///   - timerQueue: a timer dispatch queue.
     init(
-        timerType: StreamTimer.Type,
+        timerType: TimerScheduling.Type,
         timerQueue: DispatchQueue,
         webSocketClientType: WebSocketClientType
     ) {

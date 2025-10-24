@@ -40,7 +40,7 @@ public final class StreamJSONDecoder: JSONDecoder, @unchecked Sendable {
                     return date.bridgeDate
                 }
                 
-                if let date = self?.iso8601formatter.date(from: dateString) {
+                if let date = self?.iso8601formatter.dateWithMicroseconds(from: dateString) {
                     self?.dateCache.setObject(date.bridgeDate, forKey: dateString as NSString)
                     return date
                 }
@@ -55,6 +55,13 @@ public final class StreamJSONDecoder: JSONDecoder, @unchecked Sendable {
             }
         }
     }
+    
+    /// A convenience method returning RawJSON dictionary.
+    public func decodeRawJSON(from data: Data?) throws -> [String: RawJSON] {
+        guard let data, !data.isEmpty else { return [:] }
+        let rawJSON = try decode([String: RawJSON].self, from: data)
+        return rawJSON
+    }
 }
 
 extension JSONDecoder {
@@ -62,7 +69,7 @@ extension JSONDecoder {
     public static let `default`: JSONDecoder = stream
     
     /// A Stream Chat JSON decoder.
-    static let stream: StreamJSONDecoder = StreamJSONDecoder()
+    public static let stream: StreamJSONDecoder = StreamJSONDecoder()
 }
 
 // MARK: - JSONEncoder Stream
@@ -74,7 +81,7 @@ extension JSONEncoder {
     static let defaultGzip: JSONEncoder = streamGzip
     
     /// A Stream Chat JSON encoder.
-    static let stream: JSONEncoder = {
+    public static let stream: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .stream
         return encoder
@@ -195,8 +202,16 @@ extension ClientError {
             super.init(message, file, line)
         }
         
-        init<T>(missingValue: String, for type: T.Type, _ file: StaticString = #fileID, _ line: UInt = #line) {
+        public init<T>(missingValue: String, for type: T.Type, _ file: StaticString = #fileID, _ line: UInt = #line) {
             super.init("`\(missingValue)` field can't be `nil` for the `\(type)` event.", file, line)
+        }
+        
+        public init(missingValue: String, for eventType: String, _ file: StaticString = #file, _ line: UInt = #line) {
+            super.init("`\(missingValue)` field can't be `nil` for the `\(eventType)` event.", file, line)
+        }
+        
+        public init(failedParsingValue: String, for eventType: String, with error: Error, _ file: StaticString = #file, _ line: UInt = #line) {
+            super.init("`\(failedParsingValue)` failed to parse for the `\(eventType)` event. Error: \(error)", file, line)
         }
     }
 }

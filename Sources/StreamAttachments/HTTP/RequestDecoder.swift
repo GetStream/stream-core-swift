@@ -111,13 +111,6 @@ extension ClientError {
     }
 }
 
-extension ErrorPayload {
-    /// Returns `true` if the code determines that the token is expired.
-    var isExpiredTokenError: Bool {
-        code == StreamErrorCode.expiredToken
-    }
-}
-
 /// https://getstream.io/chat/docs/ios-swift/api_errors_response/
 enum StreamErrorCode {
     /// Usually returned when trying to perform an API call without a token.

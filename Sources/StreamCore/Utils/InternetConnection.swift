@@ -26,7 +26,7 @@ extension Notification {
 ///
 /// Basically, it's a wrapper over legacy monitor based on `Reachability` (iOS 11 only)
 /// and default monitor based on `Network`.`NWPathMonitor` (iOS 12+).
-public final class InternetConnection: @unchecked Sendable {
+open class InternetConnection: @unchecked Sendable {
     /// The current Internet connection status.
     @Published private(set) var status: InternetConnectionStatus {
         didSet {

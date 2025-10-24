@@ -42,22 +42,23 @@ public extension ConnectionStatus {
             self = .disconnecting
             
         case let .disconnected(source):
-            let isWaitingForReconnect = webSocketConnectionState.isAutomaticReconnectionEnabled || source.serverError?
-                .isInvalidTokenError == true
-            
+            let isWaitingForReconnect = webSocketConnectionState.isAutomaticReconnectionEnabled
             self = isWaitingForReconnect ? .connecting : .disconnected(error: source.serverError)
         }
     }
 }
 
-typealias ConnectionId = String
+public typealias ConnectionId = String
 
 /// A web socket connection state.
-public enum WebSocketConnectionState: Equatable {
+public enum WebSocketConnectionState: Equatable, Sendable {
     /// Provides additional information about the source of disconnecting.
-    public enum DisconnectionSource: Equatable {
+    public indirect enum DisconnectionSource: Equatable, Sendable {
         /// A user initiated web socket disconnecting.
         case userInitiated
+        
+        /// The connection timed out while trying to connect.
+        case timeout(from: WebSocketConnectionState)
         
         /// A server initiated web socket disconnecting, an optional error object is provided.
         case serverInitiated(error: ClientError? = nil)
@@ -95,7 +96,7 @@ public enum WebSocketConnectionState: Equatable {
     case disconnecting(source: DisconnectionSource)
     
     /// Checks if the connection state is connected.
-    var isConnected: Bool {
+    public var isConnected: Bool {
         if case .connected = self {
             return true
         }
@@ -140,6 +141,8 @@ public enum WebSocketConnectionState: Equatable {
         case .noPongReceived:
             return true
         case .userInitiated:
+            return false
+        case .timeout:
             return false
         }
     }

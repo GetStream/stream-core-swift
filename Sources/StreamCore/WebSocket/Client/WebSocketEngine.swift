@@ -30,7 +30,7 @@ public struct WebSocketEngineError: Error {
     
     let reason: String
     let code: Int
-    let engineError: Error?
+    public let engineError: Error?
     
     var localizedDescription: String { reason }
 }

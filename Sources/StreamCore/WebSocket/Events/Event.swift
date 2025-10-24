@@ -26,7 +26,7 @@ public protocol SendableEvent: Event {
 
 extension Event {
     public var name: String {
-        String(describing: Self.self)
+        String(describing: Self.self).replacingOccurrences(of: "DTO", with: "")
     }
 }
 

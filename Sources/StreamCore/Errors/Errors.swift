@@ -21,7 +21,7 @@ open class ClientError: Error, ReflectiveStringConvertible, @unchecked Sendable 
     
     public let apiError: APIError?
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         if let apiError {
             apiError.message
         } else {
@@ -138,3 +138,13 @@ struct APIErrorContainer: Codable {
 }
 
 extension APIError: Error {}
+
+/// https://getstream.io/chat/docs/ios-swift/api_errors_response/
+enum StreamErrorCode {
+    /// Usually returned when trying to perform an API call without a token.
+    static let accessKeyInvalid = 2
+    static let expiredToken = 40
+    static let notYetValidToken = 41
+    static let invalidTokenDate = 42
+    static let invalidTokenSignature = 43
+}
