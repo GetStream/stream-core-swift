@@ -17,7 +17,7 @@ env:
 
 jobs:
   build-and-test:
-    name: Test LLC
+    name: Test
     strategy:
       matrix:
         include:
@@ -52,21 +52,15 @@ jobs:
       with:
         version: ${{ matrix.ios }}
         device: ${{ matrix.device }}
-    - name: Run LLC Tests (Debug)
-      run: bundle exec fastlane test device:"${{ matrix.device }} (${{ matrix.ios }})" cron:true
-      timeout-minutes: 60
-    - name: Parse xcresult
-      if: failure()
-      run: |
-        brew install chargepoint/xcparse/xcparse
-        xcparse logs fastlane/test_output/StreamCore.xcresult fastlane/test_output/logs/
-    - uses: actions/upload-artifact@v4
-      if: failure()
-      with:
-        name: Test Data LLC (iOS ${{ matrix.ios }})
-        path: |
-          fastlane/test_output/logs/*/Diagnostics/**/*.txt
-          fastlane/test_output/logs/*/Diagnostics/simctl_diagnostics/DiagnosticReports/*
+    - name: Run Core Tests
+      run: bundle exec fastlane test_core device:"${{ matrix.device }} (${{ matrix.ios }})" cron:true
+      timeout-minutes: 30
+    - name: Run UI Tests
+      run: bundle exec fastlane test_ui device:"${{ matrix.device }} (${{ matrix.ios }})" cron:true
+      timeout-minutes: 30
+    - name: Run Attachments Tests
+      run: bundle exec fastlane test_attachments device:"${{ matrix.device }} (${{ matrix.ios }})" cron:true
+      timeout-minutes: 30
 
   automated-code-review:
     name: Automated Code Review
