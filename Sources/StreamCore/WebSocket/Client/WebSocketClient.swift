@@ -46,7 +46,7 @@ public class WebSocketClient: @unchecked Sendable {
     public private(set) var engine: WebSocketEngine?
 
     /// The queue on which web socket engine methods are called
-    private let engineQueue: DispatchQueue = .init(label: "io.getStream.video.core.web_socket_engine_queue", qos: .userInitiated)
+    private let engineQueue: DispatchQueue = .init(label: "io.getstream.core.web_socket_engine_queue", qos: .userInitiated)
 
     /// The session config used for the web socket engine
     private let sessionConfiguration: URLSessionConfiguration
