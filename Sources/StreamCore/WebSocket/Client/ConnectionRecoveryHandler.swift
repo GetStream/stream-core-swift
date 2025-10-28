@@ -54,7 +54,6 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
             keepConnectionAliveInBackground: keepConnectionAliveInBackground,
             reconnectionPolicies: [
                 WebSocketAutomaticReconnectionPolicy(webSocketClient),
-                InternetAvailabilityReconnectionPolicy(internetConnection),
                 BackgroundStateReconnectionPolicy(backgroundTaskScheduler)
             ]
         )
@@ -100,7 +99,7 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
 
 private extension DefaultConnectionRecoveryHandler {
     func subscribeOnNotifications() {
-        Task { @MainActor in
+        StreamConcurrency.onMain {
             backgroundTaskScheduler?.startListeningForAppStateUpdates(
                 onEnteringBackground: { [weak self] in self?.appDidEnterBackground() },
                 onEnteringForeground: { [weak self] in self?.appDidBecomeActive() }
@@ -116,15 +115,15 @@ private extension DefaultConnectionRecoveryHandler {
     }
     
     func unsubscribeFromNotifications() {
-        Task { @MainActor [backgroundTaskScheduler] in
+        StreamConcurrency.onMain {
             backgroundTaskScheduler?.stopListeningForAppStateUpdates()
+            
+            internetConnection.notificationCenter.removeObserver(
+                self,
+                name: .internetConnectionStatusDidChange,
+                object: nil
+            )
         }
-
-        internetConnection.notificationCenter.removeObserver(
-            self,
-            name: .internetConnectionStatusDidChange,
-            object: nil
-        )
     }
 }
 
@@ -132,7 +131,7 @@ private extension DefaultConnectionRecoveryHandler {
 
 extension DefaultConnectionRecoveryHandler {
     private func appDidBecomeActive() {
-        Task { @MainActor in
+        StreamConcurrency.onMain {
             log.debug("App -> ✅", subsystems: .webSocket)
 
             backgroundTaskScheduler?.endTask()
@@ -157,7 +156,7 @@ extension DefaultConnectionRecoveryHandler {
         
         guard let scheduler = backgroundTaskScheduler else { return }
                 
-        Task { @MainActor in
+        StreamConcurrency.onMain {
             let succeed = scheduler.beginTask { [weak self] in
                 log.debug("Background task -> ❌", subsystems: .webSocket)
 
