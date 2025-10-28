@@ -78,6 +78,8 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
         self.reconnectionTimerType = reconnectionTimerType
         self.keepConnectionAliveInBackground = keepConnectionAliveInBackground
         self.reconnectionPolicies = reconnectionPolicies
+        
+        start()
     }
     
     public func start() {
@@ -98,7 +100,7 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
 
 private extension DefaultConnectionRecoveryHandler {
     func subscribeOnNotifications() {
-        StreamConcurrency.onMain {
+        Task { @MainActor in
             backgroundTaskScheduler?.startListeningForAppStateUpdates(
                 onEnteringBackground: { [weak self] in self?.appDidEnterBackground() },
                 onEnteringForeground: { [weak self] in self?.appDidBecomeActive() }
@@ -130,7 +132,7 @@ private extension DefaultConnectionRecoveryHandler {
 
 extension DefaultConnectionRecoveryHandler {
     private func appDidBecomeActive() {
-        StreamConcurrency.onMain {
+        Task { @MainActor in
             log.debug("App -> ✅", subsystems: .webSocket)
 
             backgroundTaskScheduler?.endTask()
@@ -155,7 +157,7 @@ extension DefaultConnectionRecoveryHandler {
         
         guard let scheduler = backgroundTaskScheduler else { return }
                 
-        StreamConcurrency.onMain {
+        Task { @MainActor in
             let succeed = scheduler.beginTask { [weak self] in
                 log.debug("Background task -> ❌", subsystems: .webSocket)
 
