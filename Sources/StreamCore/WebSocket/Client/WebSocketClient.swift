@@ -217,7 +217,7 @@ extension WebSocketClient: WebSocketEngineDelegate {
             event = try eventDecoder.decode(from: data)
         } catch {
             do {
-                let apiError = try JSONDecoder.default.decode(APIErrorContainer.self, from: data).error
+                let apiError = try JSONDecoder.streamCore.decode(APIErrorContainer.self, from: data).error
                 log.error("web socket error \(apiError.message)", subsystems: .webSocket, error: apiError)
             } catch let decodingError {
                 log.warning(

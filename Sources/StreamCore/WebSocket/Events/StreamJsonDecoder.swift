@@ -59,7 +59,7 @@ public final class StreamJSONDecoder: JSONDecoder, @unchecked Sendable {
 
 extension JSONDecoder {
     /// A default `JSONDecoder`.
-    public static let `default`: JSONDecoder = stream
+    public static let streamCore: JSONDecoder = stream
     
     /// A Stream Chat JSON decoder.
     static let stream: StreamJSONDecoder = StreamJSONDecoder()
@@ -69,7 +69,7 @@ extension JSONDecoder {
 
 extension JSONEncoder {
     /// A default `JSONEncoder`.
-    public static let `default`: JSONEncoder = stream
+    public static let streamCore: JSONEncoder = stream
     /// A default gzip `JSONEncoder`.
     static let defaultGzip: JSONEncoder = streamGzip
     

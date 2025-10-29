@@ -107,7 +107,7 @@ public extension AnyStreamAttachment {
     ) -> StreamAttachment<PayloadData>? {
         guard
             PayloadData.type == type || type == .unknown,
-            let concretePayload = try? JSONDecoder.default.decode(PayloadData.self, from: payload)
+            let concretePayload = try? JSONDecoder.streamCore.decode(PayloadData.self, from: payload)
         else { return nil }
 
         return .init(
@@ -127,7 +127,7 @@ public extension StreamAttachment where Payload: AttachmentPayload {
         AnyStreamAttachment(
             id: id,
             type: type,
-            payload: try! JSONEncoder.default.encode(payload),
+            payload: try! JSONEncoder.streamCore.encode(payload),
             downloadingState: downloadingState,
             uploadingState: uploadingState
         )
@@ -141,8 +141,8 @@ public extension StreamAttachment where Payload: AttachmentPayload {
         payloadType: NewPayload.Type
     ) -> StreamAttachment<NewPayload>? {
         guard
-            let payloadData = try? JSONEncoder.default.encode(payload),
-            let concretePayload = try? JSONDecoder.default.decode(NewPayload.self, from: payloadData)
+            let payloadData = try? JSONEncoder.streamCore.encode(payload),
+            let concretePayload = try? JSONDecoder.streamCore.decode(NewPayload.self, from: payloadData)
         else {
             return nil
         }

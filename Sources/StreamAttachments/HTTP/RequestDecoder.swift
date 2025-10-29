@@ -49,7 +49,7 @@ public struct DefaultRequestDecoder: RequestDecoder {
         guard httpResponse.statusCode < 300 else {
             let serverError: ErrorPayload
             do {
-                serverError = try JSONDecoder.default.decode(ErrorPayload.self, from: data)
+                serverError = try JSONDecoder.streamCore.decode(ErrorPayload.self, from: data)
             } catch {
                 throw ClientError.Unknown("Unknown error. Server response: \(httpResponse).")
             }
@@ -67,7 +67,7 @@ public struct DefaultRequestDecoder: RequestDecoder {
         }
 
         do {
-            let decodedPayload = try JSONDecoder.default.decode(ResponseType.self, from: data)
+            let decodedPayload = try JSONDecoder.streamCore.decode(ResponseType.self, from: data)
             return decodedPayload
         } catch {
             log.error(error, subsystems: .httpRequests)

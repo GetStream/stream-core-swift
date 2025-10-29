@@ -109,8 +109,8 @@ public extension AnyAttachmentPayload {
     ) throws {
         let file = try AttachmentFile(url: localFileURL)
         let extraData = try extraData
-            .flatMap { try JSONEncoder.default.encode($0.asAnyEncodable) }
-            .flatMap { try JSONDecoder.default.decode([String: RawJSON].self, from: $0) }
+            .flatMap { try JSONEncoder.streamCore.encode($0.asAnyEncodable) }
+            .flatMap { try JSONDecoder.streamCore.decode([String: RawJSON].self, from: $0) }
 
         let payload: AttachmentPayload
         switch attachmentType {
@@ -202,7 +202,7 @@ extension StreamAttachment<Data> {
             .voiceRecording: VoiceRecordingAttachmentPayload.self
         ]
         guard let payloadType = types[type] else { return nil }
-        guard let payload = try? JSONDecoder.default.decode(
+        guard let payload = try? JSONDecoder.streamCore.decode(
             payloadType,
             from: self.payload
         ) else {
