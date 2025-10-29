@@ -37,7 +37,7 @@ final class Batch_Tests: XCTestCase, @unchecked Sendable {
         // Wait a bit less then period
         time.run(numberOfSeconds: 1)
         // Assert current batch contains expected values
-        XCTAssertEqual(batcher.currentBatch.value, [event1])
+        XCTAssertEqual(batcher.currentBatch, [event1])
         // Assert handler is not called yet
         XCTAssertEqual(handlerCalls, [])
 
@@ -47,7 +47,7 @@ final class Batch_Tests: XCTestCase, @unchecked Sendable {
         // Wait a bit less then period
         time.run(numberOfSeconds: 1)
         // Assert current batch contains expected values
-        XCTAssertEqual(batcher.currentBatch.value, [event1, event2])
+        XCTAssertEqual(batcher.currentBatch, [event1, event2])
         // Assert handler is not called yet
         XCTAssertEqual(handlerCalls, [])
 
@@ -56,7 +56,7 @@ final class Batch_Tests: XCTestCase, @unchecked Sendable {
         // Assert handler is called a single time with batched events
         XCTAssertEqual(handlerCalls, [[event1, event2]])
         // Assert current batch is empty
-        XCTAssertTrue(batcher.currentBatch.value.isEmpty)
+        XCTAssertTrue(batcher.currentBatch.isEmpty)
 
         // Clear handler
         handlerCalls.removeAll()
@@ -99,7 +99,7 @@ final class Batch_Tests: XCTestCase, @unchecked Sendable {
         handlerCompletion?()
 
         // Assert current batch is empty
-        XCTAssertEqual(batcher.currentBatch.value, [])
+        XCTAssertEqual(batcher.currentBatch, [])
         wait(for: [expectation], timeout: defaultTimeout)
     }
 }
