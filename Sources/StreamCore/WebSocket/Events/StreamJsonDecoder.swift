@@ -40,7 +40,7 @@ public final class StreamJSONDecoder: JSONDecoder, @unchecked Sendable {
                     return date.bridgeDate
                 }
                 
-                if let date = self?.iso8601formatter.date(from: dateString) {
+                if let date = self?.iso8601formatter.dateWithMicroseconds(from: dateString) {
                     self?.dateCache.setObject(date.bridgeDate, forKey: dateString as NSString)
                     return date
                 }
