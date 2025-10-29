@@ -24,7 +24,7 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
     private let eventNotificationCenter: EventNotificationCenter
     private let backgroundTaskScheduler: BackgroundTaskScheduler?
     private let internetConnection: InternetConnection
-    private let reconnectionTimerType: StreamTimer.Type
+    private let reconnectionTimerType: TimerScheduling.Type
     private let keepConnectionAliveInBackground: Bool
     private nonisolated(unsafe) var reconnectionStrategy: RetryStrategy
     private nonisolated(unsafe) var reconnectionTimer: TimerControl?
@@ -38,7 +38,7 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
         backgroundTaskScheduler: BackgroundTaskScheduler?,
         internetConnection: InternetConnection,
         reconnectionStrategy: RetryStrategy,
-        reconnectionTimerType: StreamTimer.Type,
+        reconnectionTimerType: TimerScheduling.Type,
         keepConnectionAliveInBackground: Bool
     ) {
         self.init(
@@ -63,7 +63,7 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
         backgroundTaskScheduler: BackgroundTaskScheduler?,
         internetConnection: InternetConnection,
         reconnectionStrategy: RetryStrategy,
-        reconnectionTimerType: StreamTimer.Type,
+        reconnectionTimerType: TimerScheduling.Type,
         keepConnectionAliveInBackground: Bool,
         reconnectionPolicies: [AutomaticReconnectionPolicy]
     ) {

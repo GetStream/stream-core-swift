@@ -57,6 +57,14 @@ public final class Atomic<T>: @unchecked Sendable {
         queue.sync { _value = changes(_value) }
     }
     
+    public func mutate(_ changes: (_ value: inout T) -> Void) {
+        self.mutate { value in
+            var updated = value
+            changes(&updated)
+            return updated
+        }
+    }
+    
     /// Update the value safely.
     /// - Parameter changes: a block with changes. It should return a new value.
     public func callAsFunction(_ changes: (_ value: T) -> T) { mutate(changes) }

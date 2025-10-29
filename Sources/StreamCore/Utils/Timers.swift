@@ -5,7 +5,7 @@
 import Combine
 import Foundation
 
-public protocol StreamTimer {
+public protocol TimerScheduling {
     /// Schedules a new timer.
     ///
     /// - Parameters:
@@ -33,7 +33,7 @@ public protocol StreamTimer {
     static func currentTime() -> Date
 }
 
-extension StreamTimer {
+extension TimerScheduling {
     public static func currentTime() -> Date {
         Date()
     }
@@ -58,7 +58,7 @@ extension DispatchWorkItem: TimerControl {}
 extension DispatchWorkItem: @retroactive @unchecked Sendable {}
 
 /// Default real-world implementations of timers.
-public struct DefaultTimer: StreamTimer {
+public struct DefaultTimer: TimerScheduling {
     @discardableResult
     public static func schedule(
         timeInterval: TimeInterval,
