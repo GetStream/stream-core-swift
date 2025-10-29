@@ -26,16 +26,37 @@ public struct ErrorPayload: LocalizedError, Codable, CustomDebugStringConvertibl
     public var debugDescription: String {
         "ServerErrorPayload(code: \(code), message: \"\(message)\", statusCode: \(statusCode)))."
     }
+
+    public init(code: Int, message: String, statusCode: Int) {
+        self.code = code
+        self.message = message
+        self.statusCode = statusCode
+    }
 }
 
 extension ErrorPayload {
-    /// Returns `true` if code is withing invalid token codes range.
-    var isInvalidTokenError: Bool {
-        ClosedRange.tokenInvalidErrorCodes ~= code
+    /// Returns `true` if the code determines that the token is expired.
+    public var isExpiredTokenError: Bool {
+        code == StreamErrorCode.expiredToken
     }
-    
-    /// Returns `true` if status code is withing client error codes range.
-    var isClientError: Bool {
+
+    /// Returns `true` if code is within invalid token codes range.
+    public var isInvalidTokenError: Bool {
+        ClosedRange.tokenInvalidErrorCodes ~= code || code == StreamErrorCode.accessKeyInvalid
+    }
+
+    /// Returns `true` if status code is within client error codes range.
+    public var isClientError: Bool {
         ClosedRange.clientErrorCodes ~= statusCode
     }
+}
+
+/// https://getstream.io/chat/docs/ios-swift/api_errors_response/
+public enum StreamErrorCode {
+    /// Usually returned when trying to perform an API call without a token.
+    public static let accessKeyInvalid = 2
+    public static let expiredToken = 40
+    public static let notYetValidToken = 41
+    public static let invalidTokenDate = 42
+    public static let invalidTokenSignature = 43
 }

@@ -21,7 +21,9 @@ open class ClientError: Error, ReflectiveStringConvertible, @unchecked Sendable 
     
     public let apiError: APIError?
     
-    var errorDescription: String? {
+    public var errorPayload: ErrorPayload? { underlyingError as? ErrorPayload }
+    
+    public var errorDescription: String? {
         if let apiError {
             apiError.message
         } else {
@@ -90,17 +92,45 @@ extension ClientError: Equatable {
     }
 }
 
-public extension ClientError {
+extension ClientError {
+    /// Returns `true` the stream code determines that the token is expired.
+    public var isExpiredTokenError: Bool {
+        errorPayload?.isExpiredTokenError == true
+    }
+
     /// Returns `true` if underlaying error is `ErrorPayload` with code is inside invalid token codes range.
-    var isInvalidTokenError: Bool {
-        (underlyingError as? ErrorPayload)?.isInvalidTokenError == true
-            || apiError?.isTokenExpiredError == true
+    public var isInvalidTokenError: Bool {
+        errorPayload?.isInvalidTokenError == true || apiError?.isTokenExpiredError == true
+    }
+}
+
+extension ClientError {
+    public class UnsupportedEventType: ClientError, @unchecked Sendable {
+        override public var localizedDescription: String { "The incoming event type is not supported. Ignoring." }
+    }
+    
+    public final class EventDecoding: ClientError, @unchecked Sendable {
+        override init(_ message: String, _ file: StaticString = #file, _ line: UInt = #line) {
+            super.init(message, file, line)
+        }
+
+        public init<T>(missingValue: String, for type: T.Type, _ file: StaticString = #file, _ line: UInt = #line) {
+            super.init("`\(missingValue)` field can't be `nil` for the `\(type)` event.", file, line)
+        }
+
+        public init(missingValue: String, for eventTypeRaw: String, _ file: StaticString = #file, _ line: UInt = #line) {
+            super.init("`\(missingValue)` field can't be `nil` for the `\(eventTypeRaw)` event.", file, line)
+        }
+
+        public init(failedParsingValue: String, for eventTypeRaw: String, with error: Error, _ file: StaticString = #file, _ line: UInt = #line) {
+            super.init("`\(failedParsingValue)` failed to parse for the `\(eventTypeRaw)` event. Error: \(error)", file, line)
+        }
     }
 }
 
 extension Error {
     var isRateLimitError: Bool {
-        if let error = (self as? ClientError)?.underlyingError as? ErrorPayload,
+        if let error = (self as? ClientError)?.errorPayload,
            error.statusCode == 429 {
             return true
         }
@@ -113,6 +143,12 @@ extension Error {
         if let error = self as? APIError, ClosedRange.tokenInvalidErrorCodes ~= error.code {
             return true
         }
+        if let error = self as? ErrorPayload, error.isExpiredTokenError {
+            return true
+        }
+        if let error = self as? ClientError, error.isExpiredTokenError {
+            return true
+        }
         return false
     }
     
@@ -121,16 +157,20 @@ extension Error {
            ClosedRange.clientErrorCodes ~= apiError.statusCode {
             return false
         }
+        if let error = self as? ErrorPayload,
+           ClosedRange.clientErrorCodes ~= error.statusCode {
+            return false
+        }
         return true
     }
 }
 
 extension ClosedRange where Bound == Int {
     /// The error codes for token-related errors. Typically, a refreshed token is required to recover.
-    public static let tokenInvalidErrorCodes: Self = 40...42
-    
+    public static let tokenInvalidErrorCodes: Self = StreamErrorCode.notYetValidToken...StreamErrorCode.invalidTokenSignature
+
     /// The range of HTTP request status codes for client errors.
-    static let clientErrorCodes: Self = 400...499
+    public static let clientErrorCodes: Self = 400...499
 }
 
 struct APIErrorContainer: Codable {
