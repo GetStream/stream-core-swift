@@ -99,31 +99,29 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
 
 private extension DefaultConnectionRecoveryHandler {
     func subscribeOnNotifications() {
-        StreamConcurrency.onMain {
+        Task { @MainActor in
             backgroundTaskScheduler?.startListeningForAppStateUpdates(
                 onEnteringBackground: { [weak self] in self?.appDidEnterBackground() },
                 onEnteringForeground: { [weak self] in self?.appDidBecomeActive() }
             )
-
-            internetConnection.notificationCenter.addObserver(
-                self,
-                selector: #selector(internetConnectionAvailabilityDidChange(_:)),
-                name: .internetConnectionAvailabilityDidChange,
-                object: nil
-            )
         }
+        internetConnection.notificationCenter.addObserver(
+            self,
+            selector: #selector(internetConnectionAvailabilityDidChange(_:)),
+            name: .internetConnectionAvailabilityDidChange,
+            object: nil
+        )
     }
     
     func unsubscribeFromNotifications() {
-        StreamConcurrency.onMain {
+        Task { @MainActor [backgroundTaskScheduler] in
             backgroundTaskScheduler?.stopListeningForAppStateUpdates()
-            
-            internetConnection.notificationCenter.removeObserver(
-                self,
-                name: .internetConnectionStatusDidChange,
-                object: nil
-            )
         }
+        internetConnection.notificationCenter.removeObserver(
+            self,
+            name: .internetConnectionStatusDidChange,
+            object: nil
+        )
     }
 }
 
@@ -131,7 +129,7 @@ private extension DefaultConnectionRecoveryHandler {
 
 extension DefaultConnectionRecoveryHandler {
     private func appDidBecomeActive() {
-        StreamConcurrency.onMain {
+        Task { @MainActor in
             log.debug("App -> ✅", subsystems: .webSocket)
 
             backgroundTaskScheduler?.endTask()
@@ -156,7 +154,7 @@ extension DefaultConnectionRecoveryHandler {
         
         guard let scheduler = backgroundTaskScheduler else { return }
                 
-        StreamConcurrency.onMain {
+        Task { @MainActor in
             let succeed = scheduler.beginTask { [weak self] in
                 log.debug("Background task -> ❌", subsystems: .webSocket)
 
