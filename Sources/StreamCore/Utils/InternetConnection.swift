@@ -8,16 +8,16 @@ import Network
 
 extension Notification.Name {
     /// Posted when any the Internet connection update is detected (including quality updates).
-    static let internetConnectionStatusDidChange = Self("io.getstream.StreamChat.internetConnectionStatus")
+    public static let internetConnectionStatusDidChange = Self("io.getstream.core.internetConnectionStatus")
 
     /// Posted only when the Internet connection availability is changed (excluding quality updates).
-    static let internetConnectionAvailabilityDidChange = Self("io.getstream.StreamChat.internetConnectionAvailability")
+    public static let internetConnectionAvailabilityDidChange = Self("io.getstream.core.internetConnectionAvailability")
 }
 
 extension Notification {
     static let internetConnectionStatusUserInfoKey = "internetConnectionStatus"
 
-    var internetConnectionStatus: InternetConnectionStatus? {
+    public var internetConnectionStatus: InternetConnectionStatus? {
         userInfo?[Self.internetConnectionStatusUserInfoKey] as? InternetConnectionStatus
     }
 }
@@ -26,7 +26,7 @@ extension Notification {
 ///
 /// Basically, it's a wrapper over legacy monitor based on `Reachability` (iOS 11 only)
 /// and default monitor based on `Network`.`NWPathMonitor` (iOS 12+).
-public final class InternetConnection: @unchecked Sendable {
+open class InternetConnection: @unchecked Sendable {
     /// The current Internet connection status.
     @Published private(set) var status: InternetConnectionStatus {
         didSet {
@@ -43,7 +43,7 @@ public final class InternetConnection: @unchecked Sendable {
     }
 
     /// The notification center that posts notifications when connection state changes..
-    let notificationCenter: NotificationCenter
+    public let notificationCenter: NotificationCenter
 
     /// A specific Internet connection monitor.
     private var monitor: InternetConnectionMonitor
@@ -93,7 +93,7 @@ public protocol InternetConnectionDelegate: AnyObject {
 }
 
 /// A protocol for Internet connection monitors.
-public protocol InternetConnectionMonitor: AnyObject {
+public protocol InternetConnectionMonitor: AnyObject, Sendable {
     /// A delegate for receiving Internet connection events.
     var delegate: InternetConnectionDelegate? { get set }
 
