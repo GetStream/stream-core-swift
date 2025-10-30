@@ -6,7 +6,10 @@ import CoreData
 import Foundation
 
 /// The type that keeps track of active chat components and asks them to reconnect when it's needed
-public protocol ConnectionRecoveryHandler: ConnectionStateDelegate, Sendable {}
+public protocol ConnectionRecoveryHandler: ConnectionStateDelegate, Sendable {
+    func start()
+    func stop()
+}
 
 /// The type is designed to obtain missing events that happened in watched channels while user
 /// was not connected to the web-socket.
@@ -76,12 +79,20 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
         self.keepConnectionAliveInBackground = keepConnectionAliveInBackground
         self.reconnectionPolicies = reconnectionPolicies
 
-        subscribeOnNotifications()
+        start()
     }
     
-    deinit {
+    public func start() {
+        subscribeOnNotifications()
+    }
+
+    public func stop() {
         unsubscribeFromNotifications()
         cancelReconnectionTimer()
+    }
+
+    deinit {
+        stop()
     }
 }
 
@@ -89,26 +100,21 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
 
 private extension DefaultConnectionRecoveryHandler {
     func subscribeOnNotifications() {
-        Task { @MainActor in
-            backgroundTaskScheduler?.startListeningForAppStateUpdates(
-                onEnteringBackground: { [weak self] in self?.appDidEnterBackground() },
-                onEnteringForeground: { [weak self] in self?.appDidBecomeActive() }
-            )
-
-            internetConnection.notificationCenter.addObserver(
-                self,
-                selector: #selector(internetConnectionAvailabilityDidChange(_:)),
-                name: .internetConnectionAvailabilityDidChange,
-                object: nil
-            )
-        }
+        backgroundTaskScheduler?.startListeningForAppStateUpdates(
+            onEnteringBackground: { [weak self] in self?.appDidEnterBackground() },
+            onEnteringForeground: { [weak self] in self?.appDidBecomeActive() }
+        )
+        
+        internetConnection.notificationCenter.addObserver(
+            self,
+            selector: #selector(internetConnectionAvailabilityDidChange(_:)),
+            name: .internetConnectionAvailabilityDidChange,
+            object: nil
+        )
     }
     
     func unsubscribeFromNotifications() {
-        Task { @MainActor [backgroundTaskScheduler] in
-            backgroundTaskScheduler?.stopListeningForAppStateUpdates()
-        }
-
+        backgroundTaskScheduler?.stopListeningForAppStateUpdates()
         internetConnection.notificationCenter.removeObserver(
             self,
             name: .internetConnectionStatusDidChange,
@@ -121,13 +127,11 @@ private extension DefaultConnectionRecoveryHandler {
 
 extension DefaultConnectionRecoveryHandler {
     private func appDidBecomeActive() {
-        Task { @MainActor in
-            log.debug("App -> ✅", subsystems: .webSocket)
-
-            backgroundTaskScheduler?.endTask()
-
-            reconnectIfNeeded()
-        }
+        log.debug("App -> ✅", subsystems: .webSocket)
+        
+        backgroundTaskScheduler?.endTask()
+        
+        reconnectIfNeeded()
     }
     
     private func appDidEnterBackground() {
@@ -145,20 +149,18 @@ extension DefaultConnectionRecoveryHandler {
         }
         
         guard let scheduler = backgroundTaskScheduler else { return }
-                
-        Task { @MainActor in
-            let succeed = scheduler.beginTask { [weak self] in
-                log.debug("Background task -> ❌", subsystems: .webSocket)
-
-                self?.disconnectIfNeeded()
-            }
-
-            if succeed {
-                log.debug("Background task -> ✅", subsystems: .webSocket)
-            } else {
-                // Can't initiate a background task, close the connection
-                disconnectIfNeeded()
-            }
+        
+        let succeed = scheduler.beginTask { [weak self] in
+            log.debug("Background task -> ❌", subsystems: .webSocket)
+            
+            self?.disconnectIfNeeded()
+        }
+        
+        if succeed {
+            log.debug("Background task -> ✅", subsystems: .webSocket)
+        } else {
+            // Can't initiate a background task, close the connection
+            disconnectIfNeeded()
         }
     }
     
@@ -205,7 +207,7 @@ private extension DefaultConnectionRecoveryHandler {
         let state = webSocketClient.connectionState
         
         switch state {
-        case .connecting, .authenticating, .connected, .disconnecting:
+        case .connecting, .authenticating, .connected:
             log.debug("Will disconnect automatically from \(state) state", subsystems: .webSocket)
             
             return true

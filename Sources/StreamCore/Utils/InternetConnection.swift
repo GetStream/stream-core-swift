@@ -28,7 +28,7 @@ extension Notification {
 /// and default monitor based on `Network`.`NWPathMonitor` (iOS 12+).
 open class InternetConnection: @unchecked Sendable {
     /// The current Internet connection status.
-    @Published private(set) var status: InternetConnectionStatus {
+    @Published public private(set) var status: InternetConnectionStatus {
         didSet {
             guard oldValue != status else { return }
 

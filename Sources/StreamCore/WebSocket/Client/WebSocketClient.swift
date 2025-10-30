@@ -5,19 +5,19 @@
 import Combine
 import Foundation
 
-public class WebSocketClient: @unchecked Sendable {
+open class WebSocketClient: @unchecked Sendable {
     /// The notification center `WebSocketClient` uses to send notifications about incoming events.
-    let eventNotificationCenter: EventNotificationCenter
+    public let eventNotificationCenter: EventNotificationCenter
 
     /// The batch of events received via the web-socket that wait to be processed.
     private(set) lazy var eventsBatcher = environment.eventBatcherBuilder { [weak self] events, completion in
         guard let self else { return }
         events.forEach { [eventSubject] in eventSubject.send($0) }
-        eventNotificationCenter.process(events, completion: completion)
+        eventNotificationCenter.process(events, postNotifications: true, completion: completion)
     }
 
     /// The current state the web socket connection.
-    @Atomic public private(set) var connectionState: WebSocketConnectionState = .initialized {
+    @Atomic public internal(set) var connectionState: WebSocketConnectionState = .initialized {
         didSet {
             pingController.connectionStateDidChange(connectionState)
 
@@ -25,6 +25,9 @@ public class WebSocketClient: @unchecked Sendable {
 
             log.info("Web socket connection state changed: \(connectionState)", subsystems: .webSocket)
 
+            if oldValue == .authenticating, case .connected(healthCheckInfo:) = connectionState {
+                onConnected?()
+            }
             connectionSubject.send(connectionState)
             connectionStateDelegate?.webSocketClient(self, didUpdateConnectionState: connectionState)
         }
@@ -35,7 +38,7 @@ public class WebSocketClient: @unchecked Sendable {
 
     public weak var connectionStateDelegate: ConnectionStateDelegate?
 
-    public var connectURL: URL
+    public var connectRequest: URLRequest?
 
     var requiresAuth: Bool
 
@@ -46,7 +49,7 @@ public class WebSocketClient: @unchecked Sendable {
     public private(set) var engine: WebSocketEngine?
 
     /// The queue on which web socket engine methods are called
-    private let engineQueue: DispatchQueue = .init(label: "io.getStream.video.core.web_socket_engine_queue", qos: .userInitiated)
+    private let engineQueue: DispatchQueue = .init(label: "io.getstream.core.web_socket_engine_queue", qos: .userInitiated)
 
     /// The session config used for the web socket engine
     private let sessionConfiguration: URLSessionConfiguration
@@ -58,14 +61,12 @@ public class WebSocketClient: @unchecked Sendable {
 
     let pingController: WebSocketPingController
 
-    private func createEngineIfNeeded(for connectURL: URL) -> WebSocketEngine {
-        let request = URLRequest(url: connectURL)
-
-        if let existedEngine = engine, existedEngine.request == request {
+    private func createEngineIfNeeded(for connectRequest: URLRequest) -> WebSocketEngine {
+        if let existedEngine = engine, existedEngine.request == connectRequest {
             return existedEngine
         }
 
-        let engine = environment.createEngine(request, sessionConfiguration, engineQueue)
+        let engine = environment.createEngine(connectRequest, sessionConfiguration, engineQueue)
         engine.delegate = self
         return engine
     }
@@ -79,7 +80,7 @@ public class WebSocketClient: @unchecked Sendable {
         eventNotificationCenter: EventNotificationCenter,
         webSocketClientType: WebSocketClientType,
         environment: Environment = Environment(),
-        connectURL: URL,
+        connectRequest: URLRequest?,
         requiresAuth: Bool = true,
         pingRequestBuilder: (() -> any SendableEvent)? = nil
     ) {
@@ -87,7 +88,7 @@ public class WebSocketClient: @unchecked Sendable {
         self.sessionConfiguration = sessionConfiguration
         self.webSocketClientType = webSocketClientType
         self.eventDecoder = eventDecoder
-        self.connectURL = connectURL
+        self.connectRequest = connectRequest
         self.eventNotificationCenter = eventNotificationCenter
         self.requiresAuth = requiresAuth
         pingController = environment.createPingController(
@@ -98,6 +99,10 @@ public class WebSocketClient: @unchecked Sendable {
         pingController.pingRequestBuilder = pingRequestBuilder
         
         pingController.delegate = self
+    }
+    
+    public func initialize() {
+        connectionState = .initialized
     }
 
     /// Connects the web connect.
@@ -111,7 +116,8 @@ public class WebSocketClient: @unchecked Sendable {
         default: break
         }
 
-        engine = createEngineIfNeeded(for: connectURL)
+        guard let connectRequest else { return }
+        engine = createEngineIfNeeded(for: connectRequest)
 
         connectionState = .connecting
 
@@ -148,6 +154,10 @@ public class WebSocketClient: @unchecked Sendable {
             }
         }
     }
+    
+    public func publishEvent(_ event: Event) {
+        eventsBatcher.append(event)
+    }
 }
 
 public protocol ConnectionStateDelegate: AnyObject {
@@ -179,8 +189,8 @@ public extension WebSocketClient {
 
         var eventBatcherBuilder: (
             _ handler: @Sendable @escaping ([Event], @Sendable @escaping () -> Void) -> Void
-        ) -> Batcher<Event> = {
-            Batcher<Event>(period: 0.0, handler: $0)
+        ) -> EventBatcher = {
+            Batcher<Event>(period: 0.5, handler: $0)
         }
         
         public init() {}
@@ -191,7 +201,7 @@ public extension WebSocketClient {
             createEngine: @escaping CreateEngine,
             eventBatcherBuilder: @escaping (
                 _ handler: @Sendable @escaping ([Event], @Sendable @escaping () -> Void) -> Void
-            ) -> Batcher<Event>
+            ) -> EventBatcher
         ) {
             self.timerType = timerType
             self.createPingController = createPingController
@@ -215,6 +225,9 @@ extension WebSocketClient: WebSocketEngineDelegate {
 
         do {
             event = try eventDecoder.decode(from: data)
+        } catch is ClientError.IgnoredEventType {
+            log.info("Skipping unsupported event type with payload: \(data.debugPrettyPrintedJSON)", subsystems: .webSocket)
+            return
         } catch {
             do {
                 let apiError = try JSONDecoder.streamCore.decode(APIErrorContainer.self, from: data).error
@@ -272,11 +285,6 @@ extension WebSocketClient: WebSocketEngineDelegate {
     private func handle(healthcheck: Event, info: HealthCheckInfo) {
         log.debug("Handling healthcheck", subsystems: .webSocket)
 
-        if connectionState == .authenticating {
-            connectionState = .connected(healthCheckInfo: info)
-            onConnected?()
-        }
-
         // We send the healthcheck to the eventSubject so that observers
         // (e.g. SFUEventAdapter) get updated.
         eventSubject.send(healthcheck)
@@ -305,7 +313,7 @@ extension WebSocketClient: WebSocketPingControllerDelegate {
     }
 
     func disconnectOnNoPongReceived() {
-        log.debug("disconnecting from \(connectURL)", subsystems: .webSocket)
+        log.debug("disconnecting from \(String(describing: connectRequest?.url))", subsystems: .webSocket)
         disconnect(source: .noPongReceived) {
             log.debug("Websocket is disconnected because of no pong received", subsystems: .webSocket)
         }
@@ -316,7 +324,7 @@ extension WebSocketClient: WebSocketPingControllerDelegate {
 
 extension Notification.Name {
     /// The name of the notification posted when a new event is published/
-    static let NewEventReceived = Notification.Name("io.getStream.video.core.new_event_received")
+    public static let NewEventReceived = Notification.Name("io.getstream.core.new_event_received")
 }
 
 public enum WebSocketClientType {
@@ -327,11 +335,11 @@ public enum WebSocketClientType {
 extension Notification {
     private static let eventKey = "io.getStream.video.core.event_key"
 
-    init(newEventReceived event: Event, sender: Any) {
+    public init(newEventReceived event: Event, sender: Any) {
         self.init(name: .NewEventReceived, object: sender, userInfo: [Self.eventKey: event])
     }
 
-    var event: Event? {
+    public var event: Event? {
         userInfo?[Self.eventKey] as? Event
     }
 }
@@ -349,6 +357,10 @@ extension WebSocketClient {
 
 extension ClientError {
     public class WebSocket: ClientError, @unchecked Sendable {}
+    
+    public final class IgnoredEventType: ClientError, @unchecked Sendable {
+        override public var localizedDescription: String { "The incoming event type is not supported. Ignoring." }
+    }
 }
 
 public struct WSDisconnected: Event {
