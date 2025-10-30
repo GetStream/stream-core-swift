@@ -10,7 +10,7 @@ public protocol BackgroundTaskScheduler: Sendable {
     ///
     /// Returns: `false` if system forbid background task, `true` otherwise
     @MainActor
-    func beginTask(expirationHandler: (@Sendable () -> Void)?) -> Bool
+    func beginTask(expirationHandler: (@MainActor () -> Void)?) -> Bool
     @MainActor
     func endTask()
     @MainActor
@@ -42,7 +42,8 @@ public class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sen
     public init() {}
 
     @MainActor
-    public func beginTask(expirationHandler: (@Sendable () -> Void)?) -> Bool {
+    public func beginTask(expirationHandler: (@MainActor () -> Void)?) -> Bool {
+        endTask()
         activeBackgroundTask = app?.beginBackgroundTask { [weak self] in
             self?._endTask()
             expirationHandler?()

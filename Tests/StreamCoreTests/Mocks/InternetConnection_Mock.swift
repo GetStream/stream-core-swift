@@ -7,7 +7,7 @@ import Foundation
 @testable import StreamCore
 
 /// Mock implementation of `InternetConnectionMonitor`
-final class InternetConnectionMonitor_Mock: InternetConnectionMonitor {
+final class InternetConnectionMonitor_Mock: InternetConnectionMonitor, @unchecked Sendable {
     weak var delegate: InternetConnectionDelegate?
 
     var status: InternetConnectionStatus = .unknown {
