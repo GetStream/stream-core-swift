@@ -27,7 +27,7 @@ public protocol BackgroundTaskScheduler: Sendable {
 #if os(iOS)
 import UIKit
 
-open class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sendable {
+public class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sendable {
     private let applicationStateAdapter = StreamAppStateAdapter()
 
     private lazy var app: UIApplication? = // We can't use `UIApplication.shared` directly because there's no way to convince the compiler
