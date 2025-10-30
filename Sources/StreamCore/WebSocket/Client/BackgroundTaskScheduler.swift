@@ -9,16 +9,12 @@ public protocol BackgroundTaskScheduler: Sendable {
     /// It's your responsibility to finish previously running task.
     ///
     /// Returns: `false` if system forbid background task, `true` otherwise
-    @MainActor
     func beginTask(expirationHandler: (@MainActor () -> Void)?) -> Bool
-    @MainActor
     func endTask()
-    @MainActor
     func startListeningForAppStateUpdates(
         onEnteringBackground: @escaping () -> Void,
         onEnteringForeground: @escaping () -> Void
     )
-    @MainActor
     func stopListeningForAppStateUpdates()
 
     var isAppActive: Bool { get }
@@ -28,38 +24,48 @@ public protocol BackgroundTaskScheduler: Sendable {
 import UIKit
 
 public class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sendable {
-    private let applicationStateAdapter = StreamAppStateAdapter()
-
-    private lazy var app: UIApplication? = // We can't use `UIApplication.shared` directly because there's no way to convince the compiler
+    private lazy var app: UIApplication? = {
+        // We can't use `UIApplication.shared` directly because there's no way to convince the compiler
         // this code is accessible only for non-extension executables.
         UIApplication.value(forKeyPath: "sharedApplication") as? UIApplication
+    }()
 
     /// The identifier of the currently running background task. `nil` if no background task is running.
     private var activeBackgroundTask: UIBackgroundTaskIdentifier?
+    private let queue = DispatchQueue(label: "io.getstream.IOSBackgroundTaskScheduler", target: .global())
 
-    public var isAppActive: Bool { applicationStateAdapter.state == .foreground }
-    
     public init() {}
-
-    @MainActor
-    public func beginTask(expirationHandler: (@MainActor () -> Void)?) -> Bool {
-        endTask()
-        activeBackgroundTask = app?.beginBackgroundTask { [weak self] in
-            self?._endTask()
-            expirationHandler?()
-        }
-        return activeBackgroundTask != .invalid
-    }
-
-    @MainActor
-    public func endTask() {
-        _endTask()
-    }
     
-    private func _endTask() {
-        if let activeTask = activeBackgroundTask {
-            app?.endBackgroundTask(activeTask)
-            activeBackgroundTask = nil
+    public var isAppActive: Bool {
+        StreamConcurrency.onMain {
+            self.app?.applicationState == .active
+        }
+    }
+
+    public func beginTask(expirationHandler: (@MainActor () -> Void)?) -> Bool {
+        // Only a single task is allowed at the same time
+        endTask()
+        
+        guard let app else { return false }
+        let identifier = app.beginBackgroundTask { [weak self] in
+            self?.endTask()
+            StreamConcurrency.onMain {
+                expirationHandler?()
+            }
+        }
+        queue.sync {
+            self.activeBackgroundTask = identifier
+        }
+        return identifier != .invalid
+    }
+
+    public func endTask() {
+        guard let app else { return }
+        queue.sync {
+            if let identifier = self.activeBackgroundTask {
+                self.activeBackgroundTask = nil
+                app.endBackgroundTask(identifier)
+            }
         }
     }
 
@@ -70,8 +76,10 @@ public class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sen
         onEnteringBackground: @escaping () -> Void,
         onEnteringForeground: @escaping () -> Void
     ) {
-        self.onEnteringForeground = onEnteringForeground
-        self.onEnteringBackground = onEnteringBackground
+        queue.sync {
+            self.onEnteringForeground = onEnteringForeground
+            self.onEnteringBackground = onEnteringBackground
+        }
 
         NotificationCenter.default.addObserver(
             self,
@@ -89,8 +97,10 @@ public class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sen
     }
 
     public func stopListeningForAppStateUpdates() {
-        onEnteringForeground = {}
-        onEnteringBackground = {}
+        queue.sync {
+            self.onEnteringForeground = {}
+            self.onEnteringBackground = {}
+        }
 
         NotificationCenter.default.removeObserver(
             self,
@@ -106,19 +116,17 @@ public class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sen
     }
 
     @objc private func handleAppDidEnterBackground() {
-        onEnteringBackground()
+        let callback = queue.sync { onEnteringBackground }
+        callback()
     }
 
     @objc private func handleAppDidBecomeActive() {
-        onEnteringForeground()
+        let callback = queue.sync { onEnteringForeground }
+        callback()
     }
 
     deinit {
-        Task { @MainActor [activeBackgroundTask, app] in
-            if let activeTask = activeBackgroundTask {
-                app?.endBackgroundTask(activeTask)
-            }
-        }
+        endTask()
     }
 }
 
