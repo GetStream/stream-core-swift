@@ -50,7 +50,7 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
             eventNotificationCenter: eventNotificationCenter,
             webSocketClientType: .coordinator,
             environment: environment,
-            connectURL: connectURL
+            connectRequest: URLRequest(url: connectURL)
         )
 
         connectionId = UUID().uuidString
@@ -226,7 +226,6 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
             [
                 .connecting,
                 .authenticating,
-                .connected(healthCheckInfo: healthCheckInfo),
                 .connected(healthCheckInfo: healthCheckInfo)
             ]
         )
