@@ -26,7 +26,7 @@ public protocol WebSocketEngineDelegate: AnyObject, Sendable {
 }
 
 public struct WebSocketEngineError: Error {
-    public static let stopErrorCode = 1000
+    static let stopErrorCode = 1000
     
     let reason: String
     let code: Int

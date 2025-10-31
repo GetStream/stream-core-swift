@@ -8,16 +8,16 @@ import Network
 
 extension Notification.Name {
     /// Posted when any the Internet connection update is detected (including quality updates).
-    public static let internetConnectionStatusDidChange = Self("io.getstream.core.internetConnectionStatus")
+    static let internetConnectionStatusDidChange = Self("io.getstream.core.internetConnectionStatus")
 
     /// Posted only when the Internet connection availability is changed (excluding quality updates).
-    public static let internetConnectionAvailabilityDidChange = Self("io.getstream.core.internetConnectionAvailability")
+    static let internetConnectionAvailabilityDidChange = Self("io.getstream.core.internetConnectionAvailability")
 }
 
 extension Notification {
     static let internetConnectionStatusUserInfoKey = "internetConnectionStatus"
 
-    public var internetConnectionStatus: InternetConnectionStatus? {
+    var internetConnectionStatus: InternetConnectionStatus? {
         userInfo?[Self.internetConnectionStatusUserInfoKey] as? InternetConnectionStatus
     }
 }
@@ -43,7 +43,7 @@ open class InternetConnection: @unchecked Sendable {
     }
 
     /// The notification center that posts notifications when connection state changes..
-    public let notificationCenter: NotificationCenter
+    let notificationCenter: NotificationCenter
 
     /// A specific Internet connection monitor.
     private var monitor: InternetConnectionMonitor
