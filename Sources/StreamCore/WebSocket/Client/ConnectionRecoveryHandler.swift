@@ -131,7 +131,7 @@ extension DefaultConnectionRecoveryHandler {
         
         backgroundTaskScheduler?.endTask()
         
-        reconnectIfNeeded()
+        reconnectIfNeeded(trigger: .foregrounded)
     }
     
     private func appDidEnterBackground() {
@@ -170,7 +170,7 @@ extension DefaultConnectionRecoveryHandler {
         log.debug("Internet -> \(isAvailable ? "✅" : "❌")", subsystems: .webSocket)
         
         if isAvailable {
-            reconnectIfNeeded()
+            reconnectIfNeeded(trigger: .internetAvailability)
         } else {
             disconnectIfNeeded()
         }
@@ -222,14 +222,14 @@ private extension DefaultConnectionRecoveryHandler {
 // MARK: - Reconnection
 
 private extension DefaultConnectionRecoveryHandler {
-    func reconnectIfNeeded() {
-        guard canReconnectAutomatically else { return }
+    func reconnectIfNeeded(trigger: AutomaticReconnectionTrigger) {
+        guard canReconnectAutomatically(for: trigger) else { return }
                 
         webSocketClient.connect()
     }
     
-    var canReconnectAutomatically: Bool {
-        reconnectionPolicies.first { $0.canBeReconnected() == false } == nil
+    func canReconnectAutomatically(for trigger: AutomaticReconnectionTrigger) -> Bool {
+        reconnectionPolicies.first { $0.canBeReconnected(trigger: trigger) == false } == nil
     }
 }
 
@@ -237,7 +237,7 @@ private extension DefaultConnectionRecoveryHandler {
 
 private extension DefaultConnectionRecoveryHandler {
     func scheduleReconnectionTimerIfNeeded() {
-        guard canReconnectAutomatically else { return }
+        guard canReconnectAutomatically(for: .timer) else { return }
         
         scheduleReconnectionTimer()
     }
@@ -253,7 +253,7 @@ private extension DefaultConnectionRecoveryHandler {
             onFire: { [weak self] in
                 log.debug("Timer 🔥", subsystems: .webSocket)
                 
-                self?.reconnectIfNeeded()
+                self?.reconnectIfNeeded(trigger: .timer)
             }
         )
     }
@@ -271,7 +271,11 @@ private extension DefaultConnectionRecoveryHandler {
 // MARK: - Automatic Reconnection Policies
 
 public protocol AutomaticReconnectionPolicy {
-    func canBeReconnected() -> Bool
+    func canBeReconnected(trigger: AutomaticReconnectionTrigger) -> Bool
+}
+
+public enum AutomaticReconnectionTrigger {
+    case timer, internetAvailability, foregrounded
 }
 
 struct WebSocketAutomaticReconnectionPolicy: AutomaticReconnectionPolicy {
@@ -280,9 +284,21 @@ struct WebSocketAutomaticReconnectionPolicy: AutomaticReconnectionPolicy {
     init(_ webSocketClient: WebSocketClient) {
         self.webSocketClient = webSocketClient
     }
-
-    func canBeReconnected() -> Bool {
-        webSocketClient.connectionState.isAutomaticReconnectionEnabled
+    
+    func canBeReconnected(trigger: AutomaticReconnectionTrigger) -> Bool {
+        switch trigger {
+        case .timer:
+            return webSocketClient.connectionState.isAutomaticReconnectionEnabled
+        case .internetAvailability, .foregrounded:
+            switch webSocketClient.connectionState {
+            case .disconnected(let source) where source == .userInitiated:
+                return false
+            case .initialized, .connected:
+                return false
+            default:
+                return true
+            }
+        }
     }
 }
 
@@ -293,7 +309,7 @@ struct InternetAvailabilityReconnectionPolicy: AutomaticReconnectionPolicy {
         self.internetConnection = internetConnection
     }
 
-    func canBeReconnected() -> Bool {
+    func canBeReconnected(trigger: AutomaticReconnectionTrigger) -> Bool {
         internetConnection.status.isAvailable
     }
 }
@@ -305,7 +321,7 @@ struct BackgroundStateReconnectionPolicy: AutomaticReconnectionPolicy {
         self.backgroundTaskScheduler = backgroundTaskScheduler
     }
 
-    func canBeReconnected() -> Bool {
+    func canBeReconnected(trigger: AutomaticReconnectionTrigger) -> Bool {
         backgroundTaskScheduler?.isAppActive ?? true
     }
 }
@@ -321,12 +337,12 @@ struct CompositeReconnectionPolicy: AutomaticReconnectionPolicy {
         self.policies = policies
     }
 
-    func canBeReconnected() -> Bool {
+    func canBeReconnected(trigger: AutomaticReconnectionTrigger) -> Bool {
         switch `operator` {
         case .and:
-            policies.first { $0.canBeReconnected() == false } == nil
+            policies.first { $0.canBeReconnected(trigger: trigger) == false } == nil
         case .or:
-            policies.first { $0.canBeReconnected() } != nil
+            policies.first { $0.canBeReconnected(trigger: trigger) } != nil
         }
     }
 }
