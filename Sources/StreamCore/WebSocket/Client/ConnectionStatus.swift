@@ -130,7 +130,7 @@ public enum WebSocketConnectionState: Equatable, Sendable {
                     return false
                 }
                 
-                if serverInitiatedError.isClientError && !serverInitiatedError.isExpiredTokenError {
+                if serverInitiatedError.isClientError && !serverInitiatedError.isTokenExpiredError {
                     // Don't reconnect on client side errors unless it is an expired token
                     // Expired tokens return 401, so it is considered client error.
                     return false

@@ -94,13 +94,13 @@ extension ClientError: Equatable {
 
 extension ClientError {
     /// Returns `true` the stream code determines that the token is expired.
-    public var isExpiredTokenError: Bool {
-        errorPayload?.isExpiredTokenError == true
+    public var isTokenExpiredError: Bool {
+        errorPayload?.isTokenExpiredError == true || apiError?.isTokenExpiredError == true
     }
 
     /// Returns `true` if underlaying error is `ErrorPayload` with code is inside invalid token codes range.
     public var isInvalidTokenError: Bool {
-        errorPayload?.isInvalidTokenError == true || apiError?.isTokenExpiredError == true
+        errorPayload?.isInvalidTokenError == true || apiError?.isInvalidTokenError == true
     }
 }
 
@@ -140,13 +140,13 @@ extension Error {
 
 extension Error {
     public var isTokenExpiredError: Bool {
-        if let error = self as? APIError, ClosedRange.tokenInvalidErrorCodes ~= error.code {
+        if let error = self as? APIError, error.isTokenExpiredError {
             return true
         }
-        if let error = self as? ErrorPayload, error.isExpiredTokenError {
+        if let error = self as? ErrorPayload, error.isTokenExpiredError {
             return true
         }
-        if let error = self as? ClientError, error.isExpiredTokenError {
+        if let error = self as? ClientError, error.isTokenExpiredError {
             return true
         }
         return false
@@ -171,6 +171,23 @@ extension ClosedRange where Bound == Int {
 
     /// The range of HTTP request status codes for client errors.
     public static let clientErrorCodes: Self = 400...499
+}
+
+extension APIError {
+    /// Returns `true` if the code determines that the token is expired.
+    public var isTokenExpiredError: Bool {
+        code == StreamErrorCode.expiredToken
+    }
+
+    /// Returns `true` if code is within invalid token codes range.
+    public var isInvalidTokenError: Bool {
+        ClosedRange.tokenInvalidErrorCodes ~= code || code == StreamErrorCode.accessKeyInvalid
+    }
+
+    /// Returns `true` if status code is within client error codes range.
+    public var isClientError: Bool {
+        ClosedRange.clientErrorCodes ~= statusCode
+    }
 }
 
 struct APIErrorContainer: Codable {

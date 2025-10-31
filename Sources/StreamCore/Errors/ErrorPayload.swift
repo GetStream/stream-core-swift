@@ -36,7 +36,7 @@ public struct ErrorPayload: LocalizedError, Codable, CustomDebugStringConvertibl
 
 extension ErrorPayload {
     /// Returns `true` if the code determines that the token is expired.
-    public var isExpiredTokenError: Bool {
+    public var isTokenExpiredError: Bool {
         code == StreamErrorCode.expiredToken
     }
 
