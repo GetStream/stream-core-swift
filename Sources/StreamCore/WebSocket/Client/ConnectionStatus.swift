@@ -124,7 +124,7 @@ public enum WebSocketConnectionState: Equatable, Sendable {
                 return false
             }
             
-            if let serverInitiatedError = clientError?.errorPayload {
+            if let serverInitiatedError = clientError?.apiError {
                 if serverInitiatedError.isInvalidTokenError {
                     // Don't reconnect on invalid token errors
                     return false

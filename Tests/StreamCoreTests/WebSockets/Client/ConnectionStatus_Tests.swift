@@ -10,7 +10,7 @@ final class ConnectionStatus_Tests: XCTestCase {
         let testError = ClientError(with: TestError())
 
         let invalidTokenError = ClientError(
-            with: ErrorPayload(
+            with: APIError(
                 code: ClosedRange.tokenInvalidErrorCodes.lowerBound,
                 message: .unique,
                 statusCode: .unique
