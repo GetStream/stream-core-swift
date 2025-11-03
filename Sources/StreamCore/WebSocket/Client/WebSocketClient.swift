@@ -5,7 +5,7 @@
 import Combine
 import Foundation
 
-open class WebSocketClient: @unchecked Sendable {
+public class WebSocketClient: @unchecked Sendable {
     /// The notification center `WebSocketClient` uses to send notifications about incoming events.
     public let eventNotificationCenter: EventNotificationCenter
 
@@ -25,9 +25,6 @@ open class WebSocketClient: @unchecked Sendable {
 
             log.info("Web socket connection state changed: \(connectionState)", subsystems: .webSocket)
 
-            if oldValue == .authenticating, case .connected(healthCheckInfo:) = connectionState {
-                onConnected?()
-            }
             connectionSubject.send(connectionState)
             connectionStateDelegate?.webSocketClient(self, didUpdateConnectionState: connectionState)
         }
@@ -41,6 +38,9 @@ open class WebSocketClient: @unchecked Sendable {
     public var connectRequest: URLRequest?
 
     var requiresAuth: Bool
+    /// If true, health check event is processed by the event notification center before setting connection status to connected, otherwise the order is reversed.
+    /// For example, chat expects event to be processed first, whereas video expects connection status to be set first.
+    let healthCheckBeforeConnected: Bool
 
     /// The decoder used to decode incoming events
     private let eventDecoder: AnyEventDecoder
@@ -79,8 +79,9 @@ open class WebSocketClient: @unchecked Sendable {
         eventDecoder: AnyEventDecoder,
         eventNotificationCenter: EventNotificationCenter,
         webSocketClientType: WebSocketClientType,
-        environment: Environment = Environment(),
+        environment: Environment = Environment(eventBatchingPeriod: 0.0),
         connectRequest: URLRequest?,
+        healthCheckBeforeConnected: Bool = false,
         requiresAuth: Bool = true,
         pingRequestBuilder: (() -> any SendableEvent)? = nil
     ) {
@@ -90,6 +91,7 @@ open class WebSocketClient: @unchecked Sendable {
         self.eventDecoder = eventDecoder
         self.connectRequest = connectRequest
         self.eventNotificationCenter = eventNotificationCenter
+        self.healthCheckBeforeConnected = healthCheckBeforeConnected
         self.requiresAuth = requiresAuth
         pingController = environment.createPingController(
             environment.timerType,
@@ -190,10 +192,16 @@ public extension WebSocketClient {
         var eventBatcherBuilder: (
             _ handler: @Sendable @escaping ([Event], @Sendable @escaping () -> Void) -> Void
         ) -> EventBatcher = {
-            Batcher<Event>(period: 0.5, handler: $0)
+            Batcher<Event>(period: 0.0, handler: $0)
         }
         
-        public init() {}
+        public init(
+            eventBatchingPeriod: TimeInterval
+        ) {
+            eventBatcherBuilder = {
+                Batcher<Event>(period: eventBatchingPeriod, handler: $0)
+            }
+        }
         
         init(
             timerType: TimerScheduling.Type = DefaultTimer.self,
@@ -232,7 +240,6 @@ extension WebSocketClient: WebSocketEngineDelegate {
             do {
                 let apiError = try JSONDecoder.streamCore.decode(APIErrorContainer.self, from: data).error
                 log.error("Web socket error \(apiError.message)", subsystems: .webSocket, error: apiError)
-                connectionState = .disconnecting(source: .serverInitiated(error: ClientError(with: apiError)))
             } catch let decodingError {
                 log.warning(
                     """
@@ -286,13 +293,21 @@ extension WebSocketClient: WebSocketEngineDelegate {
     private func handle(healthcheck: Event, info: HealthCheckInfo) {
         log.debug("Handling healthcheck", subsystems: .webSocket)
 
+        if !healthCheckBeforeConnected, connectionState == .authenticating {
+            connectionState = .connected(healthCheckInfo: info)
+            onConnected?()
+        }
         // We send the healthcheck to the eventSubject so that observers
         // (e.g. SFUEventAdapter) get updated.
         eventSubject.send(healthcheck)
         eventNotificationCenter.process(healthcheck, postNotification: false) { [weak self] in
             self?.engineQueue.async { [weak self] in
-                self?.pingController.pongReceived()
-                self?.connectionState = .connected(healthCheckInfo: info)
+                guard let self else { return }
+                self.pingController.pongReceived()
+                self.connectionState = .connected(healthCheckInfo: info)
+                if self.healthCheckBeforeConnected {
+                    self.onConnected?()
+                }
             }
         }
     }

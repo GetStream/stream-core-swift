@@ -226,6 +226,7 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
             [
                 .connecting,
                 .authenticating,
+                .connected(healthCheckInfo: healthCheckInfo),
                 .connected(healthCheckInfo: healthCheckInfo)
             ]
         )
