@@ -103,6 +103,10 @@ public class WebSocketClient: @unchecked Sendable {
         pingController.delegate = self
     }
     
+    /// Sets connection status to ``ConnectionStatus.initialized``.
+    ///
+    /// - Note: Used for sophisticated reconnection flows in chat.
+    /// - Important: Does not disconnect the client if it was already connected.
     public func initialize() {
         connectionState = .initialized
     }
@@ -157,6 +161,11 @@ public class WebSocketClient: @unchecked Sendable {
         }
     }
     
+    /// Publishes an event locally by forwarding it to the events batcher.
+    ///
+    /// Use it for custom events.
+    ///
+    /// - Parameter event: The event to be published locally.
     public func publishEvent(_ event: Event) {
         eventsBatcher.append(event)
     }
@@ -238,6 +247,10 @@ extension WebSocketClient: WebSocketEngineDelegate {
             return
         } catch {
             do {
+                // Web socket errors are typically handled by connection events which event decoder handles.
+                // For example: token expiration error triggers connection event which implements `error()` and
+                // leads to disconnecting the web-socket client below. This is here for logging purposes for
+                // notifying that connection event was not handled.
                 let apiError = try JSONDecoder.streamCore.decode(APIErrorContainer.self, from: data).error
                 log.error("Web socket error \(apiError.message)", subsystems: .webSocket, error: apiError)
             } catch let decodingError {
@@ -349,7 +362,7 @@ public enum WebSocketClientType {
 }
 
 extension Notification {
-    private static let eventKey = "io.getStream.video.core.event_key"
+    private static let eventKey = "io.getstream.core.event_key"
 
     public init(newEventReceived event: Event, sender: Any) {
         self.init(name: .NewEventReceived, object: sender, userInfo: [Self.eventKey: event])
