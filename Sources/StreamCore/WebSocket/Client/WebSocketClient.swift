@@ -39,7 +39,7 @@ public class WebSocketClient: @unchecked Sendable {
 
     var requiresAuth: Bool
     /// If true, health check event is processed by the event notification center before setting connection status to connected, otherwise the order is reversed.
-    /// For example, chat expects event to be processed first, whereas video expects connection status to be set first.
+    /// Compatibility reasons for chat which has to set it to true.
     let healthCheckBeforeConnected: Bool
 
     /// The decoder used to decode incoming events
