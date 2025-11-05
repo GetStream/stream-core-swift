@@ -21,8 +21,6 @@ open class ClientError: Error, ReflectiveStringConvertible, @unchecked Sendable 
     
     public let apiError: APIError?
     
-    public var errorPayload: ErrorPayload? { underlyingError as? ErrorPayload }
-    
     public var errorDescription: String? {
         if let apiError {
             apiError.message
@@ -94,13 +92,13 @@ extension ClientError: Equatable {
 
 extension ClientError {
     /// Returns `true` the stream code determines that the token is expired.
-    public var isExpiredTokenError: Bool {
-        errorPayload?.isExpiredTokenError == true
+    public var isTokenExpiredError: Bool {
+        apiError?.isTokenExpiredError == true
     }
 
     /// Returns `true` if underlaying error is `ErrorPayload` with code is inside invalid token codes range.
     public var isInvalidTokenError: Bool {
-        errorPayload?.isInvalidTokenError == true || apiError?.isTokenExpiredError == true
+        apiError?.isInvalidTokenError == true
     }
 }
 
@@ -130,7 +128,7 @@ extension ClientError {
 
 extension Error {
     var isRateLimitError: Bool {
-        if let error = (self as? ClientError)?.errorPayload,
+        if let error = (self as? ClientError)?.apiError,
            error.statusCode == 429 {
             return true
         }
@@ -140,13 +138,10 @@ extension Error {
 
 extension Error {
     public var isTokenExpiredError: Bool {
-        if let error = self as? APIError, ClosedRange.tokenInvalidErrorCodes ~= error.code {
+        if let error = self as? APIError, error.isTokenExpiredError {
             return true
         }
-        if let error = self as? ErrorPayload, error.isExpiredTokenError {
-            return true
-        }
-        if let error = self as? ClientError, error.isExpiredTokenError {
+        if let error = self as? ClientError, error.isTokenExpiredError {
             return true
         }
         return false
@@ -155,10 +150,6 @@ extension Error {
     public var hasClientErrors: Bool {
         if let apiError = self as? APIError,
            ClosedRange.clientErrorCodes ~= apiError.statusCode {
-            return false
-        }
-        if let error = self as? ErrorPayload,
-           ClosedRange.clientErrorCodes ~= error.statusCode {
             return false
         }
         return true
@@ -173,8 +164,35 @@ extension ClosedRange where Bound == Int {
     public static let clientErrorCodes: Self = 400...499
 }
 
+extension APIError {
+    /// Returns `true` if the code determines that the token is expired.
+    public var isTokenExpiredError: Bool {
+        code == StreamErrorCode.expiredToken
+    }
+
+    /// Returns `true` if code is within invalid token codes range.
+    public var isInvalidTokenError: Bool {
+        ClosedRange.tokenInvalidErrorCodes ~= code || code == StreamErrorCode.accessKeyInvalid
+    }
+
+    /// Returns `true` if status code is within client error codes range.
+    public var isClientError: Bool {
+        ClosedRange.clientErrorCodes ~= statusCode
+    }
+}
+
 struct APIErrorContainer: Codable {
     let error: APIError
 }
 
 extension APIError: Error {}
+
+/// https://getstream.io/chat/docs/ios-swift/api_errors_response/
+public enum StreamErrorCode {
+    /// Usually returned when trying to perform an API call without a token.
+    public static let accessKeyInvalid = 2
+    public static let expiredToken = 40
+    public static let notYetValidToken = 41
+    public static let invalidTokenDate = 42
+    public static let invalidTokenSignature = 43
+}

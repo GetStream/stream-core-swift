@@ -47,14 +47,14 @@ public struct DefaultRequestDecoder: RequestDecoder {
         }
 
         guard httpResponse.statusCode < 300 else {
-            let serverError: ErrorPayload
+            let serverError: APIError
             do {
-                serverError = try JSONDecoder.streamCore.decode(ErrorPayload.self, from: data)
+                serverError = try JSONDecoder.streamCore.decode(APIError.self, from: data)
             } catch {
                 throw ClientError.Unknown("Unknown error. Server response: \(httpResponse).")
             }
 
-            if serverError.isExpiredTokenError {
+            if serverError.isTokenExpiredError {
                 log.info("Request failed because of an expired token.", subsystems: .httpRequests)
                 throw ClientError.ExpiredToken()
             }
@@ -108,13 +108,6 @@ extension ClientError {
         }
 
         return false
-    }
-}
-
-extension ErrorPayload {
-    /// Returns `true` if the code determines that the token is expired.
-    var isExpiredTokenError: Bool {
-        code == StreamErrorCode.expiredToken
     }
 }
 
