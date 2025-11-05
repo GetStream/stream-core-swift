@@ -91,7 +91,7 @@ final class WebSocketConnectionState_Tests: XCTestCase, @unchecked Sendable {
 
     func test_isAutomaticReconnectionEnabled_whenDisconnectedByServerWithInvalidTokenError_returnsFalse() {
         // Create invalid token error
-        let invalidTokenError = ErrorPayload(
+        let invalidTokenError = APIError(
             code: ClosedRange.tokenInvalidErrorCodes.lowerBound,
             message: .unique,
             statusCode: .unique
@@ -108,7 +108,7 @@ final class WebSocketConnectionState_Tests: XCTestCase, @unchecked Sendable {
 
     func test_isAutomaticReconnectionEnabled_whenDisconnectedByServerWithClientError_returnsFalse() {
         // Create client error
-        let clientError = ErrorPayload(
+        let clientError = APIError(
             code: .unique,
             message: .unique,
             statusCode: ClosedRange.clientErrorCodes.lowerBound

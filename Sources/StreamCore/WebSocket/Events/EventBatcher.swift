@@ -5,7 +5,7 @@
 import Foundation
 
 /// The type that does events batching.
-protocol EventBatcher: Sendable {
+public protocol EventBatcher: Sendable {
     typealias Batch = [Event]
     typealias BatchHandler = @Sendable (_ batch: Batch, _ completion: @Sendable @escaping () -> Void) -> Void
 
@@ -13,7 +13,7 @@ protocol EventBatcher: Sendable {
     var currentBatch: Batch { get }
     
     /// Creates new batch processor.
-    init(period: TimeInterval, timerType: StreamTimer.Type, handler: @escaping BatchHandler)
+    init(period: TimeInterval, timerType: TimerScheduling.Type, handler: @escaping BatchHandler)
 
     /// Adds the item to the current batch of events. If it's the first event also schedules batch processing
     /// that will happen when `period` has passed.
@@ -25,11 +25,13 @@ protocol EventBatcher: Sendable {
     func processImmediately(completion: @Sendable @escaping () -> Void)
 }
 
-class Batcher<Item>: @unchecked Sendable {
+extension Batcher: EventBatcher where Item == Event {}
+
+public class Batcher<Item>: @unchecked Sendable {
     /// The batching period. If the item is added sonner then `period` has passed after the first item they will get into the same batch.
     private let period: TimeInterval
     /// The time used to create timers.
-    private let timerType: StreamTimer.Type
+    private let timerType: TimerScheduling.Type
     /// The timer that  calls `processor` when fired.
     private let batchProcessingTimer = AllocatedUnfairLock<TimerControl?>(nil)
     /// The closure which processes the batch.
@@ -37,11 +39,12 @@ class Batcher<Item>: @unchecked Sendable {
     /// The serial queue where item appends and batch processing is happening on.
     private let queue = DispatchQueue(label: "io.getstream.Batch.\(Item.self)")
     /// The current batch of items.
-    let currentBatch = AllocatedUnfairLock([Item]())
+    public var currentBatch: [Item] { _currentBatch.value }
+    private let _currentBatch = AllocatedUnfairLock([Item]())
     
-    init(
+    public required init(
         period: TimeInterval,
-        timerType: StreamTimer.Type = DefaultTimer.self,
+        timerType: TimerScheduling.Type = DefaultTimer.self,
         handler: @Sendable @escaping (_ batch: [Item], _ completion: @Sendable @escaping () -> Void) -> Void
     ) {
         self.period = max(period, 0)
@@ -49,9 +52,9 @@ class Batcher<Item>: @unchecked Sendable {
         self.handler = handler
     }
     
-    func append(_ item: Item) {
+    public func append(_ item: Item) {
         timerType.schedule(timeInterval: 0, queue: queue) { [weak self] in
-            self?.currentBatch.withLock { $0.append(item) }
+            self?._currentBatch.withLock { $0.append(item) }
             
             guard let self, batchProcessingTimer.value == nil else { return }
             
@@ -63,14 +66,14 @@ class Batcher<Item>: @unchecked Sendable {
         }
     }
     
-    func processImmediately(completion: @Sendable @escaping () -> Void) {
+    public func processImmediately(completion: @Sendable @escaping () -> Void) {
         timerType.schedule(timeInterval: 0, queue: queue) { [weak self] in
             self?.process(completion: completion)
         }
     }
     
     private func process(completion: (@Sendable () -> Void)? = nil) {
-        let items = currentBatch.withLock { items in
+        let items = _currentBatch.withLock { items in
             let existingItems = items
             items.removeAll()
             return existingItems

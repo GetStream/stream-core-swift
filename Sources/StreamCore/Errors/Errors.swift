@@ -21,7 +21,7 @@ open class ClientError: Error, ReflectiveStringConvertible, @unchecked Sendable 
     
     public let apiError: APIError?
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         if let apiError {
             apiError.message
         } else {
@@ -90,17 +90,45 @@ extension ClientError: Equatable {
     }
 }
 
-public extension ClientError {
+extension ClientError {
+    /// Returns `true` the stream code determines that the token is expired.
+    public var isTokenExpiredError: Bool {
+        apiError?.isTokenExpiredError == true
+    }
+
     /// Returns `true` if underlaying error is `ErrorPayload` with code is inside invalid token codes range.
-    var isInvalidTokenError: Bool {
-        (underlyingError as? ErrorPayload)?.isInvalidTokenError == true
-            || apiError?.isTokenExpiredError == true
+    public var isInvalidTokenError: Bool {
+        apiError?.isInvalidTokenError == true
+    }
+}
+
+extension ClientError {
+    public class UnsupportedEventType: ClientError, @unchecked Sendable {
+        override public var localizedDescription: String { "The incoming event type is not supported. Ignoring." }
+    }
+    
+    public final class EventDecoding: ClientError, @unchecked Sendable {
+        override init(_ message: String, _ file: StaticString = #file, _ line: UInt = #line) {
+            super.init(message, file, line)
+        }
+
+        public init<T>(missingValue: String, for type: T.Type, _ file: StaticString = #file, _ line: UInt = #line) {
+            super.init("`\(missingValue)` field can't be `nil` for the `\(type)` event.", file, line)
+        }
+
+        public init(missingValue: String, for eventTypeRaw: String, _ file: StaticString = #file, _ line: UInt = #line) {
+            super.init("`\(missingValue)` field can't be `nil` for the `\(eventTypeRaw)` event.", file, line)
+        }
+
+        public init(failedParsingValue: String, for eventTypeRaw: String, with error: Error, _ file: StaticString = #file, _ line: UInt = #line) {
+            super.init("`\(failedParsingValue)` failed to parse for the `\(eventTypeRaw)` event. Error: \(error)", file, line)
+        }
     }
 }
 
 extension Error {
     var isRateLimitError: Bool {
-        if let error = (self as? ClientError)?.underlyingError as? ErrorPayload,
+        if let error = (self as? ClientError)?.apiError,
            error.statusCode == 429 {
             return true
         }
@@ -110,7 +138,10 @@ extension Error {
 
 extension Error {
     public var isTokenExpiredError: Bool {
-        if let error = self as? APIError, ClosedRange.tokenInvalidErrorCodes ~= error.code {
+        if let error = self as? APIError, error.isTokenExpiredError {
+            return true
+        }
+        if let error = self as? ClientError, error.isTokenExpiredError {
             return true
         }
         return false
@@ -127,10 +158,27 @@ extension Error {
 
 extension ClosedRange where Bound == Int {
     /// The error codes for token-related errors. Typically, a refreshed token is required to recover.
-    public static let tokenInvalidErrorCodes: Self = 40...42
-    
+    public static let tokenInvalidErrorCodes: Self = StreamErrorCode.notYetValidToken...StreamErrorCode.invalidTokenSignature
+
     /// The range of HTTP request status codes for client errors.
-    static let clientErrorCodes: Self = 400...499
+    public static let clientErrorCodes: Self = 400...499
+}
+
+extension APIError {
+    /// Returns `true` if the code determines that the token is expired.
+    public var isTokenExpiredError: Bool {
+        code == StreamErrorCode.expiredToken
+    }
+
+    /// Returns `true` if code is within invalid token codes range.
+    public var isInvalidTokenError: Bool {
+        ClosedRange.tokenInvalidErrorCodes ~= code || code == StreamErrorCode.accessKeyInvalid
+    }
+
+    /// Returns `true` if status code is within client error codes range.
+    public var isClientError: Bool {
+        ClosedRange.clientErrorCodes ~= statusCode
+    }
 }
 
 struct APIErrorContainer: Codable {
@@ -138,3 +186,13 @@ struct APIErrorContainer: Codable {
 }
 
 extension APIError: Error {}
+
+/// https://getstream.io/chat/docs/ios-swift/api_errors_response/
+public enum StreamErrorCode {
+    /// Usually returned when trying to perform an API call without a token.
+    public static let accessKeyInvalid = 2
+    public static let expiredToken = 40
+    public static let notYetValidToken = 41
+    public static let invalidTokenDate = 42
+    public static let invalidTokenSignature = 43
+}

@@ -67,7 +67,7 @@ public struct Endpoint<ResponseType: Decodable>: Codable {
 
 private extension Encodable {
     func encodedAsData() throws -> Data {
-        try JSONEncoder.default.encode(AnyEncodable(self))
+        try JSONEncoder.streamCore.encode(AnyEncodable(self))
     }
 }
 

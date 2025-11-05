@@ -225,14 +225,14 @@ public class DefaultRequestEncoder: RequestEncoder, @unchecked Sendable {
             if let data = endpoint.body as? Data {
                 request.httpBody = data
             } else {
-                let body = try JSONEncoder.default.encode(AnyEncodable(endpoint.body ?? EmptyBody()))
+                let body = try JSONEncoder.streamCore.encode(AnyEncodable(endpoint.body ?? EmptyBody()))
                 request.httpBody = body
             }
         }
     }
 
     private func encodeJSONToQueryItems(request: inout URLRequest, data: Encodable) throws {
-        let data = try (data as? Data) ?? JSONEncoder.default.encode(AnyEncodable(data))
+        let data = try (data as? Data) ?? JSONEncoder.streamCore.encode(AnyEncodable(data))
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw ClientError.InvalidJSON("Data is not a valid JSON: \(String(data: data, encoding: .utf8) ?? "nil")")
         }

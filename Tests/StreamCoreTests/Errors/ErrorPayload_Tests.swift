@@ -5,14 +5,14 @@
 @testable import StreamCore
 import XCTest
 
-final class ErrorPayload_Tests: XCTestCase, @unchecked Sendable {
+final class APIError_Tests: XCTestCase, @unchecked Sendable {
     // MARK: - Invalid token
 
     func test_isInvalidTokenError_whenCodeIsInsideInvalidTokenRange_returnsTrue() {
         // Iterate invalid token codes range
         for code in ClosedRange.tokenInvalidErrorCodes {
             // Create the error with invalid token code
-            let error = ErrorPayload(
+            let error = APIError(
                 code: code,
                 message: .unique,
                 statusCode: .unique
@@ -33,7 +33,7 @@ final class ErrorPayload_Tests: XCTestCase, @unchecked Sendable {
         // Iterate error codes
         for code in codesOutsideInvalidTokenRange {
             // Create the error with code outside invalid token range
-            let error = ErrorPayload(
+            let error = APIError(
                 code: code,
                 message: .unique,
                 statusCode: .unique
@@ -50,7 +50,7 @@ final class ErrorPayload_Tests: XCTestCase, @unchecked Sendable {
         // Iterate invalid token codes range
         for code in ClosedRange.clientErrorCodes {
             // Create the error with client error status code
-            let error = ErrorPayload(
+            let error = APIError(
                 code: .unique,
                 message: .unique,
                 statusCode: code
@@ -71,7 +71,7 @@ final class ErrorPayload_Tests: XCTestCase, @unchecked Sendable {
         // Iterate error codes
         for code in codesOutsideClientErrorRange {
             // Create the error with code outside invalid token range
-            let error = ErrorPayload(
+            let error = APIError(
                 code: .unique,
                 message: .unique,
                 statusCode: code

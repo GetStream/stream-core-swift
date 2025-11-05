@@ -33,8 +33,8 @@ public struct VideoAttachmentPayload: AttachmentPayload {
     /// - Returns: Extra data of the given type or `nil` if decoding fails.
     public func extraData<T: Decodable>(ofType: T.Type = T.self) -> T? {
         extraData
-            .flatMap { try? JSONEncoder.default.encode($0) }
-            .flatMap { try? JSONDecoder.default.decode(T.self, from: $0) }
+            .flatMap { try? JSONEncoder.streamCore.encode($0) }
+            .flatMap { try? JSONDecoder.streamCore.decode(T.self, from: $0) }
     }
 
     /// Creates `VideoAttachmentPayload` instance.
