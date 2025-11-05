@@ -6,7 +6,7 @@ import Foundation
 @testable import StreamCore
 
 /// Mock implementation of `EventNotificationCenter`
-final class EventNotificationCenter_Mock: EventNotificationCenter, @unchecked Sendable {
+final class EventNotificationCenter_Mock: DefaultEventNotificationCenter, @unchecked Sendable {
     lazy var mock_process = MockFunc<([Event], Bool, (@Sendable () -> Void)?), Void>.mock(for: process)
 
     override func process(

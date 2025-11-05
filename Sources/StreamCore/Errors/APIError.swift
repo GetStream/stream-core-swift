@@ -16,11 +16,11 @@ public final class APIError: @unchecked Sendable, Codable, JSONEncodable, Hashab
 
     public init(
         code: Int,
-        details: [Int],
-        duration: String,
+        details: [Int] = [],
+        duration: String = "",
         exceptionFields: [String: String]? = nil,
         message: String,
-        moreInfo: String,
+        moreInfo: String = "",
         statusCode: Int,
         unrecoverable: Bool? = nil
     ) {
