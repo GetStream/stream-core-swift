@@ -6,5 +6,5 @@ import Foundation
 
 enum SystemEnvironment {
     /// A Stream Core version.
-    public static let version: String = "0.5.0"
+    public static let version: String = "0.6.0-SNAPSHOT"
 }
