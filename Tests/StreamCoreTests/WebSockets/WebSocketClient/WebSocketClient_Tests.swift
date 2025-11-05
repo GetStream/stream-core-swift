@@ -50,7 +50,7 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
             eventNotificationCenter: eventNotificationCenter,
             webSocketClientType: .coordinator,
             environment: environment,
-            connectURL: connectURL
+            connectRequest: URLRequest(url: connectURL)
         )
 
         connectionId = UUID().uuidString
@@ -155,7 +155,7 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
         test_connectionFlow()
 
         // Simulate the engine disconnecting with server error
-        let errorPayload = ErrorPayload(
+        let errorPayload = APIError(
             code: .unique,
             message: .unique,
             statusCode: .unique

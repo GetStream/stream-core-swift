@@ -8,7 +8,7 @@ import XCTest
 final class ClientError_Tests: XCTestCase, @unchecked Sendable {
     func test_isInvalidTokenError_whenUnderlayingErrorIsInvalidToken_returnsTrue() {
         // Create error code withing `ErrorPayload.tokenInvalidErrorCodes` range
-        let error = ErrorPayload(
+        let error = APIError(
             code: .random(in: ClosedRange.tokenInvalidErrorCodes),
             message: .unique,
             statusCode: .unique
@@ -26,7 +26,7 @@ final class ClientError_Tests: XCTestCase, @unchecked Sendable {
 
     func test_isInvalidTokenError_whenUnderlayingErrorIsNotInvalidToken_returnsFalse() {
         // Create error code outside `ErrorPayload.tokenInvalidErrorCodes` range
-        let error = ErrorPayload(
+        let error = APIError(
             code: ClosedRange.tokenInvalidErrorCodes.lowerBound - 1,
             message: .unique,
             statusCode: .unique
@@ -43,7 +43,7 @@ final class ClientError_Tests: XCTestCase, @unchecked Sendable {
     }
 
     func test_rateLimitError_isEphemeralError() {
-        let errorPayload = ErrorPayload(
+        let errorPayload = APIError(
             code: 9,
             message: .unique,
             statusCode: 429

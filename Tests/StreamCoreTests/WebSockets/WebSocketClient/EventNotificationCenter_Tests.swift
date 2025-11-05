@@ -16,7 +16,7 @@ final class EventNotificationCenter_Tests: XCTestCase, @unchecked Sendable {
         ]
 
         // Create notification center with middlewares
-        let center = EventNotificationCenter()
+        let center = DefaultEventNotificationCenter()
         middlewares.forEach(center.add)
 
         // Assert middlewares are assigned correctly
@@ -36,7 +36,7 @@ final class EventNotificationCenter_Tests: XCTestCase, @unchecked Sendable {
         ]
 
         // Create notification center without any middlewares
-        let center = EventNotificationCenter()
+        let center = DefaultEventNotificationCenter()
 
         // Add middlewares via `add` method
         middlewares.forEach(center.add)
@@ -53,7 +53,7 @@ final class EventNotificationCenter_Tests: XCTestCase, @unchecked Sendable {
         let consumingMiddleware = EventMiddleware_Mock { _ in nil }
 
         // Create a notification center with blocking middleware
-        let center = EventNotificationCenter()
+        let center = DefaultEventNotificationCenter()
         center.add(middleware: consumingMiddleware)
 
         // Create event logger to check published events
@@ -68,7 +68,7 @@ final class EventNotificationCenter_Tests: XCTestCase, @unchecked Sendable {
 
     func test_eventIsPublishedAsItIs_ifThereAreNoMiddlewares() {
         // Create a notification center without any middlewares
-        let center = EventNotificationCenter()
+        let center = DefaultEventNotificationCenter()
 
         // Create event logger to check published events
         let eventLogger = EventLogger(center)
@@ -87,7 +87,7 @@ final class EventNotificationCenter_Tests: XCTestCase, @unchecked Sendable {
 
     func test_process_whenShouldPostEventsIsTrue_eventsArePosted() {
         // Create a notification center with just a forwarding middleware
-        let center = EventNotificationCenter()
+        let center = DefaultEventNotificationCenter()
 
         // Create event logger to check published events
         let eventLogger = EventLogger(center)
@@ -110,7 +110,7 @@ final class EventNotificationCenter_Tests: XCTestCase, @unchecked Sendable {
 
     func test_process_whenShouldPostEventsIsFalse_eventsAreNotPosted() {
         // Create a notification center with just a forwarding middleware
-        let center = EventNotificationCenter()
+        let center = DefaultEventNotificationCenter()
 
         // Create event logger to check published events
         let eventLogger = EventLogger(center)
@@ -133,7 +133,7 @@ final class EventNotificationCenter_Tests: XCTestCase, @unchecked Sendable {
 
     func test_process_postsEventsOnPostingQueue() {
         // Create notification center
-        let center = EventNotificationCenter()
+        let center = DefaultEventNotificationCenter()
 
         // Assign mock events posting queue
         let mockQueueUUID = UUID()
@@ -181,7 +181,7 @@ final class EventNotificationCenter_Tests: XCTestCase, @unchecked Sendable {
         let outputEvent = TestEvent()
 
         // Create a notification center
-        let center = EventNotificationCenter()
+        let center = DefaultEventNotificationCenter()
 
         // Create event logger to check published events
         let eventLogger = EventLogger(center)

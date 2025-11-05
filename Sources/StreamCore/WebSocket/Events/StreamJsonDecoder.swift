@@ -40,7 +40,7 @@ public final class StreamJSONDecoder: JSONDecoder, @unchecked Sendable {
                     return date.bridgeDate
                 }
                 
-                if let date = self?.iso8601formatter.date(from: dateString) {
+                if let date = self?.iso8601formatter.dateWithMicroseconds(from: dateString) {
                     self?.dateCache.setObject(date.bridgeDate, forKey: dateString as NSString)
                     return date
                 }
@@ -182,21 +182,5 @@ extension DBDate {
 extension Date {
     var bridgeDate: DBDate {
         DBDate(timeIntervalSince1970: timeIntervalSince1970)
-    }
-}
-
-extension ClientError {
-    public class UnsupportedEventType: ClientError, @unchecked Sendable {
-        override public var localizedDescription: String { "The incoming event type is not supported. Ignoring." }
-    }
-    
-    public class EventDecoding: ClientError, @unchecked Sendable {
-        override init(_ message: String, _ file: StaticString = #fileID, _ line: UInt = #line) {
-            super.init(message, file, line)
-        }
-        
-        init<T>(missingValue: String, for type: T.Type, _ file: StaticString = #fileID, _ line: UInt = #line) {
-            super.init("`\(missingValue)` field can't be `nil` for the `\(type)` event.", file, line)
-        }
     }
 }
