@@ -40,6 +40,7 @@ jobs:
     runs-on: macos-15
     env:
       XCODE_VERSION: "26.1"
+      IOS_SIMULATOR_DEVICE: "${{ matrix.device }} (${{ matrix.ios }})"
     steps:
     - uses: actions/checkout@v4.1.1
     - uses: ./.github/actions/bootstrap
@@ -53,13 +54,13 @@ jobs:
         version: ${{ matrix.ios }}
         device: ${{ matrix.device }}
     - name: Run Core Tests
-      run: bundle exec fastlane test_core device:"${{ matrix.device }} (${{ matrix.ios }})" cron:true
+      run: bundle exec fastlane test_core device:"${{ env.IOS_SIMULATOR_DEVICE }}" cron:true
       timeout-minutes: 30
     - name: Run UI Tests
-      run: bundle exec fastlane test_ui device:"${{ matrix.device }} (${{ matrix.ios }})" cron:true
+      run: bundle exec fastlane test_ui device:"${{ env.IOS_SIMULATOR_DEVICE }}" cron:true
       timeout-minutes: 30
     - name: Run Attachments Tests
-      run: bundle exec fastlane test_attachments device:"${{ matrix.device }} (${{ matrix.ios }})" cron:true
+      run: bundle exec fastlane test_attachments device:"${{ env.IOS_SIMULATOR_DEVICE }}" cron:true
       timeout-minutes: 30
 
   automated-code-review:
