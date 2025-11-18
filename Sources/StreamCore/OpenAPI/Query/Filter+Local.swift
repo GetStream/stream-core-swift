@@ -2,6 +2,7 @@
 // Copyright © 2025 Stream.io Inc. All rights reserved.
 //
 
+import CoreLocation
 import Foundation
 
 /// A filter matcher which rrases the type of the value the filter matches against.
@@ -122,6 +123,10 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
             return Self.isIn(localRawJSONValue, filterRawJSONValue)
         case .pathExists:
             return Self.pathExists(localRawJSONValue, filterRawJSONValue)
+        case .near:
+            return Self.isNear(localRawJSONValue, filterRawJSONValue)
+        case .withinBounds:
+            return Self.isWithinBounds(localRawJSONValue, filterRawJSONValue)
         case .and, .or:
             log.debug("Should never try to match compound operators")
             return false
@@ -237,6 +242,28 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
                 }
             }
             return true
+        default:
+            return false
+        }
+    }
+    
+    static func isNear(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
+        switch (localRawJSONValue, filterRawJSONValue) {
+        case (.dictionary(let localDictionaryValue), .dictionary(let filterDictionaryValue)):
+            guard let location = CLLocationCoordinate2D(from: localDictionaryValue) else { return false }
+            guard let filterRegion = CircularRegion(from: filterDictionaryValue) else { return false }
+            return filterRegion.contains(location)
+        default:
+            return false
+        }
+    }
+    
+    static func isWithinBounds(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
+        switch (localRawJSONValue, filterRawJSONValue) {
+        case (.dictionary(let localDictionaryValue), .dictionary(let filterDictionaryValue)):
+            guard let location = CLLocationCoordinate2D(from: localDictionaryValue) else { return false }
+            guard let filterRegion = BoundingBox(from: filterDictionaryValue) else { return false }
+            return filterRegion.contains(location)
         default:
             return false
         }

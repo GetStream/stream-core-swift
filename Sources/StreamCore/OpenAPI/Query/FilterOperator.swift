@@ -43,6 +43,12 @@ public enum FilterOperator: String, Sendable {
     
     /// Matches if the value contains JSON with the given path.
     case pathExists = "$path_exists"
+    
+    /// Matches if the location is within the specified circular area.
+    case near = "$near"
+    
+    /// Matches if the location is within the specified rectangular area.
+    case withinBounds = "$within_bounds"
 }
 
 extension FilterOperator {
