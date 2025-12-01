@@ -133,7 +133,7 @@ extension BoundingBox: FilterValue {
     }
 }
 
-extension CLLocationCoordinate2D: @unchecked Sendable, FilterValue {
+extension CLLocationCoordinate2D: @unchecked @retroactive Sendable, FilterValue {
     static let rawJSONLatitudeKey = "lat"
     static let rawJSONLongitudeKey = "lng"
     
