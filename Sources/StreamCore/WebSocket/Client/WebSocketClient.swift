@@ -35,9 +35,14 @@ public class WebSocketClient: @unchecked Sendable {
 
     public weak var connectionStateDelegate: ConnectionStateDelegate?
 
-    public var connectRequest: URLRequest?
+    public var connectRequest: URLRequest? {
+        get { _connectRequest.value }
+        set { _connectRequest.value = newValue }
+    }
+    
+    private let _connectRequest = AllocatedUnfairLock<URLRequest?>(nil)
 
-    var requiresAuth: Bool
+    let requiresAuth: Bool
     /// If true, health check event is processed by the event notification center before setting connection status to connected, otherwise the order is reversed.
     /// Compatibility reasons for chat which has to set it to true.
     let healthCheckBeforeConnected: Bool
@@ -89,7 +94,7 @@ public class WebSocketClient: @unchecked Sendable {
         self.sessionConfiguration = sessionConfiguration
         self.webSocketClientType = webSocketClientType
         self.eventDecoder = eventDecoder
-        self.connectRequest = connectRequest
+        self._connectRequest.value = connectRequest
         self.eventNotificationCenter = eventNotificationCenter
         self.healthCheckBeforeConnected = healthCheckBeforeConnected
         self.requiresAuth = requiresAuth
@@ -123,7 +128,9 @@ public class WebSocketClient: @unchecked Sendable {
         }
 
         guard let connectRequest else { return }
-        engine = createEngineIfNeeded(for: connectRequest)
+        engineQueue.sync {
+            engine = createEngineIfNeeded(for: connectRequest)
+        }
 
         connectionState = .connecting
 
