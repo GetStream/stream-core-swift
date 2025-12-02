@@ -29,7 +29,8 @@ struct Filter_Tests {
         static let createdAt = Self("created_at", localValue: \.createdAt)
         static let isActive = Self("is_active", localValue: \.isActive)
         static let searchData = Self("search_data", localValue: \.searchData)
-        static let location = Self("location", localValue: \.location)
+        static let nearLocation = Self("near", localValue: \.location)
+        static let withinBoundsLocation = Self("within_bounds", localValue: \.location)
     }
     
     struct TestFilter: Filter {
@@ -261,12 +262,12 @@ struct Filter_Tests {
     @Test func nearFilter() {
         let center = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
         let region = CircularRegion(center: center, radiusInMeters: 5000)
-        let filter = TestFilter.near(.location, region)
+        let filter = TestFilter.equal(.nearLocation, region)
         let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
-            "location": .dictionary([
-                "$near": .dictionary([
+            "near": .dictionary([
+                "$eq": .dictionary([
                     "lat": .number(37.7749),
                     "lng": .number(-122.4194),
                     "distance": .number(5.0) // 5000 meters = 5 km
@@ -281,12 +282,12 @@ struct Filter_Tests {
         let northeast = CLLocationCoordinate2D(latitude: 40.7580, longitude: -73.9855)
         let southwest = CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060)
         let boundingBox = BoundingBox(northeast: northeast, southwest: southwest)
-        let filter = TestFilter.withinBounds(.location, boundingBox)
+        let filter = TestFilter.equal(.withinBoundsLocation, boundingBox)
         let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
-            "location": .dictionary([
-                "$within_bounds": .dictionary([
+            "within_bounds": .dictionary([
+                "$eq": .dictionary([
                     "ne_lat": .number(40.7580),
                     "ne_lng": .number(-73.9855),
                     "sw_lat": .number(40.7128),
@@ -1137,7 +1138,7 @@ struct Filter_Tests {
         let center = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194) // San Francisco
         let region = CircularRegion(center: center, radiusInMeters: 5000) // 5 km radius
         
-        let nearFilter = TestFilter.near(.location, region)
+        let nearFilter = TestFilter.equal(.nearLocation, region)
         
         // Location at center should match
         #expect(nearFilter.matches(TestUser(location: center)))
@@ -1152,7 +1153,7 @@ struct Filter_Tests {
         
         // Test with smaller radius
         let smallRegion = CircularRegion(center: center, radiusInMeters: 100) // 100 meters radius
-        let smallNearFilter = TestFilter.near(.location, smallRegion)
+        let smallNearFilter = TestFilter.equal(.nearLocation, smallRegion)
         
         // Location at center should match
         #expect(smallNearFilter.matches(TestUser(location: center)))
@@ -1162,7 +1163,7 @@ struct Filter_Tests {
         
         // Test with radius in kilometers
         let regionInKM = CircularRegion(center: center, radiusInKM: 10.0) // 10 km radius
-        let nearFilterInKM = TestFilter.near(.location, regionInKM)
+        let nearFilterInKM = TestFilter.equal(.nearLocation, regionInKM)
         
         // Location within 10 km should match
         #expect(nearFilterInKM.matches(TestUser(location: nearbyLocation)))
@@ -1180,7 +1181,7 @@ struct Filter_Tests {
         let southwest = CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060) // Lower Manhattan
         let boundingBox = BoundingBox(northeast: northeast, southwest: southwest)
         
-        let withinBoundsFilter = TestFilter.withinBounds(.location, boundingBox)
+        let withinBoundsFilter = TestFilter.equal(.withinBoundsLocation, boundingBox)
         
         // Location at northeast corner should match
         #expect(withinBoundsFilter.matches(TestUser(location: northeast)))
@@ -1212,7 +1213,7 @@ struct Filter_Tests {
         let sfNortheast = CLLocationCoordinate2D(latitude: 37.8044, longitude: -122.4094)
         let sfSouthwest = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
         let sfBoundingBox = BoundingBox(northeast: sfNortheast, southwest: sfSouthwest)
-        let sfWithinBoundsFilter = TestFilter.withinBounds(.location, sfBoundingBox)
+        let sfWithinBoundsFilter = TestFilter.equal(.withinBoundsLocation, sfBoundingBox)
         
         // Location within SF bounding box should match
         let sfLocation = CLLocationCoordinate2D(latitude: 37.7897, longitude: -122.4144)
@@ -1225,7 +1226,7 @@ struct Filter_Tests {
         let smallNortheast = CLLocationCoordinate2D(latitude: 37.7751, longitude: -122.4192)
         let smallSouthwest = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
         let smallBoundingBox = BoundingBox(northeast: smallNortheast, southwest: smallSouthwest)
-        let smallWithinBoundsFilter = TestFilter.withinBounds(.location, smallBoundingBox)
+        let smallWithinBoundsFilter = TestFilter.equal(.withinBoundsLocation, smallBoundingBox)
         
         // Location at southwest corner should match
         #expect(smallWithinBoundsFilter.matches(TestUser(location: smallSouthwest)))

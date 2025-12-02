@@ -104,7 +104,14 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
         case .exists:
             return Self.exists(localRawJSONValue, filterRawJSONValue)
         case .equal:
-            return Self.isEqual(localRawJSONValue, filterRawJSONValue)
+            switch value {
+            case is CircularRegion:
+                return Self.isNear(localRawJSONValue, filterRawJSONValue)
+            case is BoundingBox:
+                return Self.isWithinBounds(localRawJSONValue, filterRawJSONValue)
+            default:
+                return Self.isEqual(localRawJSONValue, filterRawJSONValue)
+            }
         case .greater:
             return Self.isGreater(localRawJSONValue, filterRawJSONValue)
         case .greaterOrEqual:
@@ -123,10 +130,6 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
             return Self.isIn(localRawJSONValue, filterRawJSONValue)
         case .pathExists:
             return Self.pathExists(localRawJSONValue, filterRawJSONValue)
-        case .near:
-            return Self.isNear(localRawJSONValue, filterRawJSONValue)
-        case .withinBounds:
-            return Self.isWithinBounds(localRawJSONValue, filterRawJSONValue)
         case .and, .or:
             log.debug("Should never try to match compound operators")
             return false

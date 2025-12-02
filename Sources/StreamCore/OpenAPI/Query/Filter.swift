@@ -195,33 +195,6 @@ extension Filter {
         Self(filterOperator: .query, field: field, value: value)
     }
     
-    /// Creates a filter that uses the Haversine formula to find values
-    /// within the specified distance from the given coordinates.
-    ///
-    /// This filter matches locations that fall within a circular region defined by a center point
-    /// and a radius. The distance calculation uses the Haversine formula to account for Earth's curvature.
-    ///
-    /// - Parameters:
-    ///   - field: The field containing location coordinates to query.
-    ///   - value: The circular region defining the center point and radius to match against.
-    /// - Returns: A filter that matches when the location field is within the specified circular region.
-    public static func near(_ field: FilterField, _ value: CircularRegion) -> Self {
-        Self(filterOperator: .near, field: field, value: value)
-    }
-    
-    /// Creates a filter that finds values within the specified rectangular bounding box.
-    ///
-    /// This filter matches locations that fall within a rectangular geographic region defined by
-    /// northeast and southwest corner coordinates.
-    ///
-    /// - Parameters:
-    ///   - field: The field containing location coordinates to query.
-    ///   - value: The bounding box defining the rectangular region to match against.
-    /// - Returns: A filter that matches when the location field is within the specified bounding box.
-    public static func withinBounds(_ field: FilterField, _ value: BoundingBox) -> Self {
-        Self(filterOperator: .withinBounds, field: field, value: value)
-    }
-    
     /// Creates a filter that combines multiple filters with a logical AND operation.
     ///
     /// - Parameter filters: An array of filters to combine.
