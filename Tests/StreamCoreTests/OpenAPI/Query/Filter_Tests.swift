@@ -2,6 +2,7 @@
 // Copyright © 2025 Stream.io Inc. All rights reserved.
 //
 
+import CoreLocation
 import Foundation
 @testable import StreamCore
 import Testing
@@ -28,6 +29,8 @@ struct Filter_Tests {
         static let createdAt = Self("created_at", localValue: \.createdAt)
         static let isActive = Self("is_active", localValue: \.isActive)
         static let searchData = Self("search_data", localValue: \.searchData)
+        static let nearLocation = Self("near", localValue: \.location)
+        static let withinBoundsLocation = Self("within_bounds", localValue: \.location)
     }
     
     struct TestFilter: Filter {
@@ -62,6 +65,7 @@ struct Filter_Tests {
                 "street": .string("Kleine-Gartmanplantsoen 21-6")
             ])
         ]
+        var location: CLLocationCoordinate2D? = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
     }
     
     // MARK: - Basic Filter Tests
@@ -69,7 +73,7 @@ struct Filter_Tests {
     @Test("Equal filter with string value")
     func equalFilterWithString() {
         let filter = TestFilter.equal(.name, "John")
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "name": .dictionary(["$eq": .string("John")])
@@ -81,7 +85,7 @@ struct Filter_Tests {
     @Test("Equal filter with integer value")
     func equalFilterWithInteger() {
         let filter = TestFilter.equal(.age, 25)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "age": .dictionary(["$eq": .number(25.0)])
@@ -93,7 +97,7 @@ struct Filter_Tests {
     @Test("Equal filter with boolean value")
     func equalFilterWithBoolean() {
         let filter = TestFilter.equal(.isActive, true)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "is_active": .dictionary(["$eq": .bool(true)])
@@ -106,7 +110,7 @@ struct Filter_Tests {
     func equalFilterWithDate() {
         let date = Date(timeIntervalSince1970: 1_640_995_200) // 2022-01-01 00:00:00 UTC
         let filter = TestFilter.equal(.createdAt, date)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "created_at": .dictionary(["$eq": .string("2022-01-01T00:00:00.000Z")])
@@ -120,7 +124,7 @@ struct Filter_Tests {
     @Test("Greater than filter")
     func greaterThanFilter() {
         let filter = TestFilter.greater(.age, 18)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "age": .dictionary(["$gt": .number(18.0)])
@@ -132,7 +136,7 @@ struct Filter_Tests {
     @Test("Greater than or equal filter")
     func greaterThanOrEqualFilter() {
         let filter = TestFilter.greaterOrEqual(.age, 21)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "age": .dictionary(["$gte": .number(21.0)])
@@ -144,7 +148,7 @@ struct Filter_Tests {
     @Test("Less than filter")
     func lessThanFilter() {
         let filter = TestFilter.less(.age, 65)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "age": .dictionary(["$lt": .number(65.0)])
@@ -156,7 +160,7 @@ struct Filter_Tests {
     @Test("Less than or equal filter")
     func lessThanOrEqualFilter() {
         let filter = TestFilter.lessOrEqual(.age, 30)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "age": .dictionary(["$lte": .number(30.0)])
@@ -170,7 +174,7 @@ struct Filter_Tests {
     @Test("In filter with array of strings")
     func inFilterWithStringArray() {
         let filter = TestFilter.in(.name, ["John", "Jane", "Bob"])
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "name": .dictionary(["$in": .array([.string("John"), .string("Jane"), .string("Bob")])])
@@ -182,7 +186,7 @@ struct Filter_Tests {
     @Test("In filter with array of integers")
     func inFilterWithIntegerArray() {
         let filter = TestFilter.in(.age, [18, 21, 25, 30])
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "age": .dictionary(["$in": .array([.number(18.0), .number(21.0), .number(25.0), .number(30.0)])])
@@ -194,7 +198,7 @@ struct Filter_Tests {
     @Test("Contains filter")
     func containsFilter() {
         let filter = TestFilter.contains(.tags, "swift")
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "tags": .dictionary(["$contains": .string("swift")])
@@ -208,7 +212,7 @@ struct Filter_Tests {
     @Test("Query filter")
     func queryFilter() {
         let filter = TestFilter.query(.name, "john")
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "name": .dictionary(["$q": .string("john")])
@@ -220,7 +224,7 @@ struct Filter_Tests {
     @Test("Autocomplete filter")
     func autocompleteFilter() {
         let filter = TestFilter.autocomplete(.name, "jo")
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "name": .dictionary(["$autocomplete": .string("jo")])
@@ -234,7 +238,7 @@ struct Filter_Tests {
     @Test("Exists filter")
     func existsFilter() {
         let filter = TestFilter.exists(.email, true)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "email": .dictionary(["$exists": .bool(true)])
@@ -246,10 +250,50 @@ struct Filter_Tests {
     @Test("Path exists filter")
     func pathExistsFilter() {
         let filter = TestFilter.pathExists(.tags, "custom.field")
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "tags": .dictionary(["$path_exists": .string("custom.field")])
+        ]
+        
+        #expect(json == expected)
+    }
+    
+    @Test func nearFilter() {
+        let center = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
+        let region = CircularRegion(center: center, radiusInMeters: 5000)
+        let filter = TestFilter.equal(.nearLocation, region)
+        let json = filter.toRawJSONDictionary()
+        
+        let expected: [String: RawJSON] = [
+            "near": .dictionary([
+                "$eq": .dictionary([
+                    "lat": .number(37.7749),
+                    "lng": .number(-122.4194),
+                    "distance": .number(5.0) // 5000 meters = 5 km
+                ])
+            ])
+        ]
+        
+        #expect(json == expected)
+    }
+    
+    @Test func withinBoundsFilter() {
+        let northeast = CLLocationCoordinate2D(latitude: 40.7580, longitude: -73.9855)
+        let southwest = CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060)
+        let boundingBox = BoundingBox(northeast: northeast, southwest: southwest)
+        let filter = TestFilter.equal(.withinBoundsLocation, boundingBox)
+        let json = filter.toRawJSONDictionary()
+        
+        let expected: [String: RawJSON] = [
+            "within_bounds": .dictionary([
+                "$eq": .dictionary([
+                    "ne_lat": .number(40.7580),
+                    "ne_lng": .number(-73.9855),
+                    "sw_lat": .number(40.7128),
+                    "sw_lng": .number(-74.0060)
+                ])
+            ])
         ]
         
         #expect(json == expected)
@@ -264,7 +308,7 @@ struct Filter_Tests {
         let activeFilter = TestFilter.equal(.isActive, true)
         
         let andFilter = TestFilter.and([ageFilter, nameFilter, activeFilter])
-        let json = andFilter.toRawJSON()
+        let json = andFilter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "$and": .array([
@@ -283,7 +327,7 @@ struct Filter_Tests {
         let nameFilter2 = TestFilter.equal(.name, "Jane")
         
         let orFilter = TestFilter.or([nameFilter1, nameFilter2])
-        let json = orFilter.toRawJSON()
+        let json = orFilter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "$or": .array([
@@ -304,7 +348,7 @@ struct Filter_Tests {
         let orFilter = TestFilter.or([nameFilter1, nameFilter2])
         let andFilter = TestFilter.and([ageFilter, orFilter])
         
-        let json = andFilter.toRawJSON()
+        let json = andFilter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "$and": .array([
@@ -327,7 +371,7 @@ struct Filter_Tests {
     func uRLFilterValue() {
         let url = URL(string: "https://example.com")!
         let filter = TestFilter.equal(.email, url)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "email": .dictionary(["$eq": .string("https://example.com")])
@@ -345,7 +389,7 @@ struct Filter_Tests {
             "key2": .number(42.0)
         ]
         let filter = TestFilter.equal(.tags, customData)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "tags": .dictionary(["$eq": .dictionary(customData)])
@@ -360,7 +404,7 @@ struct Filter_Tests {
     func arrayFilterValue() {
         let arrayValue = ["item1", "item2"]
         let filter = TestFilter.equal(.tags, arrayValue)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "tags": .dictionary(["$eq": .array([.string("item1"), .string("item2")])])
@@ -375,7 +419,7 @@ struct Filter_Tests {
     func emptyArrayInFilter() {
         let arrayValue: [String] = []
         let filter = TestFilter.in(.tags, arrayValue)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "tags": .dictionary(["$in": .array([])])
@@ -388,7 +432,7 @@ struct Filter_Tests {
     func emptyAndFilter() {
         let subFilters: [TestFilter] = []
         let filter = TestFilter.and(subFilters)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "$and": .array([])
@@ -401,7 +445,7 @@ struct Filter_Tests {
     func emptyOrFilter() {
         let subFilters: [TestFilter] = []
         let filter = TestFilter.or(subFilters)
-        let json = filter.toRawJSON()
+        let json = filter.toRawJSONDictionary()
         
         let expected: [String: RawJSON] = [
             "$or": .array([])
@@ -1087,6 +1131,114 @@ struct Filter_Tests {
                 "name": .string("Jose")
             ])
         ]))) // searchData does not contain "user.nom" path (different field name)
+    }
+    
+    @Test func filterMatchingNear() {
+        // Test location within circular region
+        let center = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194) // San Francisco
+        let region = CircularRegion(center: center, radiusInMeters: 5000) // 5 km radius
+        
+        let nearFilter = TestFilter.equal(.nearLocation, region)
+        
+        // Location at center should match
+        #expect(nearFilter.matches(TestUser(location: center)))
+        
+        // Location within radius should match (approximately 1 km away)
+        let nearbyLocation = CLLocationCoordinate2D(latitude: 37.7839, longitude: -122.4094)
+        #expect(nearFilter.matches(TestUser(location: nearbyLocation)))
+        
+        // Location far away should not match (approximately 100 km away)
+        let farLocation = CLLocationCoordinate2D(latitude: 37.8715, longitude: -121.2730) // San Jose area
+        #expect(!nearFilter.matches(TestUser(location: farLocation)))
+        
+        // Test with smaller radius
+        let smallRegion = CircularRegion(center: center, radiusInMeters: 100) // 100 meters radius
+        let smallNearFilter = TestFilter.equal(.nearLocation, smallRegion)
+        
+        // Location at center should match
+        #expect(smallNearFilter.matches(TestUser(location: center)))
+        
+        // Location just outside radius should not match
+        #expect(!smallNearFilter.matches(TestUser(location: nearbyLocation)))
+        
+        // Test with radius in kilometers
+        let regionInKM = CircularRegion(center: center, radiusInKM: 10.0) // 10 km radius
+        let nearFilterInKM = TestFilter.equal(.nearLocation, regionInKM)
+        
+        // Location within 10 km should match
+        #expect(nearFilterInKM.matches(TestUser(location: nearbyLocation)))
+        
+        // Location far away should not match
+        #expect(!nearFilterInKM.matches(TestUser(location: farLocation)))
+        
+        // Test nil location (should not match)
+        #expect(!nearFilter.matches(TestUser(location: nil)))
+    }
+    
+    @Test func filterMatchingWithinBounds() {
+        // Test location within bounding box
+        let northeast = CLLocationCoordinate2D(latitude: 40.7580, longitude: -73.9855) // Upper Manhattan
+        let southwest = CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060) // Lower Manhattan
+        let boundingBox = BoundingBox(northeast: northeast, southwest: southwest)
+        
+        let withinBoundsFilter = TestFilter.equal(.withinBoundsLocation, boundingBox)
+        
+        // Location at northeast corner should match
+        #expect(withinBoundsFilter.matches(TestUser(location: northeast)))
+        
+        // Location at southwest corner should match
+        #expect(withinBoundsFilter.matches(TestUser(location: southwest)))
+        
+        // Location in the middle should match
+        let middleLocation = CLLocationCoordinate2D(latitude: 40.7354, longitude: -73.9958) // Midtown Manhattan
+        #expect(withinBoundsFilter.matches(TestUser(location: middleLocation)))
+        
+        // Location north of bounding box should not match
+        let northLocation = CLLocationCoordinate2D(latitude: 40.8000, longitude: -73.9855)
+        #expect(!withinBoundsFilter.matches(TestUser(location: northLocation)))
+        
+        // Location south of bounding box should not match
+        let southLocation = CLLocationCoordinate2D(latitude: 40.7000, longitude: -74.0060)
+        #expect(!withinBoundsFilter.matches(TestUser(location: southLocation)))
+        
+        // Location east of bounding box should not match
+        let eastLocation = CLLocationCoordinate2D(latitude: 40.7354, longitude: -73.9000)
+        #expect(!withinBoundsFilter.matches(TestUser(location: eastLocation)))
+        
+        // Location west of bounding box should not match
+        let westLocation = CLLocationCoordinate2D(latitude: 40.7354, longitude: -74.1000)
+        #expect(!withinBoundsFilter.matches(TestUser(location: westLocation)))
+        
+        // Test with different bounding box (San Francisco area)
+        let sfNortheast = CLLocationCoordinate2D(latitude: 37.8044, longitude: -122.4094)
+        let sfSouthwest = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
+        let sfBoundingBox = BoundingBox(northeast: sfNortheast, southwest: sfSouthwest)
+        let sfWithinBoundsFilter = TestFilter.equal(.withinBoundsLocation, sfBoundingBox)
+        
+        // Location within SF bounding box should match
+        let sfLocation = CLLocationCoordinate2D(latitude: 37.7897, longitude: -122.4144)
+        #expect(sfWithinBoundsFilter.matches(TestUser(location: sfLocation)))
+        
+        // Location outside SF bounding box should not match
+        #expect(!sfWithinBoundsFilter.matches(TestUser(location: middleLocation))) // NYC location
+        
+        // Test with very small bounding box
+        let smallNortheast = CLLocationCoordinate2D(latitude: 37.7751, longitude: -122.4192)
+        let smallSouthwest = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
+        let smallBoundingBox = BoundingBox(northeast: smallNortheast, southwest: smallSouthwest)
+        let smallWithinBoundsFilter = TestFilter.equal(.withinBoundsLocation, smallBoundingBox)
+        
+        // Location at southwest corner should match
+        #expect(smallWithinBoundsFilter.matches(TestUser(location: smallSouthwest)))
+        
+        // Location at northeast corner should match
+        #expect(smallWithinBoundsFilter.matches(TestUser(location: smallNortheast)))
+        
+        // Location just outside should not match
+        #expect(!smallWithinBoundsFilter.matches(TestUser(location: sfLocation)))
+        
+        // Test nil location (should not match)
+        #expect(!withinBoundsFilter.matches(TestUser(location: nil)))
     }
     
     @Test func filterMatchingAnd() {

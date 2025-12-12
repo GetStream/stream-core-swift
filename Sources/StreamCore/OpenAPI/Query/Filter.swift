@@ -32,11 +32,6 @@ public protocol Filter: FilterValue, Sendable {
     init(filterOperator: FilterOperator, field: FilterField, value: any FilterValue)
 }
 
-/// A protocol that defines values that can be used in filters.
-///
-/// This protocol is automatically conformed to by common Swift types like `String`, `Int`, `Bool`, etc.
-public protocol FilterValue: Sendable {}
-
 /// A protocol that defines how filter fields are represented as strings.
 ///
 /// This protocol allows for type-safe field names while maintaining the ability to convert to string values
@@ -217,50 +212,17 @@ extension Filter {
     }
 }
 
-// MARK: - Supported Filter Values
-
-/// Extends `Bool` to conform to `FilterValue` for use in filters.
-extension Bool: FilterValue {}
-
-/// Extends `Date` to conform to `FilterValue` for use in filters.
-/// Dates are automatically converted to RFC3339 format when serialized.
-extension Date: FilterValue {}
-
-/// Extends `Double` to conform to `FilterValue` for use in filters.
-extension Double: FilterValue {}
-
-/// Extends `Float` to conform to `FilterValue` for use in filters.
-extension Float: FilterValue {}
-
-/// Extends `Int` to conform to `FilterValue` for use in filters.
-extension Int: FilterValue {}
-
-/// Extends `String` to conform to `FilterValue` for use in filters.
-extension String: FilterValue {}
-
-/// Extends `URL` to conform to `FilterValue` for use in filters.
-/// URLs are automatically converted to their absolute string representation when serialized.
-extension URL: FilterValue {}
-
-/// Extends `Array` to conform to `FilterValue` when its elements also conform to `FilterValue`.
-/// This allows arrays of filter values to be used in filters (e.g., for the `in` operator).
-extension Array: FilterValue where Element: FilterValue {}
-
-/// Extends `Dictionary` to conform to `FilterValue` when the key is `String` and value is `RawJSON`.
-/// This allows dictionaries to be used in filters for complex object matching.
-extension Dictionary: FilterValue where Key == String, Value == RawJSON {}
-
-extension Optional: FilterValue where Wrapped: FilterValue {}
-
 // MARK: - Filter to RawJSON Conversion
 
 extension Filter {
+    public var rawJSON: RawJSON { .dictionary(toRawJSONDictionary()) }
+    
     /// Converts the filter to a `RawJSON` representation for API communication.
     ///
     /// This method handles both regular filters and group filters (AND/OR combinations).
     ///
     /// - Returns: A dictionary representation of the filter in `RawJSON` format.
-    public func toRawJSON() -> [String: RawJSON] {
+    public func toRawJSONDictionary() -> [String: RawJSON] {
         if filterOperator.isGroup {
             // Filters with group operators are encoded in the following form:
             //  { $<operator>: [ <filter 1>, <filter 2> ] }
@@ -268,41 +230,12 @@ extension Filter {
                 log.error("Unknown filter value used with \(filterOperator)")
                 return [:]
             }
-            let rawJSONFilters = filters.map { $0.toRawJSON() }.map { RawJSON.dictionary($0) }
+            let rawJSONFilters = filters.map(\.rawJSON)
             return [filterOperator.rawValue: .array(rawJSONFilters)]
         } else {
             // Normal filters are encoded in the following form:
             //  { field: { $<operator>: <value> } }
             return [field.rawValue: .dictionary([filterOperator.rawValue: value.rawJSON])]
-        }
-    }
-}
-
-extension FilterValue {
-    /// Converts the filter value to its `RawJSON` representation.
-    ///
-    /// This property handles the conversion of various Swift types to their appropriate JSON representation
-    /// for API communication.
-    var rawJSON: RawJSON {
-        switch self {
-        case let boolValue as Bool:
-            .bool(boolValue)
-        case let dateValue as Date:
-            .string(RFC3339DateFormatter.string(from: dateValue))
-        case let doubleValue as Double:
-            .number(doubleValue)
-        case let intValue as Int:
-            .number(Double(intValue))
-        case let stringValue as String:
-            .string(stringValue)
-        case let urlValue as URL:
-            .string(urlValue.absoluteString)
-        case let arrayValue as [any FilterValue]:
-            .array(arrayValue.map(\.rawJSON))
-        case let dictionaryValue as [String: RawJSON]:
-            .dictionary(dictionaryValue)
-        default:
-            .nil
         }
     }
 }

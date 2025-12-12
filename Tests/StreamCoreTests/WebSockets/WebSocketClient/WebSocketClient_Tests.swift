@@ -351,6 +351,15 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
         // Assert completion called
         wait(for: [expectation], timeout: defaultTimeout)
     }
+    
+    func test_recreatingEngineConcurrently() {
+        DispatchQueue.concurrentPerform(iterations: 10000, execute: { _ in
+            guard let url = URL(string: "ws:///\(String.unique)") else { return }
+            self.webSocketClient.connectRequest = URLRequest(url: url)
+            self.webSocketClient.initialize()
+            self.webSocketClient.connect()
+        })
+    }
 }
 
 private final class HealthCheckEvent: @unchecked Sendable, Event, Codable, Hashable {

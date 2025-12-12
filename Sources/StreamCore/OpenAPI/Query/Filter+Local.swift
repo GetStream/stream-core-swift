@@ -2,6 +2,7 @@
 // Copyright © 2025 Stream.io Inc. All rights reserved.
 //
 
+import CoreLocation
 import Foundation
 
 /// A filter matcher which rrases the type of the value the filter matches against.
@@ -103,7 +104,14 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
         case .exists:
             return Self.exists(localRawJSONValue, filterRawJSONValue)
         case .equal:
-            return Self.isEqual(localRawJSONValue, filterRawJSONValue)
+            switch value {
+            case is CircularRegion:
+                return Self.isNear(localRawJSONValue, filterRawJSONValue)
+            case is BoundingBox:
+                return Self.isWithinBounds(localRawJSONValue, filterRawJSONValue)
+            default:
+                return Self.isEqual(localRawJSONValue, filterRawJSONValue)
+            }
         case .greater:
             return Self.isGreater(localRawJSONValue, filterRawJSONValue)
         case .greaterOrEqual:
@@ -237,6 +245,28 @@ private struct FilterMatcher<Model, Value>: Sendable where Model: Sendable, Valu
                 }
             }
             return true
+        default:
+            return false
+        }
+    }
+    
+    static func isNear(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
+        switch (localRawJSONValue, filterRawJSONValue) {
+        case (.dictionary(let localDictionaryValue), .dictionary(let filterDictionaryValue)):
+            guard let location = CLLocationCoordinate2D(from: localDictionaryValue) else { return false }
+            guard let filterRegion = CircularRegion(from: filterDictionaryValue) else { return false }
+            return filterRegion.contains(location)
+        default:
+            return false
+        }
+    }
+    
+    static func isWithinBounds(_ localRawJSONValue: RawJSON, _ filterRawJSONValue: RawJSON) -> Bool {
+        switch (localRawJSONValue, filterRawJSONValue) {
+        case (.dictionary(let localDictionaryValue), .dictionary(let filterDictionaryValue)):
+            guard let location = CLLocationCoordinate2D(from: localDictionaryValue) else { return false }
+            guard let filterRegion = BoundingBox(from: filterDictionaryValue) else { return false }
+            return filterRegion.contains(location)
         default:
             return false
         }
