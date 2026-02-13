@@ -150,10 +150,10 @@ end
 
 lane :sources_matrix do
   {
-    core: ['Sources/StreamCore/', 'Tests/StreamCoreTests'],
-    ui: ['Sources/StreamCoreUI/', 'Tests/StreamCoreUITests'],
-    attachments: ['Sources/StreamAttachments/', 'Tests/StreamAttachmentsTests'],
-    ruby: ['fastlane', 'Gemfile', 'Gemfile.lock']
+    core: ['Sources/StreamCore/', 'Tests/StreamCoreTests', '.github/workflows/smoke-checks.yml'],
+    ui: ['Sources/StreamCoreUI/', 'Tests/StreamCoreUITests', '.github/workflows/smoke-checks.yml'],
+    attachments: ['Sources/StreamAttachments/', 'Tests/StreamAttachmentsTests', '.github/workflows/smoke-checks.yml'],
+    ruby: ['fastlane', 'Gemfile', 'Gemfile.lock', '.github/workflows/smoke-checks.yml']
   }
 end
 
