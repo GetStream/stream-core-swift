@@ -51,8 +51,13 @@ public class WebSocketClient: @unchecked Sendable {
     private let eventDecoder: AnyEventDecoder
 
     /// The web socket engine used to make the actual WS connection
-    public private(set) var engine: WebSocketEngine?
+    public private(set) var engine: WebSocketEngine? {
+        get { _engine.value }
+        set { _engine.value = newValue }
+    }
 
+    private let _engine = AllocatedUnfairLock<WebSocketEngine?>(nil)
+    
     /// The queue on which web socket engine methods are called
     private let engineQueue: DispatchQueue = .init(label: "io.getstream.core.web_socket_engine_queue", qos: .userInitiated)
 
@@ -128,9 +133,7 @@ public class WebSocketClient: @unchecked Sendable {
         }
 
         guard let connectRequest else { return }
-        engineQueue.sync {
-            engine = createEngineIfNeeded(for: connectRequest)
-        }
+        engine = createEngineIfNeeded(for: connectRequest)
 
         connectionState = .connecting
 
