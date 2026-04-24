@@ -4,7 +4,7 @@
 
 import Foundation
 
-public enum HTTPMethod: String {
+public enum HTTPMethod: String, Sendable {
     case get = "GET"
     case post = "POST"
     case put = "PUT"
@@ -24,7 +24,7 @@ public enum HTTPMethod: String {
     }
 }
 
-public struct Request {
+public struct Request: Sendable {
     public var url: URL
     public var method: HTTPMethod
     public var body: Data?
@@ -65,4 +65,4 @@ public protocol DefaultAPIClientMiddleware: Sendable {
     ) async throws -> (Data, URLResponse)
 }
 
-public struct EmptyResponse: Codable {}
+public struct EmptyResponse: Codable, Sendable {}
