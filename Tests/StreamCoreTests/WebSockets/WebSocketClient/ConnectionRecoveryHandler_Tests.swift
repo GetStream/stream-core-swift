@@ -92,7 +92,7 @@ final class ConnectionRecoveryHandler_Tests: XCTestCase, @unchecked Sendable {
             )
             posted.fulfill()
         }
-        wait(for: [posted], timeout: 1)
+        wait(for: [posted], timeout: defaultTimeout)
     }
 
     /// Enqueues a no-op block on `engineQueue` and waits for it to run, ensuring all previously
@@ -100,7 +100,7 @@ final class ConnectionRecoveryHandler_Tests: XCTestCase, @unchecked Sendable {
     private func drainEngineQueue() {
         let drained = expectation(description: "engineQueue drained")
         webSocketClient.engineQueue.async { drained.fulfill() }
-        wait(for: [drained], timeout: 2)
+        wait(for: [drained], timeout: defaultTimeout)
     }
 
     // MARK: - Test 1: disconnectIfNeeded must dispatch onto engineQueue
@@ -177,7 +177,7 @@ final class ConnectionRecoveryHandler_Tests: XCTestCase, @unchecked Sendable {
 
             let bothDone = expectation(description: "both threads done iter \(iteration)")
             group.notify(queue: .global()) { bothDone.fulfill() }
-            wait(for: [bothDone], timeout: 2)
+            wait(for: [bothDone], timeout: defaultTimeout)
 
             drainEngineQueue()
 
