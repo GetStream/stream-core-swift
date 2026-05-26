@@ -195,11 +195,19 @@ extension DefaultConnectionRecoveryHandler {
 // MARK: - Disconnection
 
 private extension DefaultConnectionRecoveryHandler {
+    /// Dispatches onto `WebSocketClient.engineQueue` so the `canBeDisconnected` check and the
+    /// `disconnect(...)` call are serialized against `WebSocketEngineDelegate` callbacks, which
+    /// mutate `connectionState` on the same queue. Without this, a concurrent `webSocketDidDisconnect`
+    /// can land `.disconnected` and then be overwritten by `.disconnecting`, leaving the client stuck
+    /// and blocking automatic reconnection.
     func disconnectIfNeeded() {
-        guard canBeDisconnected else { return }
-        
-        webSocketClient.disconnect(source: .systemInitiated) {
-            log.debug("Did disconnect automatically", subsystems: .webSocket)
+        webSocketClient.engineQueue.async { [weak self] in
+            guard let self else { return }
+            guard self.canBeDisconnected else { return }
+            log.debug("\(self.webSocketClient.connectionState)", subsystems: .webSocket)
+            self.webSocketClient.disconnect(source: .systemInitiated) {
+                log.debug("Did disconnect automatically", subsystems: .webSocket)
+            }
         }
     }
     
@@ -207,7 +215,7 @@ private extension DefaultConnectionRecoveryHandler {
         let state = webSocketClient.connectionState
         
         switch state {
-        case .connecting, .authenticating, .connected, .disconnecting:
+        case .connecting, .authenticating, .connected:
             log.debug("Will disconnect automatically from \(state) state", subsystems: .webSocket)
             
             return true
@@ -222,10 +230,15 @@ private extension DefaultConnectionRecoveryHandler {
 // MARK: - Reconnection
 
 private extension DefaultConnectionRecoveryHandler {
+    /// Mirrors `disconnectIfNeeded`: the check (`canReconnectAutomatically`) and the act
+    /// (`webSocketClient.connect()`) are dispatched onto `engineQueue` so they cannot race with
+    /// the engine's own state mutations.
     func reconnectIfNeeded() {
-        guard canReconnectAutomatically else { return }
-                
-        webSocketClient.connect()
+        webSocketClient.engineQueue.async { [weak self] in
+            guard let self else { return }
+            guard self.canReconnectAutomatically else { return }
+            self.webSocketClient.connect()
+        }
     }
     
     var canReconnectAutomatically: Bool {

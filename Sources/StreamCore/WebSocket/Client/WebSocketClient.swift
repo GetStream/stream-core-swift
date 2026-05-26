@@ -58,8 +58,9 @@ public class WebSocketClient: @unchecked Sendable {
 
     private let _engine = AllocatedUnfairLock<WebSocketEngine?>(nil)
     
-    /// The queue on which web socket engine methods are called
-    private let engineQueue: DispatchQueue = .init(label: "io.getstream.core.web_socket_engine_queue", qos: .userInitiated)
+    /// The queue on which web socket engine methods are called.
+    /// Also used by the connection recovery handler to serialize check-and-act sequences against engine state mutations.
+    let engineQueue: DispatchQueue = .init(label: "io.getstream.core.web_socket_engine_queue", qos: .userInitiated)
 
     /// The session config used for the web socket engine
     private let sessionConfiguration: URLSessionConfiguration
