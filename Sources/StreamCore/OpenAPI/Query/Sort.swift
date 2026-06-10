@@ -26,7 +26,7 @@ public protocol SortField: Sendable {
     /// - Parameters:
     ///   - rawValue: The string identifier used for remote API requests
     ///   - localValue: A closure that extracts the comparable value from a model instance
-    init<Value>(_ rawValue: String, localValue: @escaping @Sendable (Model) -> Value) where Value: Comparable
+    init<Value>(_ rawValue: String, localValue: @escaping @Sendable (Model) -> Value) where Value: Comparable & Sendable
 }
 
 /// A sort configuration that combines a sort field with a direction.
@@ -142,8 +142,11 @@ public struct AnySortComparator<Model>: Sendable where Model: Sendable {
     /// Creates a type-erased comparator from a specific comparator instance.
     ///
     /// - Parameter sort: The specific comparator to wrap
-    public init<Value: Comparable>(localValue: @escaping @Sendable (Model) -> Value) {
-        compare = SortComparator(localValue: localValue).compare
+    public init<Value: Comparable & Sendable>(localValue: @escaping @Sendable (Model) -> Value) {
+        let comparator = SortComparator(localValue: localValue)
+        compare = { @Sendable lhs, rhs, direction in
+            comparator.compare(lhs, rhs, direction: direction)
+        }
     }
     
     /// Compares two model instances using the wrapped comparator.
