@@ -63,6 +63,15 @@ public enum APIHelper {
         return source
     }
 
+    /// Maps a value to a single path component and percent-encodes it for use in a URL path.
+    /// Folds the previous two-step `mapValueToPathItem` + `addingPercentEncoding` into one call
+    /// so generated endpoint paths stay compact. A `nil` value maps to an empty component.
+    public static func escapedPathItem(_ value: Any?) -> String {
+        guard let value else { return "" }
+        let item = "\(mapValueToPathItem(value))"
+        return item.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+    }
+
     /// maps all values from source to query parameters
     ///
     /// explode attribute is respected: collection values might be either joined or split up into separate key value pairs
