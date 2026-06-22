@@ -26,9 +26,11 @@ struct APIHelper_Tests {
 
     @Test("Characters allowed in a URL path are not encoded")
     func escapedPathItem_keepsPathAllowedCharacters() {
-        // .urlPathAllowed permits "/", "@", ",", ";", matching the legacy
-        // per-parameter escaping the generated EndpointPath relied on.
-        #expect(APIHelper.escapedPathItem("a/b@c,d;e") == "a/b@c,d;e")
+        // ".urlPathAllowed" membership is OS-version dependent: iOS 15/16 encode
+        // some sub-delimiters (e.g. "@"/";") that iOS 17+ leaves literal. Assert
+        // only the path-allowed characters that are stable across every supported
+        // OS version — "/" (path separator) and "," (used to join array path items).
+        #expect(APIHelper.escapedPathItem("a/b,c") == "a/b,c")
     }
 
     @Test("Array value is comma-joined then escaped")
