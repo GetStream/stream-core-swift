@@ -1,14 +1,14 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 import Foundation
 
 /// RFC3339 date formatter.
-struct RFC3339DateFormatter: Sendable {
+public struct RFC3339DateFormatter: Sendable {
     private static let shared = RFC3339DateFormatter()
     
-    static func string(from date: Date) -> String {
+    public static func string(from date: Date) -> String {
         shared.string(from: date)
     }
     

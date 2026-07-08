@@ -1,11 +1,11 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
-import Foundation
 import Combine
+import Foundation
 
-public protocol Timer {
+public protocol TimerScheduling {
     /// Schedules a new timer.
     ///
     /// - Parameters:
@@ -33,7 +33,7 @@ public protocol Timer {
     static func currentTime() -> Date
 }
 
-extension Timer {
+extension TimerScheduling {
     public static func currentTime() -> Date {
         Date()
     }
@@ -55,9 +55,10 @@ public protocol TimerControl {
 }
 
 extension DispatchWorkItem: TimerControl {}
+extension DispatchWorkItem: @retroactive @unchecked Sendable {}
 
 /// Default real-world implementations of timers.
-public struct DefaultTimer: Timer {
+public struct DefaultTimer: TimerScheduling {
     @discardableResult
     public static func schedule(
         timeInterval: TimeInterval,
@@ -116,7 +117,11 @@ private class RepeatingTimer: RepeatingTimerControl, @unchecked Sendable {
 
     private let queue = DispatchQueue(label: "io.getstream.repeating-timer")
     private var state: State = .suspended
+    #if compiler(>=6.1)
     private let timer: DispatchSourceTimer
+    #else
+    private nonisolated(unsafe) let timer: DispatchSourceTimer
+    #endif
 
     init(timeInterval: TimeInterval, queue: DispatchQueue, onFire: @escaping () -> Void) {
         timer = DispatchSource.makeTimerSource(queue: queue)

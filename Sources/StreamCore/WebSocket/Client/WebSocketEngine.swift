@@ -1,5 +1,5 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 import Foundation
@@ -30,13 +30,19 @@ public struct WebSocketEngineError: Error {
     
     let reason: String
     let code: Int
-    let engineError: Error?
+    public let engineError: Error?
     
     var localizedDescription: String { reason }
+    
+    public init(reason: String, code: Int, engineError: Error?) {
+        self.reason = reason
+        self.code = code
+        self.engineError = engineError
+    }
 }
 
 extension WebSocketEngineError {
-    init(error: Error?) {
+    public init(error: Error?) {
         if let error {
             self.init(
                 reason: error.localizedDescription,

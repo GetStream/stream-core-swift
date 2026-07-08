@@ -1,5 +1,5 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 import Combine
@@ -7,17 +7,17 @@ import Foundation
 
 public class WebSocketClient: @unchecked Sendable {
     /// The notification center `WebSocketClient` uses to send notifications about incoming events.
-    let eventNotificationCenter: EventNotificationCenter
+    public let eventNotificationCenter: EventNotificationCenter
 
     /// The batch of events received via the web-socket that wait to be processed.
     private(set) lazy var eventsBatcher = environment.eventBatcherBuilder { [weak self] events, completion in
         guard let self else { return }
         events.forEach { [eventSubject] in eventSubject.send($0) }
-        eventNotificationCenter.process(events, completion: completion)
+        eventNotificationCenter.process(events, postNotifications: true, completion: completion)
     }
 
     /// The current state the web socket connection.
-    @Atomic public private(set) var connectionState: WebSocketConnectionState = .initialized {
+    @Atomic public internal(set) var connectionState: WebSocketConnectionState = .initialized {
         didSet {
             pingController.connectionStateDidChange(connectionState)
 
@@ -35,18 +35,32 @@ public class WebSocketClient: @unchecked Sendable {
 
     public weak var connectionStateDelegate: ConnectionStateDelegate?
 
-    public var connectURL: URL
+    public var connectRequest: URLRequest? {
+        get { _connectRequest.value }
+        set { _connectRequest.value = newValue }
+    }
+    
+    private let _connectRequest = AllocatedUnfairLock<URLRequest?>(nil)
 
-    var requiresAuth: Bool
+    let requiresAuth: Bool
+    /// If true, health check event is processed by the event notification center before setting connection status to connected, otherwise the order is reversed.
+    /// Compatibility reasons for chat which has to set it to true.
+    let healthCheckBeforeConnected: Bool
 
     /// The decoder used to decode incoming events
     private let eventDecoder: AnyEventDecoder
 
     /// The web socket engine used to make the actual WS connection
-    public private(set) var engine: WebSocketEngine?
+    public private(set) var engine: WebSocketEngine? {
+        get { _engine.value }
+        set { _engine.value = newValue }
+    }
 
-    /// The queue on which web socket engine methods are called
-    private let engineQueue: DispatchQueue = .init(label: "io.getStream.video.core.web_socket_engine_queue", qos: .userInitiated)
+    private let _engine = AllocatedUnfairLock<WebSocketEngine?>(nil)
+    
+    /// The queue on which web socket engine methods are called.
+    /// Also used by the connection recovery handler to serialize check-and-act sequences against engine state mutations.
+    let engineQueue: DispatchQueue = .init(label: "io.getstream.core.web_socket_engine_queue", qos: .userInitiated)
 
     /// The session config used for the web socket engine
     private let sessionConfiguration: URLSessionConfiguration
@@ -58,14 +72,12 @@ public class WebSocketClient: @unchecked Sendable {
 
     let pingController: WebSocketPingController
 
-    private func createEngineIfNeeded(for connectURL: URL) -> WebSocketEngine {
-        let request = URLRequest(url: connectURL)
-
-        if let existedEngine = engine, existedEngine.request == request {
+    private func createEngineIfNeeded(for connectRequest: URLRequest) -> WebSocketEngine {
+        if let existedEngine = engine, existedEngine.request == connectRequest {
             return existedEngine
         }
 
-        let engine = environment.createEngine(request, sessionConfiguration, engineQueue)
+        let engine = environment.createEngine(connectRequest, sessionConfiguration, engineQueue)
         engine.delegate = self
         return engine
     }
@@ -78,8 +90,9 @@ public class WebSocketClient: @unchecked Sendable {
         eventDecoder: AnyEventDecoder,
         eventNotificationCenter: EventNotificationCenter,
         webSocketClientType: WebSocketClientType,
-        environment: Environment = Environment(),
-        connectURL: URL,
+        environment: Environment = Environment(eventBatchingPeriod: 0.0),
+        connectRequest: URLRequest?,
+        healthCheckBeforeConnected: Bool = false,
         requiresAuth: Bool = true,
         pingRequestBuilder: (() -> any SendableEvent)? = nil
     ) {
@@ -87,8 +100,9 @@ public class WebSocketClient: @unchecked Sendable {
         self.sessionConfiguration = sessionConfiguration
         self.webSocketClientType = webSocketClientType
         self.eventDecoder = eventDecoder
-        self.connectURL = connectURL
+        self._connectRequest.value = connectRequest
         self.eventNotificationCenter = eventNotificationCenter
+        self.healthCheckBeforeConnected = healthCheckBeforeConnected
         self.requiresAuth = requiresAuth
         pingController = environment.createPingController(
             environment.timerType,
@@ -98,6 +112,14 @@ public class WebSocketClient: @unchecked Sendable {
         pingController.pingRequestBuilder = pingRequestBuilder
         
         pingController.delegate = self
+    }
+    
+    /// Sets connection status to ``ConnectionStatus.initialized``.
+    ///
+    /// - Note: Used for sophisticated reconnection flows in chat.
+    /// - Important: Does not disconnect the client if it was already connected.
+    public func initialize() {
+        connectionState = .initialized
     }
 
     /// Connects the web connect.
@@ -111,7 +133,8 @@ public class WebSocketClient: @unchecked Sendable {
         default: break
         }
 
-        engine = createEngineIfNeeded(for: connectURL)
+        guard let connectRequest else { return }
+        engine = createEngineIfNeeded(for: connectRequest)
 
         connectionState = .connecting
 
@@ -148,6 +171,15 @@ public class WebSocketClient: @unchecked Sendable {
             }
         }
     }
+    
+    /// Publishes an event locally by forwarding it to the events batcher.
+    ///
+    /// Use it for custom events.
+    ///
+    /// - Parameter event: The event to be published locally.
+    public func publishEvent(_ event: Event) {
+        eventsBatcher.append(event)
+    }
 }
 
 public protocol ConnectionStateDelegate: AnyObject {
@@ -158,7 +190,7 @@ public extension WebSocketClient {
     /// An object encapsulating all dependencies of `WebSocketClient`.
     struct Environment {
         typealias CreatePingController = (
-            _ timerType: Timer.Type,
+            _ timerType: TimerScheduling.Type,
             _ timerQueue: DispatchQueue,
             _ webSocketClientType: WebSocketClientType
         ) -> WebSocketPingController
@@ -169,7 +201,7 @@ public extension WebSocketClient {
             _ callbackQueue: DispatchQueue
         ) -> WebSocketEngine
 
-        var timerType: Timer.Type = DefaultTimer.self
+        var timerType: TimerScheduling.Type = DefaultTimer.self
 
         var createPingController: CreatePingController = WebSocketPingController.init
 
@@ -179,19 +211,25 @@ public extension WebSocketClient {
 
         var eventBatcherBuilder: (
             _ handler: @Sendable @escaping ([Event], @Sendable @escaping () -> Void) -> Void
-        ) -> Batcher<Event> = {
+        ) -> EventBatcher = {
             Batcher<Event>(period: 0.0, handler: $0)
         }
         
-        public init() {}
+        public init(
+            eventBatchingPeriod: TimeInterval
+        ) {
+            eventBatcherBuilder = {
+                Batcher<Event>(period: eventBatchingPeriod, handler: $0)
+            }
+        }
         
         init(
-            timerType: Timer.Type = DefaultTimer.self,
+            timerType: TimerScheduling.Type = DefaultTimer.self,
             createPingController: @escaping CreatePingController,
             createEngine: @escaping CreateEngine,
             eventBatcherBuilder: @escaping (
                 _ handler: @Sendable @escaping ([Event], @Sendable @escaping () -> Void) -> Void
-            ) -> Batcher<Event>
+            ) -> EventBatcher
         ) {
             self.timerType = timerType
             self.createPingController = createPingController
@@ -215,10 +253,17 @@ extension WebSocketClient: WebSocketEngineDelegate {
 
         do {
             event = try eventDecoder.decode(from: data)
+        } catch is ClientError.IgnoredEventType {
+            log.info("Skipping unsupported event type with payload: \(data.debugPrettyPrintedJSON)", subsystems: .webSocket)
+            return
         } catch {
             do {
-                let apiError = try JSONDecoder.default.decode(APIErrorContainer.self, from: data).error
-                log.error("web socket error \(apiError.message)", subsystems: .webSocket, error: apiError)
+                // Web socket errors are typically handled by connection events which event decoder handles.
+                // For example: token expiration error triggers connection event which implements `error()` and
+                // leads to disconnecting the web-socket client below. This is here for logging purposes for
+                // notifying that connection event was not handled.
+                let apiError = try JSONDecoder.streamCore.decode(APIErrorContainer.self, from: data).error
+                log.error("Web socket error \(apiError.message)", subsystems: .webSocket, error: apiError)
             } catch let decodingError {
                 log.warning(
                     """
@@ -272,18 +317,21 @@ extension WebSocketClient: WebSocketEngineDelegate {
     private func handle(healthcheck: Event, info: HealthCheckInfo) {
         log.debug("Handling healthcheck", subsystems: .webSocket)
 
-        if connectionState == .authenticating {
+        if !healthCheckBeforeConnected, connectionState == .authenticating {
             connectionState = .connected(healthCheckInfo: info)
             onConnected?()
         }
-
         // We send the healthcheck to the eventSubject so that observers
         // (e.g. SFUEventAdapter) get updated.
         eventSubject.send(healthcheck)
         eventNotificationCenter.process(healthcheck, postNotification: false) { [weak self] in
             self?.engineQueue.async { [weak self] in
-                self?.pingController.pongReceived()
-                self?.connectionState = .connected(healthCheckInfo: info)
+                guard let self else { return }
+                self.pingController.pongReceived()
+                self.connectionState = .connected(healthCheckInfo: info)
+                if self.healthCheckBeforeConnected {
+                    self.onConnected?()
+                }
             }
         }
     }
@@ -305,7 +353,7 @@ extension WebSocketClient: WebSocketPingControllerDelegate {
     }
 
     func disconnectOnNoPongReceived() {
-        log.debug("disconnecting from \(connectURL)", subsystems: .webSocket)
+        log.debug("disconnecting from \(String(describing: connectRequest?.url))", subsystems: .webSocket)
         disconnect(source: .noPongReceived) {
             log.debug("Websocket is disconnected because of no pong received", subsystems: .webSocket)
         }
@@ -316,7 +364,7 @@ extension WebSocketClient: WebSocketPingControllerDelegate {
 
 extension Notification.Name {
     /// The name of the notification posted when a new event is published/
-    static let NewEventReceived = Notification.Name("io.getStream.video.core.new_event_received")
+    public static let NewEventReceived = Notification.Name("io.getstream.core.new_event_received")
 }
 
 public enum WebSocketClientType {
@@ -325,13 +373,13 @@ public enum WebSocketClientType {
 }
 
 extension Notification {
-    private static let eventKey = "io.getStream.video.core.event_key"
+    private static let eventKey = "io.getstream.core.event_key"
 
-    init(newEventReceived event: Event, sender: Any) {
+    public init(newEventReceived event: Event, sender: Any) {
         self.init(name: .NewEventReceived, object: sender, userInfo: [Self.eventKey: event])
     }
 
-    var event: Event? {
+    public var event: Event? {
         userInfo?[Self.eventKey] as? Event
     }
 }
@@ -349,6 +397,10 @@ extension WebSocketClient {
 
 extension ClientError {
     public class WebSocket: ClientError, @unchecked Sendable {}
+    
+    public final class IgnoredEventType: ClientError, @unchecked Sendable {
+        override public var localizedDescription: String { "The incoming event type is not supported. Ignoring." }
+    }
 }
 
 public struct WSDisconnected: Event {

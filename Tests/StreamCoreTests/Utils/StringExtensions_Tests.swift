@@ -1,12 +1,11 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 @testable import StreamCore
 import XCTest
 
 final class StringExtensions_Tests: XCTestCase {
-
     func test_Levenshtein() throws {
         XCTAssertEqual("".levenshtein(""), "".levenshtein(""))
         XCTAssertEqual("".levenshtein(""), 0)

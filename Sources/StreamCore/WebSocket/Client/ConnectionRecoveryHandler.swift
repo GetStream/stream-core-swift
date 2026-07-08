@@ -1,12 +1,15 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 import CoreData
 import Foundation
 
 /// The type that keeps track of active chat components and asks them to reconnect when it's needed
-public protocol ConnectionRecoveryHandler: ConnectionStateDelegate, Sendable {}
+public protocol ConnectionRecoveryHandler: ConnectionStateDelegate, Sendable {
+    func start()
+    func stop()
+}
 
 /// The type is designed to obtain missing events that happened in watched channels while user
 /// was not connected to the web-socket.
@@ -24,7 +27,7 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
     private let eventNotificationCenter: EventNotificationCenter
     private let backgroundTaskScheduler: BackgroundTaskScheduler?
     private let internetConnection: InternetConnection
-    private let reconnectionTimerType: Timer.Type
+    private let reconnectionTimerType: TimerScheduling.Type
     private let keepConnectionAliveInBackground: Bool
     private nonisolated(unsafe) var reconnectionStrategy: RetryStrategy
     private nonisolated(unsafe) var reconnectionTimer: TimerControl?
@@ -38,7 +41,7 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
         backgroundTaskScheduler: BackgroundTaskScheduler?,
         internetConnection: InternetConnection,
         reconnectionStrategy: RetryStrategy,
-        reconnectionTimerType: Timer.Type,
+        reconnectionTimerType: TimerScheduling.Type,
         keepConnectionAliveInBackground: Bool
     ) {
         self.init(
@@ -63,7 +66,7 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
         backgroundTaskScheduler: BackgroundTaskScheduler?,
         internetConnection: InternetConnection,
         reconnectionStrategy: RetryStrategy,
-        reconnectionTimerType: Timer.Type,
+        reconnectionTimerType: TimerScheduling.Type,
         keepConnectionAliveInBackground: Bool,
         reconnectionPolicies: [AutomaticReconnectionPolicy]
     ) {
@@ -76,12 +79,20 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
         self.keepConnectionAliveInBackground = keepConnectionAliveInBackground
         self.reconnectionPolicies = reconnectionPolicies
 
-        subscribeOnNotifications()
+        start()
     }
     
-    deinit {
+    public func start() {
+        subscribeOnNotifications()
+    }
+
+    public func stop() {
         unsubscribeFromNotifications()
         cancelReconnectionTimer()
+    }
+
+    deinit {
+        stop()
     }
 }
 
@@ -89,26 +100,21 @@ public final class DefaultConnectionRecoveryHandler: ConnectionRecoveryHandler, 
 
 private extension DefaultConnectionRecoveryHandler {
     func subscribeOnNotifications() {
-        Task { @MainActor in
-            backgroundTaskScheduler?.startListeningForAppStateUpdates(
-                onEnteringBackground: { [weak self] in self?.appDidEnterBackground() },
-                onEnteringForeground: { [weak self] in self?.appDidBecomeActive() }
-            )
-
-            internetConnection.notificationCenter.addObserver(
-                self,
-                selector: #selector(internetConnectionAvailabilityDidChange(_:)),
-                name: .internetConnectionAvailabilityDidChange,
-                object: nil
-            )
-        }
+        backgroundTaskScheduler?.startListeningForAppStateUpdates(
+            onEnteringBackground: { [weak self] in self?.appDidEnterBackground() },
+            onEnteringForeground: { [weak self] in self?.appDidBecomeActive() }
+        )
+        
+        internetConnection.notificationCenter.addObserver(
+            self,
+            selector: #selector(internetConnectionAvailabilityDidChange(_:)),
+            name: .internetConnectionAvailabilityDidChange,
+            object: nil
+        )
     }
     
     func unsubscribeFromNotifications() {
-        Task { @MainActor [backgroundTaskScheduler] in
-            backgroundTaskScheduler?.stopListeningForAppStateUpdates()
-        }
-
+        backgroundTaskScheduler?.stopListeningForAppStateUpdates()
         internetConnection.notificationCenter.removeObserver(
             self,
             name: .internetConnectionStatusDidChange,
@@ -121,13 +127,11 @@ private extension DefaultConnectionRecoveryHandler {
 
 extension DefaultConnectionRecoveryHandler {
     private func appDidBecomeActive() {
-        Task { @MainActor in
-            log.debug("App -> ✅", subsystems: .webSocket)
-
-            backgroundTaskScheduler?.endTask()
-
-            reconnectIfNeeded()
-        }
+        log.debug("App -> ✅", subsystems: .webSocket)
+        
+        backgroundTaskScheduler?.endTask()
+        
+        reconnectIfNeeded()
     }
     
     private func appDidEnterBackground() {
@@ -145,20 +149,18 @@ extension DefaultConnectionRecoveryHandler {
         }
         
         guard let scheduler = backgroundTaskScheduler else { return }
-                
-        Task { @MainActor in
-            let succeed = scheduler.beginTask { [weak self] in
-                log.debug("Background task -> ❌", subsystems: .webSocket)
-
-                self?.disconnectIfNeeded()
-            }
-
-            if succeed {
-                log.debug("Background task -> ✅", subsystems: .webSocket)
-            } else {
-                // Can't initiate a background task, close the connection
-                disconnectIfNeeded()
-            }
+        
+        let succeed = scheduler.beginTask { [weak self] in
+            log.debug("Background task -> ❌", subsystems: .webSocket)
+            
+            self?.disconnectIfNeeded()
+        }
+        
+        if succeed {
+            log.debug("Background task -> ✅", subsystems: .webSocket)
+        } else {
+            // Can't initiate a background task, close the connection
+            disconnectIfNeeded()
         }
     }
     
@@ -193,11 +195,19 @@ extension DefaultConnectionRecoveryHandler {
 // MARK: - Disconnection
 
 private extension DefaultConnectionRecoveryHandler {
+    /// Dispatches onto `WebSocketClient.engineQueue` so the `canBeDisconnected` check and the
+    /// `disconnect(...)` call are serialized against `WebSocketEngineDelegate` callbacks, which
+    /// mutate `connectionState` on the same queue. Without this, a concurrent `webSocketDidDisconnect`
+    /// can land `.disconnected` and then be overwritten by `.disconnecting`, leaving the client stuck
+    /// and blocking automatic reconnection.
     func disconnectIfNeeded() {
-        guard canBeDisconnected else { return }
-        
-        webSocketClient.disconnect(source: .systemInitiated) {
-            log.debug("Did disconnect automatically", subsystems: .webSocket)
+        webSocketClient.engineQueue.async { [weak self] in
+            guard let self else { return }
+            guard self.canBeDisconnected else { return }
+            log.debug("\(self.webSocketClient.connectionState)", subsystems: .webSocket)
+            self.webSocketClient.disconnect(source: .systemInitiated) {
+                log.debug("Did disconnect automatically", subsystems: .webSocket)
+            }
         }
     }
     
@@ -205,7 +215,7 @@ private extension DefaultConnectionRecoveryHandler {
         let state = webSocketClient.connectionState
         
         switch state {
-        case .connecting, .authenticating, .connected, .disconnecting:
+        case .connecting, .authenticating, .connected:
             log.debug("Will disconnect automatically from \(state) state", subsystems: .webSocket)
             
             return true
@@ -220,10 +230,15 @@ private extension DefaultConnectionRecoveryHandler {
 // MARK: - Reconnection
 
 private extension DefaultConnectionRecoveryHandler {
+    /// Mirrors `disconnectIfNeeded`: the check (`canReconnectAutomatically`) and the act
+    /// (`webSocketClient.connect()`) are dispatched onto `engineQueue` so they cannot race with
+    /// the engine's own state mutations.
     func reconnectIfNeeded() {
-        guard canReconnectAutomatically else { return }
-                
-        webSocketClient.connect()
+        webSocketClient.engineQueue.async { [weak self] in
+            guard let self else { return }
+            guard self.canReconnectAutomatically else { return }
+            self.webSocketClient.connect()
+        }
     }
     
     var canReconnectAutomatically: Bool {

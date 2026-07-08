@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# shellcheck source=/dev/null
+# Usage: ./bootstrap.sh
+# This script will:
+#   - install SwiftLint, SwiftFormat, SwiftGen
+#   - link git hooks
+#   - install sonar-scanner if `INSTALL_SONAR` environment variable is provided
+# If you get `zsh: permission denied: ./bootstrap.sh` error, please run `chmod +x bootstrap.sh` first
+
+function puts {
+  echo
+  echo -e "👉 ${1}"
+}
+
+# Set bash to Strict Mode (http://redsymbol.net/articles/unofficial-bash-strict-mode/)
+set -Eeuo pipefail
+
+trap "echo ; echo ❌ The Bootstrap script failed to finish without error. See the log above to debug. ; echo" ERR
+
+source ./Githubfile
+
+if [ "${GITHUB_ACTIONS:-}" != "true" ]; then
+  puts "Set up git hooks"
+  bundle install
+  bundle exec lefthook install
+fi
+
+if [ "${SKIP_SWIFT_BOOTSTRAP:-}" != true ]; then
+  puts "Install SwiftLint v${SWIFT_LINT_VERSION}"
+  DOWNLOAD_URL="https://github.com/realm/SwiftLint/releases/download/${SWIFT_LINT_VERSION}/SwiftLint.pkg"
+  DOWNLOAD_PATH="/tmp/SwiftLint-${SWIFT_LINT_VERSION}.pkg"
+  wget "$DOWNLOAD_URL" -O "$DOWNLOAD_PATH"
+  sudo installer -pkg "$DOWNLOAD_PATH" -target /
+  swiftlint version
+
+  puts "Install SwiftFormat v${SWIFT_FORMAT_VERSION}"
+  DOWNLOAD_URL="https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFT_FORMAT_VERSION}/swiftformat.zip"
+  DOWNLOAD_PATH="/tmp/swiftformat-${SWIFT_FORMAT_VERSION}.zip"
+  BIN_PATH="/usr/local/bin/swiftformat"
+  brew uninstall swiftformat || true
+  wget "$DOWNLOAD_URL" -O "$DOWNLOAD_PATH"
+  unzip -o "$DOWNLOAD_PATH" -d /tmp/swiftformat-${SWIFT_FORMAT_VERSION}
+  sudo mv /tmp/swiftformat-${SWIFT_FORMAT_VERSION}/swiftformat "$BIN_PATH"
+  sudo chmod +x "$BIN_PATH"
+  swiftformat --version
+
+  puts "Install SwiftGen v${SWIFT_GEN_VERSION}"
+  DOWNLOAD_URL="https://github.com/SwiftGen/SwiftGen/releases/download/${SWIFT_GEN_VERSION}/swiftgen-${SWIFT_GEN_VERSION}.zip"
+  DOWNLOAD_PATH="/tmp/swiftgen-${SWIFT_GEN_VERSION}.zip"
+  INSTALL_DIR="/usr/local/lib/swiftgen"
+  BIN_PATH="/usr/local/bin/swiftgen"
+  wget "$DOWNLOAD_URL" -O "$DOWNLOAD_PATH"
+  sudo rm -rf "$INSTALL_DIR"
+  sudo mkdir -p "$INSTALL_DIR"
+  sudo unzip -o "$DOWNLOAD_PATH" -d "$INSTALL_DIR"
+  sudo sudo rm -f "$BIN_PATH"
+  sudo sudo ln -s "$INSTALL_DIR/bin/swiftgen" "$BIN_PATH"
+  swiftgen --version
+fi
+
+if [[ ${INSTALL_SONAR-default} == true ]]; then
+  puts "Install sonar scanner v${SONAR_VERSION}"
+  DOWNLOAD_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_VERSION}-macosx-x64.zip"
+  wget "${DOWNLOAD_URL}" -O ./fastlane/sonar.zip
+  cd fastlane
+  unzip sonar.zip
+  rm sonar.zip
+  cd ..
+  mv "fastlane/sonar-scanner-${SONAR_VERSION}-macosx-x64/" fastlane/sonar/
+  chmod +x ./fastlane/sonar/bin/sonar-scanner
+fi
+
+if [[ ${INSTALL_YEETD-default} == true ]]; then
+  PACKAGE="yeetd-normal.pkg"
+  puts "Install yeetd v${YEETD_VERSION}"
+  wget "https://github.com/biscuitehh/yeetd/releases/download/${YEETD_VERSION}/${PACKAGE}"
+  sudo installer -pkg ${PACKAGE} -target /
+  puts "Running yeetd daemon"
+  yeetd &
+fi
+
+if [[ ${INSTALL_IPSW-default} == true ]]; then
+  puts "Install ipsw v${IPSW_VERSION}"
+  FILE="ipsw_${IPSW_VERSION}_macOS_universal.tar.gz"
+  wget "https://github.com/blacktop/ipsw/releases/download/v${IPSW_VERSION}/${FILE}"
+  tar -xzf "$FILE"
+  chmod +x ipsw
+  sudo mv ipsw /usr/local/bin/
+fi

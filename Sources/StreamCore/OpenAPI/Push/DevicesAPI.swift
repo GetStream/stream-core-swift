@@ -1,5 +1,5 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 import Foundation
@@ -15,8 +15,8 @@ open class DevicesAPI: DevicesAPIEndpoints, @unchecked Sendable {
         basePath: String,
         transport: DefaultAPITransport,
         middlewares: [DefaultAPIClientMiddleware],
-        jsonDecoder: JSONDecoder = JSONDecoder.default,
-        jsonEncoder: JSONEncoder = JSONEncoder.default
+        jsonDecoder: JSONDecoder = JSONDecoder.streamCore,
+        jsonEncoder: JSONEncoder = JSONEncoder.streamCore
     ) {
         self.basePath = basePath
         self.transport = transport

@@ -1,5 +1,5 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 import Combine
@@ -36,7 +36,6 @@ final class TimerPublisher: Publisher {
 }
 
 extension TimerPublisher {
-
     /// A subscription wrapper that handles timer events and lifecycle.
     ///
     /// Emits `Date` values to the subscriber while the timer is active. It

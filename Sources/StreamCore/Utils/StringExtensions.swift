@@ -1,5 +1,5 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 import Foundation
@@ -53,7 +53,7 @@ extension String {
 }
 
 extension StringProtocol {
-    func ranges<S: StringProtocol>(of string: S, options: String.CompareOptions = []) -> [Range<String.Index>] {
+    public func ranges<S: StringProtocol>(of string: S, options: String.CompareOptions = []) -> [Range<String.Index>] {
         var result: [Range<Index>] = []
         var startIndex = startIndex
         while startIndex < endIndex, let range = self[startIndex...].range(of: string, options: options) {

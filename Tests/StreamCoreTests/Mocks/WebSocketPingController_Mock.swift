@@ -1,5 +1,5 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 import Foundation
@@ -7,11 +7,11 @@ import Foundation
 import XCTest
 
 final class WebSocketPingController_Mock: WebSocketPingController, @unchecked Sendable {
-    var connectionStateDidChange_connectionStates: [WebSocketConnectionState] = []
-    var pongReceivedCount = 0
+    @Atomic var connectionStateDidChange_connectionStates: [WebSocketConnectionState] = []
+    @Atomic var pongReceivedCount = 0
 
     override func connectionStateDidChange(_ connectionState: WebSocketConnectionState) {
-        connectionStateDidChange_connectionStates.append(connectionState)
+        _connectionStateDidChange_connectionStates.mutate { $0.append(connectionState) }
         super.connectionStateDidChange(connectionState)
     }
 

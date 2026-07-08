@@ -1,11 +1,11 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 import Foundation
 
 extension URLRequest {
-    var queryItems: [URLQueryItem] {
+    public var queryItems: [URLQueryItem] {
         if let url,
            let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
            let queryItems = urlComponents.queryItems {
@@ -16,7 +16,7 @@ extension URLRequest {
 }
 
 extension Array where Element == URLQueryItem {
-    var prettyPrinted: String {
+    public var prettyPrinted: String {
         var message = ""
         
         forEach { item in

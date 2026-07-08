@@ -1,5 +1,5 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 /*
@@ -35,7 +35,7 @@ extension Data {
     ///
     /// - Returns: Gzip-compressed `Data` instance.
     /// - Throws: `GzipError`
-    func gzipped() throws -> Data {
+    public func gzipped() throws -> Data {
         guard !isEmpty else {
             return Data()
         }

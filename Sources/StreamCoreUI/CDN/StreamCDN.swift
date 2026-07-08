@@ -1,11 +1,11 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 import UIKit
 
 open class StreamImageCDN: ImageCDN, @unchecked Sendable {
-    nonisolated(unsafe) public static var streamCDNURL = "stream-io-cdn.com"
+    public nonisolated(unsafe) static var streamCDNURL = "stream-io-cdn.com"
 
     public init() {}
 
@@ -17,7 +17,7 @@ open class StreamImageCDN: ImageCDN, @unchecked Sendable {
         }
 
         // If there is not resize, not need to add query parameters to the URL.
-        guard let resize = resize else {
+        guard let resize else {
             return URLRequest(url: url)
         }
 

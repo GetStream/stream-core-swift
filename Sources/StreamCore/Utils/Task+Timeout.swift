@@ -1,5 +1,5 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 import Foundation
@@ -18,7 +18,6 @@ extension Task where Failure == any Error {
     ) {
         self = Task(priority: priority) {
             try await withThrowingTaskGroup(of: Success.self) { group in
-
                 /// Add the operation to perform as the first task.
                 _ = group.addTaskUnlessCancelled {
                     try await operation()

@@ -1,5 +1,5 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 @testable import StreamCore
@@ -50,7 +50,7 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
             eventNotificationCenter: eventNotificationCenter,
             webSocketClientType: .coordinator,
             environment: environment,
-            connectURL: connectURL
+            connectRequest: URLRequest(url: connectURL)
         )
 
         connectionId = UUID().uuidString
@@ -155,7 +155,7 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
         test_connectionFlow()
 
         // Simulate the engine disconnecting with server error
-        let errorPayload = ErrorPayload(
+        let errorPayload = APIError(
             code: .unique,
             message: .unique,
             statusCode: .unique
@@ -351,9 +351,18 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
         // Assert completion called
         wait(for: [expectation], timeout: defaultTimeout)
     }
+    
+    func test_recreatingEngineConcurrently() {
+        DispatchQueue.concurrentPerform(iterations: 10000, execute: { _ in
+            guard let url = URL(string: "ws:///\(String.unique)") else { return }
+            self.webSocketClient.connectRequest = URLRequest(url: url)
+            self.webSocketClient.initialize()
+            self.webSocketClient.connect()
+        })
+    }
 }
 
-private final class HealthCheckEvent: @unchecked Sendable, Event, Codable, JSONEncodable, Hashable {
+private final class HealthCheckEvent: @unchecked Sendable, Event, Codable, Hashable {
     public var cid: String?
     public var connectionId: String
     public var createdAt: Date

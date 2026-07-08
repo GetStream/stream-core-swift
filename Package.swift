@@ -15,29 +15,37 @@ let package = Package(
         .library(
             name: "StreamCoreUI",
             targets: ["StreamCoreUI"]
+        ),
+        // Features
+        .library(
+            name: "StreamAttachments",
+            targets: ["StreamAttachments"]
         )
     ],
     targets: [
         .target(
-            name: "StreamCore",
-            swiftSettings: [
-                .unsafeFlags(["-enable-library-evolution"])
-            ]
-        ),
-        .target(
-            name: "StreamCoreUI",
-            dependencies: ["StreamCore"],
-            swiftSettings: [
-                .unsafeFlags(["-enable-library-evolution"])
-            ]
+            name: "StreamCore"
         ),
         .testTarget(
             name: "StreamCoreTests",
             dependencies: ["StreamCore"]
         ),
+        .target(
+            name: "StreamCoreUI",
+            dependencies: ["StreamCore"]
+        ),
         .testTarget(
             name: "StreamCoreUITests",
             dependencies: ["StreamCoreUI"]
+        ),
+        // Features
+        .target(
+            name: "StreamAttachments",
+            dependencies: ["StreamCore"]
+        ),
+        .testTarget(
+            name: "StreamAttachmentsTests",
+            dependencies: ["StreamAttachments"]
         )
     ]
 )

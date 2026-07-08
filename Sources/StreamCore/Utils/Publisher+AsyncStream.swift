@@ -1,12 +1,11 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 @preconcurrency import Combine
 import Foundation
 
 public extension Publisher where Output: Sendable {
-
     /// Converts the current publisher into an `AsyncStream` of its output.
     ///
     /// This allows you to consume any Combine publisher using Swift's `for await`
@@ -53,14 +52,14 @@ public extension Publisher where Output: Sendable {
         function: StaticString = #function,
         line: UInt = #line
     ) async throws -> Output {
-        nonisolated(unsafe) let selfReference = self
+        let erased = self.eraseToAnyPublisher()
         return try await Task(
             timeoutInSeconds: timeoutInSeconds,
             file: file,
             function: function,
             line: line
-        ) {
-            try await selfReference.firstValue(file: file, line: line)
+        ) { [erased] in
+            try await erased.firstValue(file: file, line: line)
         }.value
     }
 

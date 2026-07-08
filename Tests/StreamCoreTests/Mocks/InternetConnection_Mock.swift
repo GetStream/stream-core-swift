@@ -1,5 +1,5 @@
 //
-// Copyright © 2025 Stream.io Inc. All rights reserved.
+// Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
 import Combine
@@ -7,7 +7,7 @@ import Foundation
 @testable import StreamCore
 
 /// Mock implementation of `InternetConnectionMonitor`
-final class InternetConnectionMonitor_Mock: InternetConnectionMonitor {
+final class InternetConnectionMonitor_Mock: InternetConnectionMonitor, @unchecked Sendable {
     weak var delegate: InternetConnectionDelegate?
 
     var status: InternetConnectionStatus = .unknown {

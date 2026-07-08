@@ -4,9 +4,6 @@ excluded:
   - .ruby-lsp
   - .swiftpm
   - derived_data
-  - fastlane
-  - Package.swift
-  - Scripts
   - Sources/StreamCore/Generated
   - Sources/StreamCore/generated
   - spm_cache
@@ -14,7 +11,6 @@ excluded:
   - vendor/bundle
 
 only_rules:
-  # Currently enabled autocorrectable rules
   - attribute_name_spacing
   - closing_brace
   - colon
@@ -26,7 +22,7 @@ only_rules:
   - empty_enum_arguments
   - empty_parameters
   - empty_parentheses_with_trailing_closure
-  - explicit_init
+  - file_name_no_space
   - joined_default_parameter
   - leading_whitespace
   - legacy_cggeometry_functions
@@ -34,6 +30,7 @@ only_rules:
   - legacy_constructor
   - legacy_nsgeometry_functions
   - mark
+  - multiline_arguments
   - no_space_in_method_call
   - prefer_type_checking
   - private_over_fileprivate
@@ -50,7 +47,6 @@ only_rules:
   - trailing_comma
   - trailing_newline
   - trailing_semicolon
-  - trailing_whitespace
   - unneeded_break_in_switch
   - unneeded_override
   - unused_closure_parameter
@@ -59,5 +55,8 @@ only_rules:
   - vertical_whitespace
   - void_return
 
-trailing_whitespace:
-  ignores_empty_lines: true
+multiline_arguments:
+  only_enforce_after_first_closure_on_first_line: true
+
+file_name_no_space:
+  severity: error
