@@ -272,54 +272,54 @@ public protocol AutomaticReconnectionPolicy {
     func canBeReconnected() -> Bool
 }
 
-struct WebSocketAutomaticReconnectionPolicy: AutomaticReconnectionPolicy {
+public struct WebSocketAutomaticReconnectionPolicy: AutomaticReconnectionPolicy {
     private var webSocketClient: WebSocketClient
 
-    init(_ webSocketClient: WebSocketClient) {
+    public init(_ webSocketClient: WebSocketClient) {
         self.webSocketClient = webSocketClient
     }
 
-    func canBeReconnected() -> Bool {
+    public func canBeReconnected() -> Bool {
         webSocketClient.connectionState.isAutomaticReconnectionEnabled
     }
 }
 
-struct InternetAvailabilityReconnectionPolicy: AutomaticReconnectionPolicy {
+public struct InternetAvailabilityReconnectionPolicy: AutomaticReconnectionPolicy {
     private var internetConnection: InternetConnection
 
-    init(_ internetConnection: InternetConnection) {
+    public init(_ internetConnection: InternetConnection) {
         self.internetConnection = internetConnection
     }
 
-    func canBeReconnected() -> Bool {
+    public func canBeReconnected() -> Bool {
         internetConnection.status.isAvailable
     }
 }
 
-struct BackgroundStateReconnectionPolicy: AutomaticReconnectionPolicy {
+public struct BackgroundStateReconnectionPolicy: AutomaticReconnectionPolicy {
     private var backgroundTaskScheduler: BackgroundTaskScheduler?
 
-    init(_ backgroundTaskScheduler: BackgroundTaskScheduler?) {
+    public init(_ backgroundTaskScheduler: BackgroundTaskScheduler?) {
         self.backgroundTaskScheduler = backgroundTaskScheduler
     }
 
-    func canBeReconnected() -> Bool {
+    public func canBeReconnected() -> Bool {
         backgroundTaskScheduler?.isAppActive ?? true
     }
 }
 
-struct CompositeReconnectionPolicy: AutomaticReconnectionPolicy {
-    enum Operator { case and, or }
+public struct CompositeReconnectionPolicy: AutomaticReconnectionPolicy {
+    public enum Operator { case and, or }
 
     private var `operator`: Operator
     private var policies: [AutomaticReconnectionPolicy]
 
-    init(_ operator: Operator, policies: [AutomaticReconnectionPolicy]) {
+    public init(_ operator: Operator, policies: [AutomaticReconnectionPolicy]) {
         self.operator = `operator`
         self.policies = policies
     }
 
-    func canBeReconnected() -> Bool {
+    public func canBeReconnected() -> Bool {
         switch `operator` {
         case .and:
             policies.first { $0.canBeReconnected() == false } == nil

@@ -111,7 +111,7 @@ public enum WebSocketConnectionState: Equatable {
     }
     
     /// Returns `true` is the state requires and allows automatic reconnection.
-    var isAutomaticReconnectionEnabled: Bool {
+    public var isAutomaticReconnectionEnabled: Bool {
         guard case let .disconnected(source) = self else { return false }
         
         switch source {
