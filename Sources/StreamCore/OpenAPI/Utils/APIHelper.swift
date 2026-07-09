@@ -122,4 +122,24 @@ public enum APIHelper {
         }
         return destination
     }
+
+    /// Maps all values from source to a query-parameter dictionary
+    ///
+    /// Keys whose value is nil are omitted; collection values are comma-joined.
+    public static func mapValuesToQueryDictionary(_ source: [String: Any?]) -> [String: String]? {
+        let destination = source.filter { $0.value != nil }.reduce(into: [String: String]()) { result, item in
+            if let collection = item.value as? [Any?] {
+                result[item.key] = collection
+                    .compactMap { value in convertAnyToString(value) }
+                    .joined(separator: ",")
+            } else if let value = item.value {
+                result[item.key] = convertAnyToString(value)
+            }
+        }
+
+        if destination.isEmpty {
+            return nil
+        }
+        return destination
+    }
 }

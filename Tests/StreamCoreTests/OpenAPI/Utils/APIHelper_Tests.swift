@@ -56,4 +56,53 @@ struct APIHelper_Tests {
         let postEscape = preEscape.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
         #expect(APIHelper.escapedPathItem(array) == postEscape)
     }
+
+    // MARK: - mapValuesToQueryDictionary
+
+    @Test("Mirrors a generated endpoint call: nil optionals are dropped, others kept")
+    func mapValuesToQueryDictionary_dropsNilOptionals() {
+        let query = "adm"
+        let limit: Int? = 10
+        let nameGt: String? = nil
+        let roleType: String? = "user"
+        let includeGlobalRoles: Bool? = nil
+
+        let result = APIHelper.mapValuesToQueryDictionary([
+            "query": query,
+            "limit": limit,
+            "name_gt": nameGt,
+            "role_type": roleType,
+            "include_global_roles": includeGlobalRoles
+        ])
+
+        #expect(result == ["query": "adm", "limit": "10", "role_type": "user"])
+    }
+
+    @Test("Bool values are converted to lowercase true/false")
+    func mapValuesToQueryDictionary_bool() {
+        let result = APIHelper.mapValuesToQueryDictionary([
+            "yes": true,
+            "no": false
+        ])
+
+        #expect(result == ["yes": "true", "no": "false"])
+    }
+
+    @Test("Array values are comma-joined")
+    func mapValuesToQueryDictionary_arrayJoined() {
+        let result = APIHelper.mapValuesToQueryDictionary([
+            "ids": ["a", "b", "c"]
+        ])
+
+        #expect(result == ["ids": "a,b,c"])
+    }
+
+    @Test("Empty or all-nil input returns nil")
+    func mapValuesToQueryDictionary_emptyReturnsNil() {
+        #expect(APIHelper.mapValuesToQueryDictionary([:]) == nil)
+        #expect(APIHelper.mapValuesToQueryDictionary([
+            "a": nil as String?,
+            "b": nil as Int?
+        ]) == nil)
+    }
 }
