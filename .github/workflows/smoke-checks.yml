@@ -25,7 +25,6 @@ env:
   GITHUB_PR_NUM: ${{ github.event.pull_request.number }}
 
 permissions:
-  actions: write
   contents: read
   pull-requests: write
 
