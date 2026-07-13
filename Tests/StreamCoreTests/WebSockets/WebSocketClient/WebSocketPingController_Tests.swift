@@ -6,6 +6,7 @@
 import XCTest
 
 final class WebSocketPingController_Tests: XCTestCase, @unchecked Sendable {
+    private let pingInterval: TimeInterval = 5
     var time: VirtualTime!
     var pingController: WebSocketPingController!
     private var delegate: WebSocketPingController_Delegate!
@@ -17,7 +18,8 @@ final class WebSocketPingController_Tests: XCTestCase, @unchecked Sendable {
         pingController = .init(
             timerType: VirtualTimeTimer.self,
             timerQueue: .main,
-            webSocketClientType: .coordinator
+            webSocketClientType: .coordinator,
+            pingInterval: pingInterval
         )
 
         delegate = WebSocketPingController_Delegate()
@@ -36,21 +38,21 @@ final class WebSocketPingController_Tests: XCTestCase, @unchecked Sendable {
         assert(delegate.sendPing_calledCount == 0)
 
         // Check `sendPing` is not called when the connection is not connected
-        time.run(numberOfSeconds: WebSocketPingController.pingTimeInterval + 1)
+        time.run(numberOfSeconds: pingInterval + 1)
         XCTAssertEqual(delegate.sendPing_calledCount, 0)
 
         // Set the connection state as connected
         pingController.connectionStateDidChange(.connected(healthCheckInfo: HealthCheckInfo()))
 
         // Simulate time passed 3x pingTimeInterval (+1 for margin errors)
-        time.run(numberOfSeconds: 3 * (WebSocketPingController.pingTimeInterval + 1))
+        time.run(numberOfSeconds: 3 * (pingInterval + 1))
         XCTAssertEqual(delegate.sendPing_calledCount, 3)
 
         let oldPingCount = delegate.sendPing_calledCount
 
         // Set the connection state to not connected and check `sendPing` is no longer called
         pingController.connectionStateDidChange(.authenticating)
-        time.run(numberOfSeconds: 3 * (WebSocketPingController.pingTimeInterval + 1))
+        time.run(numberOfSeconds: 3 * (pingInterval + 1))
         XCTAssertEqual(delegate.sendPing_calledCount, oldPingCount)
     }
 

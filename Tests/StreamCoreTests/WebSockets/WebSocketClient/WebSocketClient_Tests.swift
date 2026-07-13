@@ -23,6 +23,7 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
     private var eventNotificationCenterMiddleware: EventMiddleware_Mock!
     
     private let connectURL = URL(string: "http://example.com/ws")!
+    private let pingInterval: TimeInterval = 5
     
     private let createdAt = Date()
     private lazy var healthCheckInfo = HealthCheckInfo(
@@ -50,7 +51,8 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
             eventNotificationCenter: eventNotificationCenter,
             webSocketClientType: .coordinator,
             environment: environment,
-            connectRequest: URLRequest(url: connectURL)
+            connectRequest: URLRequest(url: connectURL),
+            pingInterval: pingInterval
         )
 
         connectionId = UUID().uuidString
@@ -240,6 +242,15 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
 
         pingController.delegate?.sendPing()
         AssertAsync.willBeEqual(engine!.sendPing_calledCount, 1)
+    }
+
+    func test_webSocketPingController_usesConfiguredPingInterval() {
+        test_connectionFlow()
+        engine!.sendPing_calledCount = 0
+
+        time.run(numberOfSeconds: pingInterval + 1)
+
+        XCTAssertEqual(engine!.sendPing_calledCount, 1)
     }
 
     func test_pongReceived_callsPingController_pongReceived() {
