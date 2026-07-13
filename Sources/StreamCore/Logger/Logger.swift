@@ -2,6 +2,7 @@
 // Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
+import Combine
 import Foundation
 
 public var log: Logger {
@@ -251,9 +252,17 @@ public enum LogConfig {
                 $0.level = newValue
                 $0.invalidateLogger()
             }
+            Self.levelSubject.send(newValue)
         }
     }
-    
+
+    private nonisolated(unsafe) static let levelSubject = CurrentValueSubject<LogLevel, Never>(_state.value.level)
+
+    /// Publishes the current log level and all subsequent changes.
+    public static var levelPublisher: AnyPublisher<LogLevel, Never> {
+        levelSubject.eraseToAnyPublisher()
+    }
+
     /// Date formatter for the logger. Defaults to ISO8601
     public static var dateFormatter: DateFormatter {
         get {
@@ -432,6 +441,7 @@ public enum LogConfig {
     
     static func reset() {
         _state.withLock { $0 = State() }
+        levelSubject.send(level)
     }
 }
 
