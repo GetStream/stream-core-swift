@@ -2,10 +2,12 @@
 // Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
+import Combine
 import Foundation
 @testable import StreamCore
 import Testing
 
+@Suite(.serialized)
 struct Logger_Tests {
     @Test func concurrentLoggingProcessesAllMessages() async throws {
         let iterations = 200
@@ -31,6 +33,22 @@ struct Logger_Tests {
                 $0.contains("LoggerQueue")
             } == false
         )
+    }
+
+    @Test func levelPublisherEmitsCurrentLevelAndChanges() {
+        resetLogConfig()
+        defer { resetLogConfig() }
+        let receivedLevels = AllocatedUnfairLock<[LogLevel]>([])
+        let cancellable = LogConfig.levelPublisher.sink { level in
+            #expect(LogConfig.level == level)
+            receivedLevels.withLock { $0.append(level) }
+        }
+
+        withExtendedLifetime(cancellable) {
+            LogConfig.level = .debug
+        }
+
+        #expect(receivedLevels.value == [.error, .debug])
     }
 
     // MARK: - Concurrent Logger Invalidation Tests
