@@ -21,13 +21,12 @@ public protocol HealthCheck: Event, Equatable {}
 /// The controller manages ping and pong timers. It sends ping periodically to keep a web socket connection alive.
 /// After ping is sent, a pong waiting timer is started, and if pong does not come, a forced disconnect is called.
 class WebSocketPingController {
-    /// The time interval to ping connection to keep it alive.
-    static let pingTimeInterval: TimeInterval = 25
     /// The time interval for pong timeout.
     static let pongTimeoutTimeInterval: TimeInterval = 3
     
     private let timerType: TimerScheduling.Type
     private let timerQueue: DispatchQueue
+    private let pingInterval: TimeInterval
     
     /// The timer used for scheduling `ping` calls
     private var pingTimerControl: RepeatingTimerControl?
@@ -53,11 +52,13 @@ class WebSocketPingController {
     init(
         timerType: TimerScheduling.Type,
         timerQueue: DispatchQueue,
-        webSocketClientType: WebSocketClientType
+        webSocketClientType: WebSocketClientType,
+        pingInterval: TimeInterval
     ) {
         self.timerType = timerType
         self.timerQueue = timerQueue
         self.webSocketClientType = webSocketClientType
+        self.pingInterval = pingInterval
     }
     
     /// `WebSocketClient` should call this when the connection state did change.
@@ -98,7 +99,10 @@ class WebSocketPingController {
     
     private func schedulePingTimerIfNeeded() {
         guard pingTimerControl == nil else { return }
-        pingTimerControl = timerType.scheduleRepeating(timeInterval: Self.pingTimeInterval, queue: timerQueue) { [weak self] in
+        pingTimerControl = timerType.scheduleRepeating(
+            timeInterval: pingInterval,
+            queue: timerQueue
+        ) { [weak self] in
             self?.sendPing()
         }
     }

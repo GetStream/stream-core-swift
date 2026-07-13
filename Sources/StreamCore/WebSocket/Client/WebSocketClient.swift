@@ -85,6 +85,9 @@ public class WebSocketClient: @unchecked Sendable {
     public var onWSConnectionEstablished: (() -> Void)?
     public var onConnected: (() -> Void)?
 
+    /// Creates a WebSocket client.
+    /// - Parameter pingInterval: The interval between WebSocket keep-alive pings.
+    ///   Defaults to 25 seconds.
     public init(
         sessionConfiguration: URLSessionConfiguration,
         eventDecoder: AnyEventDecoder,
@@ -94,6 +97,7 @@ public class WebSocketClient: @unchecked Sendable {
         connectRequest: URLRequest?,
         healthCheckBeforeConnected: Bool = false,
         requiresAuth: Bool = true,
+        pingInterval: TimeInterval = 25,
         pingRequestBuilder: (() -> any SendableEvent)? = nil
     ) {
         self.environment = environment
@@ -107,7 +111,8 @@ public class WebSocketClient: @unchecked Sendable {
         pingController = environment.createPingController(
             environment.timerType,
             engineQueue,
-            webSocketClientType
+            webSocketClientType,
+            pingInterval
         )
         pingController.pingRequestBuilder = pingRequestBuilder
         
@@ -192,7 +197,8 @@ public extension WebSocketClient {
         typealias CreatePingController = (
             _ timerType: TimerScheduling.Type,
             _ timerQueue: DispatchQueue,
-            _ webSocketClientType: WebSocketClientType
+            _ webSocketClientType: WebSocketClientType,
+            _ pingInterval: TimeInterval
         ) -> WebSocketPingController
 
         typealias CreateEngine = (
