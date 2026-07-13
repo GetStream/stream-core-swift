@@ -436,7 +436,7 @@ public enum LogConfig {
 }
 
 /// Entity used for logging messages.
-open class Logger {
+open class Logger: @unchecked Sendable {
     /// Identifier of the Logger. Will be visible if a destination has `showIdentifiers` enabled.
     public let identifier: String
     
