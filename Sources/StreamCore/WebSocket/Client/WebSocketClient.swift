@@ -5,6 +5,62 @@
 import Combine
 import Foundation
 
+/// Describes why a client-initiated WebSocket close is requested.
+public enum WebSocketCloseContext: Equatable, Sendable {
+    /// Closes the current socket because a disconnection was requested or
+    /// detected.
+    ///
+    /// The source lets a provider distinguish cases such as a user request,
+    /// automatic recovery, or a failed health check and select the appropriate
+    /// close code.
+    case disconnection(source: WebSocketConnectionState.DisconnectionSource)
+
+    /// Closes the current socket so it can be replaced with new connection
+    /// settings while the higher-level operation continues.
+    ///
+    /// For example, Stream Video uses this context when replacing its SFU
+    /// signaling socket after receiving an updated WebSocket configuration.
+    case reconfiguration
+
+    /// Closes the current socket with a protocol-specific code requested by the
+    /// caller.
+    ///
+    /// This supports integrations that already know the required close code.
+    /// The provider receives that code and may preserve or override it.
+    case explicit(
+        code: URLSessionWebSocketTask.CloseCode,
+        source: WebSocketConnectionState.DisconnectionSource
+    )
+
+    var disconnectionSource: WebSocketConnectionState.DisconnectionSource {
+        switch self {
+        case let .disconnection(source), let .explicit(_, source):
+            return source
+        case .reconfiguration:
+            return .userInitiated
+        }
+    }
+}
+
+/// Provides the close code for a client-initiated WebSocket close.
+public protocol WebSocketCloseCodeProviding: Sendable {
+    func closeCode(for context: WebSocketCloseContext) -> URLSessionWebSocketTask.CloseCode
+}
+
+/// Preserves the default WebSocket close-code behavior.
+public struct DefaultWebSocketCloseCodeProvider: WebSocketCloseCodeProviding {
+    public init() {}
+
+    public func closeCode(for context: WebSocketCloseContext) -> URLSessionWebSocketTask.CloseCode {
+        switch context {
+        case let .explicit(code, _):
+            return code
+        case .disconnection, .reconfiguration:
+            return .normalClosure
+        }
+    }
+}
+
 public class WebSocketClient: @unchecked Sendable {
     /// The notification center `WebSocketClient` uses to send notifications about incoming events.
     public let eventNotificationCenter: EventNotificationCenter
@@ -69,6 +125,7 @@ public class WebSocketClient: @unchecked Sendable {
     private let environment: Environment
 
     private let webSocketClientType: WebSocketClientType
+    private let closeCodeProvider: any WebSocketCloseCodeProviding
 
     let pingController: WebSocketPingController
 
@@ -98,6 +155,7 @@ public class WebSocketClient: @unchecked Sendable {
         healthCheckBeforeConnected: Bool = false,
         requiresAuth: Bool = true,
         pingInterval: TimeInterval = 25,
+        closeCodeProvider: any WebSocketCloseCodeProviding = DefaultWebSocketCloseCodeProvider(),
         pingRequestBuilder: (() -> any SendableEvent)? = nil
     ) {
         self.environment = environment
@@ -108,6 +166,7 @@ public class WebSocketClient: @unchecked Sendable {
         self.eventNotificationCenter = eventNotificationCenter
         self.healthCheckBeforeConnected = healthCheckBeforeConnected
         self.requiresAuth = requiresAuth
+        self.closeCodeProvider = closeCodeProvider
         pingController = environment.createPingController(
             environment.timerType,
             engineQueue,
@@ -148,16 +207,46 @@ public class WebSocketClient: @unchecked Sendable {
         }
     }
 
-    /// Disconnects the web socket.
+    /// Disconnects using the existing close-code-based API.
     ///
-    /// Calling this function has no effect, if the connection is in an inactive state.
-    /// - Parameter source: Additional information about the source of the disconnection. Default value is `.userInitiated`.
+    /// The close-code provider receives an
+    /// ``WebSocketCloseContext/explicit(code:source:)`` context and chooses the
+    /// final close code. Prefer ``disconnect(context:completion:)`` for new
+    /// code that can describe why the socket is closing without selecting a
+    /// close code.
+    ///
+    /// - Parameters:
+    ///   - code: The requested close code. The provider may return a different
+    ///     code.
+    ///   - source: The source recorded in the connection state.
+    ///   - completion: Called after pending batched events are processed.
     public func disconnect(
         code: URLSessionWebSocketTask.CloseCode = .normalClosure,
         source: WebSocketConnectionState.DisconnectionSource = .userInitiated,
         completion: @Sendable @escaping () -> Void
     ) {
-        connectionState = .disconnecting(source: source)
+        disconnect(
+            context: .explicit(code: code, source: source),
+            completion: completion
+        )
+    }
+
+    /// Disconnects by describing why the socket is closing.
+    ///
+    /// Use this API for new integrations. The close-code provider receives the
+    /// context and chooses the final close code. For example, use
+    /// ``WebSocketCloseContext/reconfiguration`` when replacing a socket so the
+    /// provider can select a product-specific reconfiguration code.
+    ///
+    /// - Parameters:
+    ///   - context: The reason for closing the socket.
+    ///   - completion: Called after pending batched events are processed.
+    public func disconnect(
+        context: WebSocketCloseContext,
+        completion: @Sendable @escaping () -> Void
+    ) {
+        connectionState = .disconnecting(source: context.disconnectionSource)
+        let code = closeCodeProvider.closeCode(for: context)
         engineQueue.async { [engine, eventsBatcher] in
             engine?.disconnect(with: code)
 
@@ -165,13 +254,21 @@ public class WebSocketClient: @unchecked Sendable {
         }
     }
 
+    /// Asynchronously disconnects with the given disconnection source.
+    ///
+    /// The close-code provider receives a
+    /// ``WebSocketCloseContext/disconnection(source:)`` context and chooses the
+    /// final close code. The call returns after pending batched events are
+    /// processed, not after the remote peer acknowledges the closure.
+    ///
+    /// - Parameter source: The source recorded in the connection state.
     public func disconnect(source: WebSocketConnectionState.DisconnectionSource = .userInitiated) async {
         await withCheckedContinuation { [weak self] continuation in
             guard let self else {
                 continuation.resume()
                 return
             }
-            disconnect {
+            disconnect(context: .disconnection(source: source)) {
                 continuation.resume()
             }
         }
@@ -360,7 +457,7 @@ extension WebSocketClient: WebSocketPingControllerDelegate {
 
     func disconnectOnNoPongReceived() {
         log.debug("disconnecting from \(String(describing: connectRequest?.url))", subsystems: .webSocket)
-        disconnect(source: .noPongReceived) {
+        disconnect(context: .disconnection(source: .noPongReceived)) {
             log.debug("Websocket is disconnected because of no pong received", subsystems: .webSocket)
         }
     }

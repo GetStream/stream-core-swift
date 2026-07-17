@@ -150,6 +150,54 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
 
         // Assert disconnect is called
         AssertAsync.willBeEqual(engine!.disconnect_calledCount, 1)
+        XCTAssertEqual(engine!.disconnect_closeCode, .normalClosure)
+    }
+
+    func test_disconnect_withExplicitCode_usesCloseCodeProviderDecision() {
+        let providerCloseCode = URLSessionWebSocketTask.CloseCode(rawValue: 4001)!
+        let requestedCloseCode = URLSessionWebSocketTask.CloseCode(rawValue: 4002)!
+        let closeCodeProvider = setUpWebSocketClient(closeCode: providerCloseCode)
+
+        webSocketClient.disconnect(
+            code: requestedCloseCode,
+            source: .userInitiated
+        ) {}
+
+        AssertAsync.willBeEqual(engine!.disconnect_calledCount, 1)
+        XCTAssertEqual(engine!.disconnect_closeCode, providerCloseCode)
+        XCTAssertEqual(
+            closeCodeProvider.receivedContext,
+            .explicit(code: requestedCloseCode, source: .userInitiated)
+        )
+    }
+
+    func test_disconnect_withExplicitCode_defaultProviderUsesRequestedCode() {
+        let requestedCloseCode = URLSessionWebSocketTask.CloseCode(rawValue: 4002)!
+        webSocketClient.connect()
+        AssertAsync.willBeEqual(engine!.connect_calledCount, 1)
+
+        webSocketClient.disconnect(
+            code: requestedCloseCode,
+            source: .userInitiated
+        ) {}
+
+        AssertAsync.willBeEqual(engine!.disconnect_calledCount, 1)
+        XCTAssertEqual(engine!.disconnect_closeCode, requestedCloseCode)
+    }
+
+    func test_disconnect_withReconfigurationContext_usesCloseCodeProviderDecision() {
+        let providerCloseCode = URLSessionWebSocketTask.CloseCode(rawValue: 4002)!
+        let closeCodeProvider = setUpWebSocketClient(closeCode: providerCloseCode)
+
+        webSocketClient.disconnect(context: .reconfiguration) {}
+
+        AssertAsync.willBeEqual(engine!.disconnect_calledCount, 1)
+        XCTAssertEqual(
+            webSocketClient.connectionState,
+            .disconnecting(source: .userInitiated)
+        )
+        XCTAssertEqual(engine!.disconnect_closeCode, providerCloseCode)
+        XCTAssertEqual(closeCodeProvider.receivedContext, .reconfiguration)
     }
 
     func test_whenConnectedAndEngineDisconnectsWithServerError_itIsTreatedAsServerInitiatedDisconnect() {
@@ -277,6 +325,24 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
             Assert.willBeEqual(self.webSocketClient.connectionState, .disconnecting(source: .noPongReceived))
             Assert.willBeEqual(self.engine!.disconnect_calledCount, 1)
         }
+        XCTAssertEqual(engine!.disconnect_closeCode, .normalClosure)
+    }
+
+    func test_webSocketPingController_disconnectOnNoPongReceived_usesCloseCodeProvider() {
+        let providerCloseCode = URLSessionWebSocketTask.CloseCode(rawValue: 4001)!
+        let closeCodeProvider = setUpWebSocketClient(closeCode: providerCloseCode)
+
+        pingController.delegate?.disconnectOnNoPongReceived()
+
+        AssertAsync {
+            Assert.willBeEqual(self.webSocketClient.connectionState, .disconnecting(source: .noPongReceived))
+            Assert.willBeEqual(self.engine!.disconnect_calledCount, 1)
+        }
+        XCTAssertEqual(engine!.disconnect_closeCode, providerCloseCode)
+        XCTAssertEqual(
+            closeCodeProvider.receivedContext,
+            .disconnection(source: .noPongReceived)
+        )
     }
 
     // MARK: - Event handling tests
@@ -370,6 +436,41 @@ final class WebSocketClient_Tests: XCTestCase, @unchecked Sendable {
             self.webSocketClient.initialize()
             self.webSocketClient.connect()
         })
+    }
+
+    private func setUpWebSocketClient(
+        closeCode: URLSessionWebSocketTask.CloseCode
+    ) -> WebSocketCloseCodeProvider_Mock {
+        let closeCodeProvider = WebSocketCloseCodeProvider_Mock(closeCode: closeCode)
+        var environment = WebSocketClient.Environment.mock
+        environment.timerType = VirtualTimeTimer.self
+        webSocketClient = WebSocketClient(
+            sessionConfiguration: .ephemeral,
+            eventDecoder: decoder,
+            eventNotificationCenter: eventNotificationCenter,
+            webSocketClientType: .coordinator,
+            environment: environment,
+            connectRequest: URLRequest(url: connectURL),
+            pingInterval: pingInterval,
+            closeCodeProvider: closeCodeProvider
+        )
+        webSocketClient.connect()
+        AssertAsync.willBeEqual(engine!.connect_calledCount, 1)
+        return closeCodeProvider
+    }
+}
+
+private final class WebSocketCloseCodeProvider_Mock: WebSocketCloseCodeProviding, @unchecked Sendable {
+    private let closeCode: URLSessionWebSocketTask.CloseCode
+    private(set) var receivedContext: WebSocketCloseContext?
+
+    init(closeCode: URLSessionWebSocketTask.CloseCode) {
+        self.closeCode = closeCode
+    }
+
+    func closeCode(for context: WebSocketCloseContext) -> URLSessionWebSocketTask.CloseCode {
+        receivedContext = context
+        return closeCode
     }
 }
 
