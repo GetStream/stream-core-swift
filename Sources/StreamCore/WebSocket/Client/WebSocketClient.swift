@@ -7,8 +7,26 @@ import Foundation
 
 /// Describes why a client-initiated WebSocket close is requested.
 public enum WebSocketCloseContext: Equatable, Sendable {
+    /// Closes the current socket because a disconnection was requested or
+    /// detected.
+    ///
+    /// The source lets a provider distinguish cases such as a user request,
+    /// automatic recovery, or a failed health check and select the appropriate
+    /// close code.
     case disconnection(source: WebSocketConnectionState.DisconnectionSource)
+
+    /// Closes the current socket so it can be replaced with new connection
+    /// settings while the higher-level operation continues.
+    ///
+    /// For example, Stream Video uses this context when replacing its SFU
+    /// signaling socket after receiving an updated WebSocket configuration.
     case reconfiguration
+
+    /// Closes the current socket with a protocol-specific code requested by the
+    /// caller.
+    ///
+    /// This supports integrations that already know the required close code.
+    /// The provider receives that code and may preserve or override it.
     case explicit(
         code: URLSessionWebSocketTask.CloseCode,
         source: WebSocketConnectionState.DisconnectionSource
