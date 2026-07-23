@@ -86,8 +86,15 @@ public class WebSocketClient: @unchecked Sendable {
         }
     }
 
-    let connectionSubject = PassthroughSubject<WebSocketConnectionState, Never>()
+    private let connectionSubject = CurrentValueSubject<
+        WebSocketConnectionState,
+        Never
+    >(.initialized)
     public let eventSubject = PassthroughSubject<Event, Never>()
+
+    public var connectionStatePublisher: AnyPublisher<WebSocketConnectionState, Never> {
+        connectionSubject.eraseToAnyPublisher()
+    }
 
     public weak var connectionStateDelegate: ConnectionStateDelegate?
 
@@ -383,6 +390,8 @@ extension WebSocketClient: WebSocketEngineDelegate {
 
         if let error = event.error() {
             log.error("Received an error webSocket event.", subsystems: .webSocket, error: error)
+            // Publish before disconnecting so observers receive the terminal event.
+            eventSubject.send(event)
             connectionState = .disconnecting(source: .serverInitiated(error: ClientError(with: error)))
             return
         } else {
