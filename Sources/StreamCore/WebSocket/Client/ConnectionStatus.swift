@@ -42,7 +42,9 @@ public extension ConnectionStatus {
             self = .disconnecting
             
         case let .disconnected(source):
-            let isWaitingForReconnect = webSocketConnectionState.isAutomaticReconnectionEnabled
+            let isWaitingForReconnect =
+                webSocketConnectionState.isAutomaticReconnectionEnabled
+                    || webSocketConnectionState.requiresTokenRefresh
             
             self = isWaitingForReconnect ? .connecting : .disconnected(error: source.serverError)
         }
@@ -112,6 +114,15 @@ public enum WebSocketConnectionState: Equatable, Sendable {
         return true
     }
     
+    /// Returns `true` when a fresh token must be installed before reconnecting.
+    public var requiresTokenRefresh: Bool {
+        guard case let .disconnected(source) = self else {
+            return false
+        }
+
+        return source.serverError?.isTokenExpiredError == true
+    }
+
     /// Returns `true` is the state requires and allows automatic reconnection.
     public var isAutomaticReconnectionEnabled: Bool {
         guard case let .disconnected(source) = self else { return false }
@@ -125,14 +136,15 @@ public enum WebSocketConnectionState: Equatable, Sendable {
             }
             
             if let serverInitiatedError = clientError?.apiError {
-                if serverInitiatedError.isInvalidTokenError {
-                    // Don't reconnect on invalid token errors
+                if serverInitiatedError.isInvalidTokenError
+                    || serverInitiatedError.isTokenExpiredError {
+                    // A new token must be installed before reconnecting.
+                    // Retrying here can race the product's token refresh.
                     return false
                 }
                 
-                if serverInitiatedError.isClientError && !serverInitiatedError.isTokenExpiredError {
-                    // Don't reconnect on client side errors unless it is an expired token
-                    // Expired tokens return 401, so it is considered client error.
+                if serverInitiatedError.isClientError {
+                    // Don't reconnect on client-side errors.
                     return false
                 }
             }
