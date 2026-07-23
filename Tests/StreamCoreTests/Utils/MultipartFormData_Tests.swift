@@ -13,6 +13,7 @@ struct MultipartFormData_Tests {
         let boundary = String(encodedString.dropFirst(2).prefix(21))
 
         #expect(boundary.hasPrefix("chat-"))
+        #expect(boundary.count == 21)
         #expect(boundary.dropFirst(5).allSatisfy { $0.isHexDigit })
         #expect(encodedString.hasSuffix("\r\n--\(boundary)--\r\n"))
     }
