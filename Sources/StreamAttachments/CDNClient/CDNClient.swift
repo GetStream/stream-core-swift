@@ -123,8 +123,8 @@ public class StreamCDNClient: CDNClient, @unchecked Sendable {
                 return
             }
 
-            let data = multipartFormData.getMultipartFormData()
-            urlRequest.addValue("multipart/form-data; boundary=\(MultipartFormData.boundary)", forHTTPHeaderField: "Content-Type")
+            let data = multipartFormData.encode()
+            urlRequest.addValue("multipart/form-data; boundary=\(multipartFormData.boundary)", forHTTPHeaderField: "Content-Type")
             urlRequest.addValue("stream-feeds-swift-v0.0.1", forHTTPHeaderField: "X-Stream-Client") // TODO: fix this.
             urlRequest.httpBody = data
 
