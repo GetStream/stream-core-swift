@@ -106,6 +106,23 @@ final class WebSocketConnectionState_Tests: XCTestCase, @unchecked Sendable {
         XCTAssertFalse(state.isAutomaticReconnectionEnabled)
     }
 
+    func test_expiredToken_requiresRefreshAndDisablesAutomaticReconnection() {
+        let expiredTokenError = APIError(
+            code: StreamErrorCode.expiredToken,
+            message: .unique,
+            statusCode: 401
+        )
+
+        let state: WebSocketConnectionState = .disconnected(
+            source: .serverInitiated(
+                error: ClientError(with: expiredTokenError)
+            )
+        )
+
+        XCTAssertTrue(state.requiresTokenRefresh)
+        XCTAssertFalse(state.isAutomaticReconnectionEnabled)
+    }
+
     func test_isAutomaticReconnectionEnabled_whenDisconnectedByServerWithClientError_returnsFalse() {
         // Create client error
         let clientError = APIError(
