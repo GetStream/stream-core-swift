@@ -213,6 +213,9 @@ extension InternetConnection {
 
 /// A protocol defining the interface for internet connection monitoring.
 public protocol InternetConnectionProtocol {
+    /// The current Internet connection status.
+    var status: InternetConnectionStatus { get }
+
     /// A publisher that emits the current internet connection status.
     ///
     /// This publisher never fails and continuously updates with the latest
