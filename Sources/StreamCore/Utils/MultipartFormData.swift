@@ -5,7 +5,7 @@
 import Foundation
 
 /// Encodes a file as multipart form data.
-public struct MultipartFormData: Sendable {
+public struct MultipartFormData: Encodable, Sendable {
     private static let crlf = "\r\n"
 
     @usableFromInline static let defaultBoundary: String = String(
