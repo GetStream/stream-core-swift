@@ -125,7 +125,7 @@ private class RepeatingTimer: RepeatingTimerControl, @unchecked Sendable {
 
     init(timeInterval: TimeInterval, queue: DispatchQueue, onFire: @escaping () -> Void) {
         timer = DispatchSource.makeTimerSource(queue: queue)
-        timer.schedule(deadline: .now() + .milliseconds(Int(timeInterval)), repeating: timeInterval, leeway: .seconds(1))
+        timer.schedule(deadline: .now() + timeInterval, repeating: timeInterval, leeway: .seconds(1))
         timer.setEventHandler(handler: onFire)
     }
 

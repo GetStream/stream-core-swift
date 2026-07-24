@@ -18,6 +18,21 @@ final class RepeatingTimer_Tests: XCTestCase, @unchecked Sendable {
         }
     }
 
+    func test_scheduleRepeating_doesNotFireBeforeInterval() {
+        let interval: TimeInterval = 0.2
+        let timerDidFire = expectation(description: "Timer fires")
+        timerDidFire.isInverted = true
+
+        let subject = DefaultTimer.scheduleRepeating(
+            timeInterval: interval,
+            queue: .global(),
+            onFire: { timerDidFire.fulfill() }
+        )
+        subject.resume()
+
+        wait(for: [timerDidFire], timeout: interval / 2)
+    }
+
     func test_deinit_whenResumed_doesNotCrash() {
         var repeatingTimer: RepeatingTimerControl? = DefaultTimer.scheduleRepeating(
             timeInterval: 0.4,
