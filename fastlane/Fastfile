@@ -15,6 +15,7 @@ source_packages_path = 'spm_cache'
 swift_environment_path = File.absolute_path("../Sources/#{sdk_names.first}/Utils/SystemEnvironment+Version.swift")
 is_localhost = !is_ci
 @force_check = false
+xcodebuild_formatter = FastlaneCore::Globals.verbose? ? '' : nil
 
 before_all do |lane|
   if is_ci
@@ -114,7 +115,8 @@ private_lane :run_library_tests do |options|
     devices: options[:device],
     number_of_retries: 3,
     skip_build: options[:skip_build],
-    build_for_testing: options[:build_for_testing]
+    build_for_testing: options[:build_for_testing],
+    xcodebuild_formatter: xcodebuild_formatter
   }
 
   scan(scan_options)
