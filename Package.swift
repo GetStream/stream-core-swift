@@ -10,10 +10,12 @@ let package = Package(
     products: [
         .library(
             name: "StreamCore",
+            type: .static,
             targets: ["StreamCore"]
         ),
         .library(
             name: "StreamCoreUI",
+            type: .static,
             targets: ["StreamCoreUI"]
         ),
         // Features
