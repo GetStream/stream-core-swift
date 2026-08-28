@@ -4,16 +4,16 @@
 
 import UIKit
 
-/// The layout tokens of the Stream design system: spacing, radii, icon
+/// The layout tokens every Stream SDK draws from: spacing, radii, icon
 /// sizing, stroke widths and elevations.
 ///
-/// The set is shared across Stream's SDKs, so it spans more surfaces than
-/// any single one draws.
+/// Each SDK layers its own product tokens on top of this set and exposes
+/// both through its appearance object.
 ///
 /// Semantic tokens derive from the foundation scale, so overriding a
 /// scale token cascades. Because the derivation is lazy, apply overrides
 /// before the first read.
-public final class DesignSystemTokens: @unchecked Sendable {
+public final class SharedDesignSystemTokens: @unchecked Sendable {
     // MARK: - Button
 
     public lazy var buttonHitTargetMinHeight: CGFloat = size48
@@ -38,11 +38,6 @@ public final class DesignSystemTokens: @unchecked Sendable {
     public lazy var buttonVisualHeightMd: CGFloat = size40
     public lazy var buttonVisualHeightSm: CGFloat = size32
     public lazy var buttonVisualHeightXs: CGFloat = size24
-
-    // MARK: - Composer
-
-    public lazy var composerRadiusFixed: CGFloat = radius3xl
-    public lazy var composerRadiusFloating: CGFloat = radius3xl
 
     // MARK: - Dark
 
@@ -81,15 +76,6 @@ public final class DesignSystemTokens: @unchecked Sendable {
     public lazy var lightElevation2: BoxShadow = .init(x: 0, y: 2, blur: 6, spread: 0, color: UIColor(hex: 0x00000024))
     public lazy var lightElevation3: BoxShadow = .init(x: 0, y: 4, blur: 12, spread: 0, color: UIColor(hex: 0x00000029))
     public lazy var lightElevation4: BoxShadow = .init(x: 0, y: 8, blur: 24, spread: 0, color: UIColor(hex: 0x00000033))
-
-    // MARK: - Message
-
-    public lazy var messageBubbleRadiusAttachment: CGFloat = radiusLg
-    public lazy var messageBubbleRadiusAttachmentInline: CGFloat = radiusMd
-    public lazy var messageBubbleRadiusGroupBottom: CGFloat = radius2xl
-    public lazy var messageBubbleRadiusGroupMiddle: CGFloat = radius2xl
-    public lazy var messageBubbleRadiusGroupTop: CGFloat = radius2xl
-    public lazy var messageBubbleRadiusTail: CGFloat = radiusNone
 
     // MARK: - Radius
 

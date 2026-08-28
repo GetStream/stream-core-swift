@@ -4,11 +4,13 @@
 
 import UIKit
 
-/// The semantic colour tokens of the Stream design system.
+/// The semantic colour tokens every Stream SDK draws from.
 ///
-/// The set is shared across Stream's SDKs, so it spans more surfaces than
-/// any single one draws. Tokens are grouped by the surface they describe:
-/// `Background`, `Border`, `Button`, `Control`, `Text`, and so on.
+/// Tokens are grouped by the surface they describe: `Background`, `Border`,
+/// `Button`, `Control`, `Text`, and so on. Each SDK layers its own
+/// product tokens on top of this set and exposes both through its
+/// appearance object, so an app that runs more than one SDK reskins them
+/// together by configuring a single instance.
 ///
 /// - Important: Start by adjusting the `brand` and `chrome` ramps. Most
 /// semantic tokens derive from them, so a handful of overrides reskins an
@@ -16,9 +18,7 @@ import UIKit
 /// deviate from what the ramps produce.
 ///
 /// Because tokens derive lazily, override the ramps before the first read.
-/// Each SDK exposes the palette on its own appearance object, which is the
-/// safest place to install a configured instance during setup.
-public final class ColorPalette: @unchecked Sendable {
+public final class SharedColorPalette: @unchecked Sendable {
     // MARK: - Brand
 
     public lazy var brand50: UIColor = UIColor(light: .blue50, dark: .blue900)
@@ -171,50 +171,8 @@ public final class ColorPalette: @unchecked Sendable {
     public lazy var buttonSecondaryTextOnAccent: UIColor = textPrimary
     public lazy var buttonSecondaryTextOnDark: UIColor = textOnInverse
 
-    // MARK: - Messaging
-
-    public lazy var chatBackgroundAttachmentIncoming: UIColor = backgroundCoreSurfaceStrong
-    public lazy var chatBackgroundAttachmentOutgoing: UIColor = brand150
-    public lazy var chatBackgroundIncoming: UIColor = backgroundCoreSurfaceDefault
-    public lazy var chatBackgroundMention: UIColor = .baseTransparent0
-    public lazy var chatBackgroundMentionBroadcast: UIColor = chatBackgroundMention
-    public lazy var chatBackgroundMentionGroup: UIColor = chatBackgroundMention
-    public lazy var chatBackgroundMentionRole: UIColor = chatBackgroundMention
-    public lazy var chatBackgroundMentionUser: UIColor = chatBackgroundMention
-    public lazy var chatBackgroundOutgoing: UIColor = brand100
-    public lazy var chatBorderIncoming: UIColor = borderCoreSubtle
-    public lazy var chatBorderOnChatIncoming: UIColor = borderCoreStrong
-    public lazy var chatBorderOnChatOutgoing: UIColor = brand300
-    public lazy var chatBorderOutgoing: UIColor = brand100
-    public lazy var chatPollProgressFillIncoming: UIColor = controlProgressBarFill
-    public lazy var chatPollProgressFillOutgoing: UIColor = accentPrimary
-    public lazy var chatPollProgressTrackIncoming: UIColor = controlProgressBarTrack
-    public lazy var chatPollProgressTrackOutgoing: UIColor = brand200
-    public lazy var chatReplyIndicatorIncoming: UIColor = chrome400
-    public lazy var chatReplyIndicatorOutgoing: UIColor = brand400
-    public lazy var chatTextIncoming: UIColor = textPrimary
-    public lazy var chatTextLink: UIColor = textLink
-    public lazy var chatTextMention: UIColor = textLink
-    public lazy var chatTextMentionBroadcast: UIColor = chatTextMention
-    public lazy var chatTextMentionGroup: UIColor = chatTextMention
-    public lazy var chatTextMentionRole: UIColor = chatTextMention
-    public lazy var chatTextMentionUser: UIColor = chatTextMention
-    public lazy var chatTextOutgoing: UIColor = brand900
-    public lazy var chatTextReaction: UIColor = textSecondary
-    public lazy var chatTextRead: UIColor = accentPrimary
-    public lazy var chatTextSystem: UIColor = textSecondary
-    public lazy var chatTextTimestamp: UIColor = textTertiary
-    public lazy var chatTextTypingIndicator: UIColor = chatTextIncoming
-    public lazy var chatTextUsername: UIColor = textSecondary
-    public lazy var chatThreadConnectorIncoming: UIColor = borderCoreDefault
-    public lazy var chatThreadConnectorOutgoing: UIColor = brand150
-    public lazy var chatWaveformBar: UIColor = borderCoreOpacityStrong
-    public lazy var chatWaveformBarPlaying: UIColor = accentPrimary
-
     // MARK: - Control
 
-    public lazy var controlAcceptCallBackground: UIColor = accentSuccess
-    public lazy var controlAcceptCallText: UIColor = textOnAccent
     public lazy var controlCheckboxBackground: UIColor = .baseTransparent0
     public lazy var controlCheckboxBackgroundSelected: UIColor = accentPrimary
     public lazy var controlCheckboxBorder: UIColor = borderCoreDefault
@@ -247,17 +205,6 @@ public final class ColorPalette: @unchecked Sendable {
     public lazy var controlToggleSwitchBackgroundDisabled: UIColor = backgroundUtilityDisabled
     public lazy var controlToggleSwitchBackgroundSelected: UIColor = accentPrimary
     public lazy var controlToggleSwitchKnob: UIColor = backgroundCoreOnAccent
-    public lazy var controlVideoBackgroundControlBackground: UIColor = backgroundCoreSurfaceSubtle
-    public lazy var controlVideoBackgroundControlBackgroundSelected: UIColor = accentPrimary
-    public lazy var controlVideoBackgroundControlText: UIColor = textPrimary
-    public lazy var controlVideoBackgroundControlTextSelected: UIColor = textOnAccent
-
-    // MARK: - Indicator
-
-    public lazy var indicatorFair: UIColor = accentWarning
-    public lazy var indicatorGreat: UIColor = accentSuccess
-    public lazy var indicatorPoor: UIColor = accentError
-    public lazy var indicatorSpeaking: UIColor = brand300
 
     // MARK: - Input
 
@@ -268,13 +215,6 @@ public final class ColorPalette: @unchecked Sendable {
     public lazy var inputTextIcon: UIColor = textTertiary
     public lazy var inputTextIconActive: UIColor = textPrimary
     public lazy var inputTextPlaceholder: UIColor = textTertiary
-
-    // MARK: - Label
-
-    public lazy var labelBackgroundNeutral: UIColor = chrome150
-    public lazy var labelBackgroundPrimary: UIColor = brand150
-    public lazy var labelTextNeutral: UIColor = textPrimary
-    public lazy var labelTextPrimary: UIColor = brand900
 
     // MARK: - Presence
 

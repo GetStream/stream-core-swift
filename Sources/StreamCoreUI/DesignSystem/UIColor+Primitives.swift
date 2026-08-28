@@ -7,7 +7,10 @@ import UIKit
 /// The raw colour ramps the semantic tokens are built from.
 ///
 /// These are deliberately not public: consumers should override semantic
-/// tokens on `ColorPalette` rather than the primitives.
+/// tokens on ``SharedColorPalette`` rather than the primitives. The
+/// initialisers stay internal too, because SDKs already vend their own
+/// public equivalents and a second one would be ambiguous at call sites
+/// that import both modules.
 extension UIColor {
     convenience init(hex: UInt32) {
         let r = CGFloat((hex >> 24) & 0xff) / 255.0

@@ -6,8 +6,8 @@ import StreamCoreUI
 import UIKit
 import XCTest
 
-final class ColorPalette_Tests: XCTestCase {
-    private lazy var subject: ColorPalette! = .init()
+final class SharedColorPalette_Tests: XCTestCase {
+    private lazy var subject: SharedColorPalette! = .init()
 
     override func tearDown() {
         subject = nil
@@ -31,9 +31,9 @@ final class ColorPalette_Tests: XCTestCase {
         XCTAssertEqual(subject.accentNeutral, original)
     }
 
-    func test_brandRampOverridden_beforeFirstRead_messagingTokenUsesOverride() {
-        subject.brand100 = .magenta
+    func test_brandRampOverridden_beforeFirstRead_derivedTokenUsesOverride() {
+        subject.brand150 = .magenta
 
-        XCTAssertEqual(subject.chatBackgroundOutgoing, .magenta)
+        XCTAssertEqual(subject.borderUtilityFocused, .magenta)
     }
 }

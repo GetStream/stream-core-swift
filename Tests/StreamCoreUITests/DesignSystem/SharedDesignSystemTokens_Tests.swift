@@ -5,8 +5,8 @@
 import StreamCoreUI
 import XCTest
 
-final class DesignSystemTokens_Tests: XCTestCase {
-    private lazy var subject: DesignSystemTokens! = .init()
+final class SharedDesignSystemTokens_Tests: XCTestCase {
+    private lazy var subject: SharedDesignSystemTokens! = .init()
 
     override func tearDown() {
         subject = nil
@@ -29,9 +29,9 @@ final class DesignSystemTokens_Tests: XCTestCase {
         XCTAssertEqual(subject.inputRadiusTextInput, original)
     }
 
-    func test_radiusOverridden_beforeFirstRead_messagingTokenUsesOverride() {
-        subject.radius2xl = 99
+    func test_semanticTokenOverridden_readsBackOverride() {
+        subject.spacingMd = 99
 
-        XCTAssertEqual(subject.messageBubbleRadiusGroupTop, 99)
+        XCTAssertEqual(subject.spacingMd, 99)
     }
 }
