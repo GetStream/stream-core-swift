@@ -111,6 +111,8 @@
 				StreamAttachmentsTests/StreamAttachments.xctestplan,
 				StreamAttachmentsTests/StreamAttachmentsTests.swift,
 				StreamCoreUITests/CDN/StreamImageCDN_Tests.swift,
+				StreamCoreUITests/DesignSystem/ColorPalette_Tests.swift,
+				StreamCoreUITests/DesignSystem/DesignSystemTokens_Tests.swift,
 			);
 			target = 845495272DBA3A1300211413 /* StreamCoreTests */;
 		};
@@ -118,6 +120,8 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				StreamCoreUITests/CDN/StreamImageCDN_Tests.swift,
+				StreamCoreUITests/DesignSystem/ColorPalette_Tests.swift,
+				StreamCoreUITests/DesignSystem/DesignSystemTokens_Tests.swift,
 			);
 			target = 8415DA162E462EEF00FEE25F /* StreamCoreUITests */;
 		};
