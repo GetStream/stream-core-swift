@@ -35,7 +35,7 @@ is what makes a re-sync repeatable.
 `chatThreadConnectorIncoming`, `chatThreadConnectorOutgoing`,
 `chatWaveformBar`, `chatWaveformBarPlaying`.
 
-**Calling (14), owned by the Video SDK.** The `Indicator` group
+**Video (14).** The `Indicator` group
 (`indicatorFair`, `indicatorGreat`, `indicatorPoor`, `indicatorSpeaking`), the
 `Label` group (`labelBackgroundNeutral`, `labelBackgroundPrimary`,
 `labelTextNeutral`, `labelTextPrimary`), `controlAcceptCallBackground`,
