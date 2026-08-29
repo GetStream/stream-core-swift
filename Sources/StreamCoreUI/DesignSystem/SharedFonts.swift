@@ -13,6 +13,9 @@ import UIKit
 /// `swiftUI.body` untouched, so an app that renders in both frameworks
 /// should set the style it actually uses, or both.
 public final class SharedFonts: @unchecked Sendable {
+    /// Process-wide default, used when an SDK does not pass its own fonts.
+    public static let shared = SharedFonts()
+
     public let uiKit: UIKitFace
     public let swiftUI: SwiftUIFace
 

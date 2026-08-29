@@ -13,6 +13,9 @@ import UIKit
 /// The set is SF Symbols throughout, so it carries no asset catalog and
 /// each SDK resolves an icon in whichever framework it renders with.
 public final class SharedImages: @unchecked Sendable {
+    /// Process-wide default, used when an SDK does not pass its own images.
+    public static let shared = SharedImages()
+
     // MARK: - Navigation
 
     public lazy var back: SharedImage = .system("chevron.left")

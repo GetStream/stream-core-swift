@@ -6,7 +6,7 @@ import StreamCoreUI
 import XCTest
 
 final class SharedDesignSystemTokens_Tests: XCTestCase {
-    private lazy var subject: SharedDesignSystemTokens! = .init()
+    private lazy var subject: DesignSystemTokens! = .init()
 
     override func tearDown() {
         subject = nil

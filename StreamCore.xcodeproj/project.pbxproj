@@ -112,9 +112,9 @@
 				StreamAttachmentsTests/StreamAttachments.xctestplan,
 				StreamAttachmentsTests/StreamAttachmentsTests.swift,
 				StreamCoreUITests/CDN/StreamImageCDN_Tests.swift,
-				StreamCoreUITests/DesignSystem/SharedAppearance_Tests.swift,
-				StreamCoreUITests/DesignSystem/SharedColorPalette_Tests.swift,
-				StreamCoreUITests/DesignSystem/SharedDesignSystemTokens_Tests.swift,
+				StreamCoreUITests/DesignSystem/Appearance_Tests.swift,
+				StreamCoreUITests/DesignSystem/ColorPalette_Tests.swift,
+				StreamCoreUITests/DesignSystem/DesignSystemTokens_Tests.swift,
 				StreamCoreUITests/DesignSystem/SharedFonts_Tests.swift,
 				StreamCoreUITests/DesignSystem/SharedImages_Tests.swift,
 			);
@@ -124,9 +124,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				StreamCoreUITests/CDN/StreamImageCDN_Tests.swift,
-				StreamCoreUITests/DesignSystem/SharedAppearance_Tests.swift,
-				StreamCoreUITests/DesignSystem/SharedColorPalette_Tests.swift,
-				StreamCoreUITests/DesignSystem/SharedDesignSystemTokens_Tests.swift,
+				StreamCoreUITests/DesignSystem/Appearance_Tests.swift,
+				StreamCoreUITests/DesignSystem/ColorPalette_Tests.swift,
+				StreamCoreUITests/DesignSystem/DesignSystemTokens_Tests.swift,
 				StreamCoreUITests/DesignSystem/SharedFonts_Tests.swift,
 				StreamCoreUITests/DesignSystem/SharedImages_Tests.swift,
 			);

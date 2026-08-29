@@ -9,7 +9,7 @@ is what makes a re-sync repeatable.
 
 1. Take the generated palette and layout tokens.
 2. Remove the product groups listed below and keep the remainder here, in
-   `SharedColorPalette` and `SharedDesignSystemTokens`.
+   `ColorPalette` and `DesignSystemTokens`.
 3. Hand each removed group to its SDK, which layers it onto the shared set
    through its own appearance object.
 4. Check the counts: 175 shared colour tokens and 66 shared layout tokens as

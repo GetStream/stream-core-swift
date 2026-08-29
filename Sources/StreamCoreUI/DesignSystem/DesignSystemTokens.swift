@@ -13,7 +13,7 @@ import UIKit
 /// Semantic tokens derive from the foundation scale, so overriding a
 /// scale token cascades. Because the derivation is lazy, apply overrides
 /// before the first read.
-public final class SharedDesignSystemTokens: @unchecked Sendable {
+public final class DesignSystemTokens: @unchecked Sendable {
     // MARK: - Button
 
     public lazy var buttonHitTargetMinHeight: CGFloat = size48

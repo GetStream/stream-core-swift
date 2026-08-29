@@ -7,7 +7,7 @@ import UIKit
 import XCTest
 
 final class SharedColorPalette_Tests: XCTestCase {
-    private lazy var subject: SharedColorPalette! = .init()
+    private lazy var subject: ColorPalette! = .init()
 
     override func tearDown() {
         subject = nil
@@ -35,5 +35,22 @@ final class SharedColorPalette_Tests: XCTestCase {
         subject.brand150 = .magenta
 
         XCTAssertEqual(subject.borderUtilityFocused, .magenta)
+    }
+
+    // MARK: - Bags
+
+    func test_bag_receivesPalette_andDerivesFromIt() {
+        subject.brand300 = .magenta
+
+        XCTAssertEqual(subject[TestColorBag.self].derived, .magenta)
+    }
+}
+
+private final class TestColorBag: ColorBag {
+    private let palette: ColorPalette
+    lazy var derived: UIColor = palette.brand300
+
+    required init(palette: ColorPalette) {
+        self.palette = palette
     }
 }

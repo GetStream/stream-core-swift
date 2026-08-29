@@ -4,6 +4,14 @@
 
 import UIKit
 
+/// A bag of product-specific colour tokens attached to ``ColorPalette``.
+///
+/// Each SDK defines its own conforming type and vends the tokens through
+/// `@dynamicMemberLookup` on the palette, so customers never mention the bag.
+public protocol ColorBag: AnyObject {
+    init(palette: ColorPalette)
+}
+
 /// The semantic colour tokens every Stream SDK draws from.
 ///
 /// Tokens are grouped by the surface they describe: `Background`, `Border`,
@@ -18,7 +26,37 @@ import UIKit
 /// deviate from what the ramps produce.
 ///
 /// Because tokens derive lazily, override the ramps before the first read.
-public final class SharedColorPalette: @unchecked Sendable {
+///
+/// Product SDKs attach extra tokens through ``ColorBag``. Those members are
+/// then read on this type via `@dynamicMemberLookup`, so
+/// `colorPalette.chatBackgroundOutgoing` and `colorPalette.brand500` are
+/// equally valid.
+@dynamicMemberLookup
+public final class ColorPalette: @unchecked Sendable {
+    private var bags: [ObjectIdentifier: Any] = [:]
+
+    /// Used by Stream SDKs to attach product tokens.
+    public subscript<Bag: ColorBag>(_ type: Bag.Type) -> Bag {
+        get {
+            if let bag = bags[ObjectIdentifier(type)] as? Bag {
+                return bag
+            }
+            let bag = Bag(palette: self)
+            bags[ObjectIdentifier(type)] = bag
+            return bag
+        }
+        set { bags[ObjectIdentifier(type)] = newValue }
+    }
+
+    /// Satisfies `@dynamicMemberLookup` in this module. Product tokens are
+    /// added as key-path subscripts in each SDK.
+    public subscript<Value>(
+        dynamicMember keyPath: ReferenceWritableKeyPath<ColorPalette, Value>
+    ) -> Value {
+        get { self[keyPath: keyPath] }
+        set { self[keyPath: keyPath] = newValue }
+    }
+
     // MARK: - Brand
 
     public lazy var brand50: UIColor = UIColor(light: .blue50, dark: .blue900)
