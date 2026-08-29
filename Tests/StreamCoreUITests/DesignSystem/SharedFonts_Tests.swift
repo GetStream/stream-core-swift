@@ -7,6 +7,7 @@ import SwiftUI
 import UIKit
 import XCTest
 
+@MainActor
 final class SharedFonts_Tests: XCTestCase {
     private lazy var subject: SharedFonts! = .init()
 

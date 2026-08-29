@@ -9,6 +9,7 @@ import Foundation
 /// Each SDK defines its own conforming type (call images, chat formatters,
 /// and so on) and exposes it through an extension. CoreUI does not know
 /// those types.
+@MainActor
 public protocol AppearanceBag: AnyObject {
     init()
 }
@@ -26,12 +27,14 @@ public protocol AppearanceBag: AnyObject {
 /// Appearance.shared.colorPalette.brand500 = .purple
 /// ```
 ///
-/// - Important: The default instance is process-wide, so an override made
-/// through one SDK is visible to the others. To keep them apart, build a
-/// separate instance and hand it to the SDK.
+/// - Important: Configure and read this type on the main thread. The
+/// default instance is process-wide, so an override made through one SDK
+/// is visible to the others. To keep them apart, build a separate instance
+/// and hand it to the SDK.
 ///
 /// Tokens derive lazily, so apply overrides before the first read.
-public final class Appearance: @unchecked Sendable {
+@MainActor
+public final class Appearance {
     /// The instance every Stream SDK uses unless it is given another one.
     public static let shared = Appearance()
 

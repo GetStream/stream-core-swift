@@ -8,6 +8,7 @@ import UIKit
 ///
 /// Each SDK defines its own conforming type and vends the tokens through
 /// `@dynamicMemberLookup` on the palette, so customers never mention the bag.
+@MainActor
 public protocol ColorBag: AnyObject {
     init(palette: ColorPalette)
 }
@@ -26,13 +27,15 @@ public protocol ColorBag: AnyObject {
 /// deviate from what the ramps produce.
 ///
 /// Because tokens derive lazily, override the ramps before the first read.
+/// Configure and read this type on the main thread.
 ///
 /// Product SDKs attach extra tokens through ``ColorBag``. Those members are
 /// then read on this type via `@dynamicMemberLookup`, so
 /// `colorPalette.chatBackgroundOutgoing` and `colorPalette.brand500` are
 /// equally valid.
+@MainActor
 @dynamicMemberLookup
-public final class ColorPalette: @unchecked Sendable {
+public final class ColorPalette {
     private var bags: [ObjectIdentifier: Any] = [:]
 
     /// Used by Stream SDKs to attach product tokens.

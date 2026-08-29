@@ -6,6 +6,7 @@ import StreamCoreUI
 import UIKit
 import XCTest
 
+@MainActor
 final class Appearance_Tests: XCTestCase {
     private lazy var subject: Appearance! = .init()
 

@@ -12,7 +12,8 @@ import UIKit
 /// The two faces are independent: overriding `uiKit.body` leaves
 /// `swiftUI.body` untouched, so an app that renders in both frameworks
 /// should set the style it actually uses, or both.
-public final class SharedFonts: @unchecked Sendable {
+@MainActor
+public final class SharedFonts {
     /// Process-wide default, used when an SDK does not pass its own fonts.
     public static let shared = SharedFonts()
 
@@ -30,7 +31,7 @@ public final class SharedFonts: @unchecked Sendable {
     // MARK: - UIKit
 
     /// The `UIFont` face of the shared text styles.
-    public final class UIKitFace: @unchecked Sendable {
+    public final class UIKitFace {
         public var caption1 = UIFont.preferredFont(forTextStyle: .caption1)
         public var footnote = UIFont.preferredFont(forTextStyle: .footnote)
         public var footnoteBold = UIFont.preferredFont(forTextStyle: .footnote).bold
@@ -56,7 +57,7 @@ public final class SharedFonts: @unchecked Sendable {
     // MARK: - SwiftUI
 
     /// The SwiftUI `Font` face of the shared text styles.
-    public final class SwiftUIFace: @unchecked Sendable {
+    public final class SwiftUIFace {
         public var caption1 = Font.caption
         public var footnote = Font.footnote
         public var footnoteBold = Font.footnote.bold()
