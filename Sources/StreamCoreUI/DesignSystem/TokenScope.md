@@ -60,14 +60,14 @@ semantic token for transparent before it can adopt.
 
 The Video SDK contributes no layout tokens today.
 
-## Fonts and images
+## Fonts
 
-Neither comes from the generator. `SharedFonts` holds the fourteen text styles
-both SDKs already declared identically; `SharedImages` holds icons that name a
-generic affordance rather than a product concept. An icon belongs to an SDK the
-moment its name only makes sense there, which is why hanging up a call and
-sending a message are not here.
+Fonts do not come from the generator. `SharedFonts` holds the fourteen text
+styles both SDKs already declared identically, vended as `UIFont` and as
+SwiftUI `Font`.
 
 `SharedFonts.UIKitFace.title3` is bold while its SwiftUI counterpart is not.
 That is not a mistake: each face preserves what its SDK rendered before the
 styles were shared, and reconciling them is a deliberate visual change.
+
+Icons and images stay on each SDK. Shared iconography is out of scope here.

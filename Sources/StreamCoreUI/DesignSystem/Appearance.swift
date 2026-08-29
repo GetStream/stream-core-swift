@@ -16,8 +16,8 @@ public protocol AppearanceBag: AnyObject {
 /// The visual configuration every Stream SDK draws from.
 ///
 /// This type owns the shared design system: ``colorPalette`` and
-/// ``tokens``. Product-specific pieces — call icons, chat formatters,
-/// localization — are attached by each SDK through ``AppearanceBag``.
+/// ``tokens``. Product-specific pieces — images, formatters, localization
+/// — are attached by each SDK through ``AppearanceBag``.
 ///
 /// Because every SDK defaults to ``shared``, an app that runs more than
 /// one of them reskins them together:
