@@ -5,7 +5,6 @@
 import StreamCoreUI
 import XCTest
 
-@MainActor
 final class SharedDesignSystemTokens_Tests: XCTestCase {
     private lazy var subject: DesignSystemTokens! = .init()
 

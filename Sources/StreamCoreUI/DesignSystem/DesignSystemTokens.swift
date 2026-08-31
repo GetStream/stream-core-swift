@@ -13,7 +13,6 @@ import UIKit
 /// Semantic tokens derive from the foundation scale, so overriding a
 /// scale token cascades. Because the derivation is lazy, apply overrides
 /// before the first read.
-@MainActor
 public final class DesignSystemTokens {
     // MARK: - Button
 

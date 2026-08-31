@@ -6,7 +6,6 @@ import StreamCoreUI
 import UIKit
 import XCTest
 
-@MainActor
 final class SharedColorPalette_Tests: XCTestCase {
     private lazy var subject: ColorPalette! = .init()
 
