@@ -33,7 +33,9 @@ public protocol AppearanceBag: AnyObject {
 /// Tokens derive lazily, so apply overrides before the first read.
 public final class Appearance {
     /// The instance every Stream SDK uses unless it is given another one.
-    public static let shared = Appearance()
+    ///
+    /// Not synchronized. This is a process-wide UI configuration object.
+    nonisolated(unsafe) public static let shared = Appearance()
 
     /// Same instance as ``shared``. Matches the name Chat already uses.
     public static var `default`: Appearance { shared }
