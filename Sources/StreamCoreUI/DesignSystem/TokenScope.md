@@ -1,17 +1,20 @@
 # Token scope
 
 The `design-system-tokens` generator emits one flat Swift file covering every
-Stream product. This module carries only the part every SDK draws from; the
-rest lives on the SDK that owns it. The split is applied by hand, so this note
-is what makes a re-sync repeatable.
+Stream product. This module carries only the part every SDK draws from, on
+``DesignTokens`` (`colors` and `layout`; fonts will be a later group).
+Product-specific colours and layout live on each SDK's appearance
+(`VideoAppearance.colors`, `ChatAppearance.colors`). The split is applied
+by hand, so this note is what makes a re-sync repeatable.
 
 ## Re-syncing
 
 1. Take the generated palette and layout tokens.
 2. Remove the product groups listed below and keep the remainder here, in
-   `ColorPalette` and `DesignSystemTokens`.
-3. Hand each removed group to its SDK, which layers it onto the shared set
-   through its own appearance object.
+   `DesignTokens.Colors` and `DesignTokens.Layout`.
+3. Hand each removed group to its SDK's appearance colours (or layout),
+   derived from the shared `DesignTokens` instance the appearance is
+   constructed with.
 4. Check the counts: 175 shared colour tokens and 66 shared layout tokens as
    of this note. A changed count means a token moved scope and the lists below
    need updating too.
@@ -44,8 +47,8 @@ is what makes a re-sync repeatable.
 `controlVideoBackgroundControlText`,
 `controlVideoBackgroundControlTextSelected`.
 
-Every product token derives from a shared one, so each SDK can define its group
-against the shared palette without reaching for a raw ramp. The exception is
+Every product token derives from a shared one, so each SDK can define its
+group against the `DesignTokens` instance it was given. The exception is
 `chatBackgroundMention`, which resolves to the raw `.baseTransparent0`; the
 ramps are internal here, so Chat needs either a public primitive or a shared
 semantic token for transparent before it can adopt.
@@ -59,6 +62,22 @@ semantic token for transparent before it can adopt.
 `messageBubbleRadiusGroupTop`, `messageBubbleRadiusTail`.
 
 The Video SDK contributes no layout tokens today.
+
+## Product appearances
+
+Shared tokens are configured on `DesignTokens` and passed into each SDK:
+
+```swift
+let tokens = DesignTokens()
+tokens.colors.accentPrimary = .red
+let videoAppearance = VideoAppearance(tokens: tokens)
+let chatAppearance = ChatAppearance(tokens: tokens)
+```
+
+Video-only colours are `videoAppearance.colors`. Chat-only colours are
+`chatAppearance.colors`. When Chat adopts, keep its existing token names as
+deprecated computed properties on the old appearance type so existing call
+sites keep compiling.
 
 Fonts, icons and images stay on each SDK. Shared typography and iconography
 are out of scope here.
