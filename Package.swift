@@ -14,6 +14,7 @@ let package = Package(
         ),
         .library(
             name: "StreamCoreUI",
+            type: .dynamic,
             targets: ["StreamCoreUI"]
         ),
         // Features
