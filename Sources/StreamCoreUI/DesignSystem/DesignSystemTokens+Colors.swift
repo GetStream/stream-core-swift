@@ -14,6 +14,7 @@ import UIKit
 /// Tokens derive lazily, so override the ramps before the first read.
 extension DesignSystemTokens {
     public final class Colors {
+
         // MARK: - Brand
 
         public lazy var brand50: UIColor = UIColor(light: .blue50, dark: .blue900)
@@ -27,6 +28,7 @@ extension DesignSystemTokens {
         public lazy var brand700: UIColor = UIColor(light: .blue700, dark: .blue150)
         public lazy var brand800: UIColor = UIColor(light: .blue800, dark: .blue100)
         public lazy var brand900: UIColor = UIColor(light: .blue900, dark: .blue50)
+
         // MARK: - Chrome
 
         public lazy var chrome0: UIColor = UIColor(light: .baseWhite, dark: .baseBlack)
@@ -42,6 +44,7 @@ extension DesignSystemTokens {
         public lazy var chrome800: UIColor = UIColor(light: .slate800, dark: .neutral100)
         public lazy var chrome900: UIColor = UIColor(light: .slate900, dark: .neutral50)
         public lazy var chrome1000: UIColor = UIColor(light: .baseBlack, dark: .baseWhite)
+
         // MARK: - Accent
 
         public lazy var accentError: UIColor = UIColor(light: .red500, dark: .red400)
@@ -49,6 +52,7 @@ extension DesignSystemTokens {
         public lazy var accentPrimary: UIColor = UIColor(light: brand500, dark: brand400)
         public lazy var accentSuccess: UIColor = UIColor(light: .green400, dark: .green300)
         public lazy var accentWarning: UIColor = UIColor(light: .yellow400, dark: .yellow300)
+
         // MARK: - Avatar
 
         public lazy var avatarBackgroundDefault: UIColor = avatarPaletteBackground1
@@ -68,6 +72,7 @@ extension DesignSystemTokens {
         public lazy var avatarPresenceBorder: UIColor = borderCoreOnInverse
         public lazy var avatarTextDefault: UIColor = avatarPaletteText1
         public lazy var avatarTextPlaceholder: UIColor = chrome500
+
         // MARK: - Background
 
         public lazy var backgroundCoreApp: UIColor = chrome0
@@ -102,6 +107,7 @@ extension DesignSystemTokens {
             light: UIColor(hex: 0x1a1b2533),
             dark: UIColor(hex: 0xffffff40)
             )
+
         // MARK: - Badge
 
         public lazy var badgeBackgroundDefault: UIColor = backgroundCoreElevation3
@@ -114,6 +120,7 @@ extension DesignSystemTokens {
         public lazy var badgeText: UIColor = textPrimary
         public lazy var badgeTextOnAccent: UIColor = textOnAccent
         public lazy var badgeTextOnInverse: UIColor = textOnInverse
+
         // MARK: - Border
 
         public lazy var borderCoreDefault: UIColor = UIColor(light: chrome150, dark: chrome200)
@@ -135,6 +142,7 @@ extension DesignSystemTokens {
         public lazy var borderUtilitySelected: UIColor = UIColor(light: UIColor(hex: 0x1a1b2526), dark: UIColor(hex: 0xffffff26))
         public lazy var borderUtilitySuccess: UIColor = accentSuccess
         public lazy var borderUtilityWarning: UIColor = accentWarning
+
         // MARK: - Button
 
         public lazy var buttonDestructiveBackground: UIColor = accentError
@@ -158,6 +166,7 @@ extension DesignSystemTokens {
         public lazy var buttonSecondaryText: UIColor = textPrimary
         public lazy var buttonSecondaryTextOnAccent: UIColor = textPrimary
         public lazy var buttonSecondaryTextOnDark: UIColor = textOnInverse
+
         // MARK: - Control
 
         public lazy var controlCheckboxBackground: UIColor = .baseTransparent0
@@ -192,6 +201,7 @@ extension DesignSystemTokens {
         public lazy var controlToggleSwitchBackgroundDisabled: UIColor = backgroundUtilityDisabled
         public lazy var controlToggleSwitchBackgroundSelected: UIColor = accentPrimary
         public lazy var controlToggleSwitchKnob: UIColor = backgroundCoreOnAccent
+
         // MARK: - Input
 
         public lazy var inputSendIcon: UIColor = accentPrimary
@@ -201,27 +211,32 @@ extension DesignSystemTokens {
         public lazy var inputTextIcon: UIColor = textTertiary
         public lazy var inputTextIconActive: UIColor = textPrimary
         public lazy var inputTextPlaceholder: UIColor = textTertiary
+
         // MARK: - Presence
 
         public lazy var presenceBackgroundOffline: UIColor = avatarPresenceBackgroundOffline
         public lazy var presenceBackgroundOnline: UIColor = avatarPresenceBackgroundOnline
         public lazy var presenceBorder: UIColor = avatarPresenceBorder
+
         // MARK: - Reaction
 
         public lazy var reactionBackground: UIColor = backgroundCoreElevation3
         public lazy var reactionBorder: UIColor = borderCoreDefault
         public lazy var reactionEmoji: UIColor = textPrimary
         public lazy var reactionText: UIColor = textPrimary
+
         // MARK: - Skeleton
 
         public lazy var skeletonLoadingBase: UIColor = .baseTransparent0
         public lazy var skeletonLoadingHighlight: UIColor = backgroundCoreOverlayLight
+
         // MARK: - System
 
         public lazy var systemBackgroundBlur: UIColor = UIColor(light: UIColor(hex: 0xffffff03), dark: UIColor(hex: 0x00000003))
         public lazy var systemCaret: UIColor = accentPrimary
         public lazy var systemScrollbar: UIColor = UIColor(light: UIColor(hex: 0x00000080), dark: UIColor(hex: 0xffffff80))
         public lazy var systemText: UIColor = chrome1000
+
         // MARK: - Text
 
         public lazy var textDisabled: UIColor = chrome300

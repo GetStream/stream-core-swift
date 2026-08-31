@@ -12,6 +12,7 @@ import UIKit
 /// overrides before the first read.
 extension DesignSystemTokens {
     public final class Layout {
+
         // MARK: - Button
 
         public lazy var buttonHitTargetMinHeight: CGFloat = size48
@@ -36,17 +37,20 @@ extension DesignSystemTokens {
         public lazy var buttonVisualHeightMd: CGFloat = size40
         public lazy var buttonVisualHeightSm: CGFloat = size32
         public lazy var buttonVisualHeightXs: CGFloat = size24
+
         // MARK: - Dark
 
         public lazy var darkElevation1: BoxShadow = .init(x: 0, y: 1, blur: 3, spread: 0, color: UIColor(hex: 0x00000033))
         public lazy var darkElevation2: BoxShadow = .init(x: 0, y: 2, blur: 6, spread: 0, color: UIColor(hex: 0x00000038))
         public lazy var darkElevation3: BoxShadow = .init(x: 0, y: 4, blur: 12, spread: 0, color: UIColor(hex: 0x0000003d))
         public lazy var darkElevation4: BoxShadow = .init(x: 0, y: 8, blur: 24, spread: 0, color: UIColor(hex: 0x00000047))
+
         // MARK: - Device
 
         public lazy var deviceRadius: CGFloat = 62
         public lazy var deviceSafeAreaBottom: CGFloat = space32
         public lazy var deviceSafeAreaTop: CGFloat = 50
+
         // MARK: - Icon
 
         public lazy var iconSizeLg: CGFloat = size32
@@ -56,6 +60,7 @@ extension DesignSystemTokens {
         public lazy var iconStrokeDefault: CGFloat = w150
         public lazy var iconStrokeEmphasis: CGFloat = w200
         public lazy var iconStrokeSubtle: CGFloat = w120
+
         // MARK: - Input
 
         public lazy var inputRadiusOptionCard: CGFloat = radiusXl
@@ -63,12 +68,14 @@ extension DesignSystemTokens {
         public lazy var inputRadiusSearchInput: CGFloat = radiusFull
         public lazy var inputRadiusSelectInput: CGFloat = radiusXl
         public lazy var inputRadiusTextInput: CGFloat = radiusXl
+
         // MARK: - Light
 
         public lazy var lightElevation1: BoxShadow = .init(x: 0, y: 1, blur: 3, spread: 0, color: UIColor(hex: 0x0000001f))
         public lazy var lightElevation2: BoxShadow = .init(x: 0, y: 2, blur: 6, spread: 0, color: UIColor(hex: 0x00000024))
         public lazy var lightElevation3: BoxShadow = .init(x: 0, y: 4, blur: 12, spread: 0, color: UIColor(hex: 0x00000029))
         public lazy var lightElevation4: BoxShadow = .init(x: 0, y: 8, blur: 24, spread: 0, color: UIColor(hex: 0x00000033))
+
         // MARK: - Radius
 
         public lazy var radius2xl: CGFloat = radius20
@@ -82,6 +89,7 @@ extension DesignSystemTokens {
         public lazy var radiusXl: CGFloat = radius16
         public lazy var radiusXs: CGFloat = radius4
         public lazy var radiusXxs: CGFloat = radius2
+
         // MARK: - Spacing
 
         public lazy var spacing2xl: CGFloat = space32
@@ -94,6 +102,7 @@ extension DesignSystemTokens {
         public lazy var spacingXs: CGFloat = space8
         public lazy var spacingXxs: CGFloat = space4
         public lazy var spacingXxxs: CGFloat = space2
+
         // MARK: - Foundations
 
         let lineHeightLineHeight10: CGFloat = 10
