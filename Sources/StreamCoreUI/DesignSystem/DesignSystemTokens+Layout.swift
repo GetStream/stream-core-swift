@@ -12,7 +12,6 @@ import UIKit
 /// overrides before the first read.
 extension DesignSystemTokens {
     public final class Layout {
-
         // MARK: - Button
 
         public lazy var buttonHitTargetMinHeight: CGFloat = size48

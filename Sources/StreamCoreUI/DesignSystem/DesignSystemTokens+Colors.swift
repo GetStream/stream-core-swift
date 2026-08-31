@@ -14,7 +14,6 @@ import UIKit
 /// Tokens derive lazily, so override the ramps before the first read.
 extension DesignSystemTokens {
     public final class Colors {
-
         // MARK: - Brand
 
         public lazy var brand50: UIColor = UIColor(light: .blue50, dark: .blue900)
@@ -86,15 +85,15 @@ extension DesignSystemTokens {
         public lazy var backgroundCoreOverlayDark: UIColor = UIColor(
             light: UIColor(hex: 0x1a1b2540),
             dark: UIColor(hex: 0x00000080)
-            )
+        )
         public lazy var backgroundCoreOverlayDarkStrong: UIColor = UIColor(
             light: UIColor(hex: 0x1a1b25bf),
             dark: UIColor(hex: 0x000000bf)
-            )
+        )
         public lazy var backgroundCoreOverlayLight: UIColor = UIColor(
             light: UIColor(hex: 0xffffffbf),
             dark: UIColor(hex: 0x000000bf)
-            )
+        )
         public lazy var backgroundCoreScrim: UIColor = UIColor(light: UIColor(hex: 0x1a1b2580), dark: UIColor(hex: 0x000000bf))
         public lazy var backgroundCoreSurfaceCard: UIColor = UIColor(light: chrome50, dark: chrome100)
         public lazy var backgroundCoreSurfaceDefault: UIColor = chrome100
@@ -106,7 +105,7 @@ extension DesignSystemTokens {
         public lazy var backgroundUtilitySelected: UIColor = UIColor(
             light: UIColor(hex: 0x1a1b2533),
             dark: UIColor(hex: 0xffffff40)
-            )
+        )
 
         // MARK: - Badge
 
