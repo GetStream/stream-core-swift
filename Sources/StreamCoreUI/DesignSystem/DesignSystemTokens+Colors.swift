@@ -12,7 +12,7 @@ import UIKit
 /// only when one surface needs to deviate from what the ramps produce.
 ///
 /// Tokens derive lazily, so override the ramps before the first read.
-extension DesignTokens {
+extension DesignSystemTokens {
     public final class Colors {
         // MARK: - Brand
 

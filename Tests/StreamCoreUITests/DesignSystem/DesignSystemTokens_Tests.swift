@@ -6,8 +6,8 @@ import StreamCoreUI
 import UIKit
 import XCTest
 
-final class DesignTokens_Tests: XCTestCase {
-    private lazy var subject: DesignTokens! = .init()
+final class DesignSystemTokens_Tests: XCTestCase {
+    private lazy var subject: DesignSystemTokens! = .init()
 
     override func tearDown() {
         subject = nil
@@ -17,7 +17,7 @@ final class DesignTokens_Tests: XCTestCase {
     // MARK: - Isolation
 
     func test_separateInstances_overrideDoesNotLeakBetweenThem() {
-        let other = DesignTokens()
+        let other = DesignSystemTokens()
 
         subject.colors.brand500 = .magenta
 
@@ -25,8 +25,8 @@ final class DesignTokens_Tests: XCTestCase {
     }
 
     func test_init_injectedGroupsAreUsed() {
-        let colors = DesignTokens.Colors()
-        let layout = DesignTokens.Layout()
+        let colors = DesignSystemTokens.Colors()
+        let layout = DesignSystemTokens.Layout()
 
         subject = .init(colors: colors, layout: layout)
 

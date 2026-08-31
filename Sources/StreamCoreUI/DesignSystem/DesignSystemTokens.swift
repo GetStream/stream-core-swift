@@ -11,16 +11,16 @@ import UIKit
 /// later fonts group can be added the same way.
 ///
 /// ```swift
-/// let tokens = DesignTokens()
+/// let tokens = DesignSystemTokens()
 /// tokens.colors.accentPrimary = .red
 /// let videoAppearance = VideoAppearance(tokens: tokens)
 /// let chatAppearance = ChatAppearance(tokens: tokens)
 /// ```
 ///
 /// - Important: Start by adjusting the `brand` and `chrome` ramps on
-/// ``DesignTokens/Colors``. Most semantic colour tokens derive from them.
+/// ``DesignSystemTokens/Colors``. Most semantic colour tokens derive from them.
 /// Tokens derive lazily, so override the ramps before the first read.
-public final class DesignTokens {
+public final class DesignSystemTokens {
     /// Shared colour tokens.
     public var colors: Colors
     /// Shared layout tokens.

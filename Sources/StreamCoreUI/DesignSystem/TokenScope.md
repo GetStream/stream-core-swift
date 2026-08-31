@@ -2,7 +2,7 @@
 
 The `design-system-tokens` generator emits one flat Swift file covering every
 Stream product. This module carries only the part every SDK draws from, on
-``DesignTokens`` (`colors` and `layout`; fonts will be a later group).
+``DesignSystemTokens`` (`colors` and `layout`; fonts will be a later group).
 Product-specific colours and layout live on each SDK's appearance
 (`VideoAppearance.colors`, `ChatAppearance.colors`). The split is applied
 by hand, so this note is what makes a re-sync repeatable.
@@ -11,9 +11,9 @@ by hand, so this note is what makes a re-sync repeatable.
 
 1. Take the generated palette and layout tokens.
 2. Remove the product groups listed below and keep the remainder here, in
-   `DesignTokens.Colors` and `DesignTokens.Layout`.
+   `DesignSystemTokens.Colors` and `DesignSystemTokens.Layout`.
 3. Hand each removed group to its SDK's appearance colours (or layout),
-   derived from the shared `DesignTokens` instance the appearance is
+   derived from the shared `DesignSystemTokens` instance the appearance is
    constructed with.
 4. Check the counts: 175 shared colour tokens and 66 shared layout tokens as
    of this note. A changed count means a token moved scope and the lists below
@@ -48,7 +48,7 @@ by hand, so this note is what makes a re-sync repeatable.
 `controlVideoBackgroundControlTextSelected`.
 
 Every product token derives from a shared one, so each SDK can define its
-group against the `DesignTokens` instance it was given. The exception is
+group against the `DesignSystemTokens` instance it was given. The exception is
 `chatBackgroundMention`, which resolves to the raw `.baseTransparent0`; the
 ramps are internal here, so Chat needs either a public primitive or a shared
 semantic token for transparent before it can adopt.
@@ -65,10 +65,10 @@ The Video SDK contributes no layout tokens today.
 
 ## Product appearances
 
-Shared tokens are configured on `DesignTokens` and passed into each SDK:
+Shared tokens are configured on `DesignSystemTokens` and passed into each SDK:
 
 ```swift
-let tokens = DesignTokens()
+let tokens = DesignSystemTokens()
 tokens.colors.accentPrimary = .red
 let videoAppearance = VideoAppearance(tokens: tokens)
 let chatAppearance = ChatAppearance(tokens: tokens)
