@@ -5,13 +5,6 @@
 import UIKit
 
 /// Shared color tokens every Stream SDK draws from.
-///
-/// - Important: Start by adjusting ``palette``. Most semantic tokens
-/// derive from its brand and chrome scales, so a handful of overrides
-/// reskins every SDK that shares this instance. Reach for an individual
-/// token only when one surface needs to deviate from the palette.
-///
-/// Tokens derive lazily, so override the palette before the first read.
 extension DesignSystemTokens {
     public final class Colors {
         /// Brand and chrome scales semantic tokens derive from.
