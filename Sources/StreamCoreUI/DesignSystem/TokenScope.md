@@ -3,7 +3,7 @@
 The `design-system-tokens` generator emits one flat Swift file covering every
 Stream product. This module carries only the part every SDK draws from, on
 ``DesignSystemTokens`` (`colors` and `layout`; fonts will be a later group).
-Product-specific colours and layout live on each SDK's appearance
+Product-specific colors and layout live on each SDK's appearance
 (`VideoAppearance.colors`, `ChatAppearance.colors`). The split is applied
 by hand, so this note is what makes a re-sync repeatable.
 
@@ -12,14 +12,14 @@ by hand, so this note is what makes a re-sync repeatable.
 1. Take the generated palette and layout tokens.
 2. Remove the product groups listed below and keep the remainder here, in
    `DesignSystemTokens.Colors` and `DesignSystemTokens.Layout`.
-3. Hand each removed group to its SDK's appearance colours (or layout),
+3. Hand each removed group to its SDK's appearance colors (or layout),
    derived from the shared `DesignSystemTokens` instance the appearance is
    constructed with.
-4. Check the counts: 175 shared colour tokens and 66 shared layout tokens as
+4. Check the counts: 175 shared color tokens and 66 shared layout tokens as
    of this note. A changed count means a token moved scope and the lists below
    need updating too.
 
-## Colour tokens
+## Color tokens
 
 **Messaging (37), owned by the Chat SDK.** Every `chat*` token:
 `chatBackgroundAttachmentIncoming`, `chatBackgroundAttachmentOutgoing`,
@@ -74,7 +74,7 @@ let videoAppearance = VideoAppearance(tokens: tokens)
 let chatAppearance = ChatAppearance(tokens: tokens)
 ```
 
-Video-only colours are `videoAppearance.colors`. Chat-only colours are
+Video-only colors are `videoAppearance.colors`. Chat-only colors are
 `chatAppearance.colors`. When Chat adopts, keep its existing token names as
 deprecated computed properties on the old appearance type so existing call
 sites keep compiling.

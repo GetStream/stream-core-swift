@@ -7,7 +7,7 @@ import UIKit
 /// Shared design tokens every Stream SDK draws from, grouped by kind.
 ///
 /// Pass the same instance into each product appearance so Chat and Video
-/// reskin together. Colour and layout live on separate properties so a
+/// reskin together. Color and layout live on separate properties so a
 /// later fonts group can be added the same way.
 ///
 /// ```swift
@@ -18,10 +18,10 @@ import UIKit
 /// ```
 ///
 /// - Important: Start by adjusting the `brand` and `chrome` ramps on
-/// ``DesignSystemTokens/Colors``. Most semantic colour tokens derive from them.
+/// ``DesignSystemTokens/Colors``. Most semantic color tokens derive from them.
 /// Tokens derive lazily, so override the ramps before the first read.
 public final class DesignSystemTokens {
-    /// Shared colour tokens.
+    /// Shared color tokens.
     public var colors: Colors
     /// Shared layout tokens.
     public var layout: Layout

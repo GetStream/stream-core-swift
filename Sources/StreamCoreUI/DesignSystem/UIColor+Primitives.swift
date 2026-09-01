@@ -4,7 +4,7 @@
 
 import UIKit
 
-/// The raw colour ramps the semantic tokens are built from.
+/// The raw color ramps the semantic tokens are built from.
 ///
 /// These are deliberately not public: consumers should override semantic
 /// tokens on ``DesignSystemTokens/Colors`` rather than the primitives. The

@@ -4,7 +4,7 @@
 
 import UIKit
 
-/// Shared colour tokens every Stream SDK draws from.
+/// Shared color tokens every Stream SDK draws from.
 ///
 /// - Important: Start by adjusting the `brand` and `chrome` ramps. Most
 /// semantic tokens derive from them, so a handful of overrides reskins

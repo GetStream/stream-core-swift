@@ -34,7 +34,7 @@ final class DesignSystemTokens_Tests: XCTestCase {
         XCTAssertTrue(subject.layout === layout)
     }
 
-    // MARK: - Colour ramps
+    // MARK: - Color ramps
 
     func test_chromeRampOverridden_beforeFirstRead_derivedTokenUsesOverride() {
         subject.colors.chrome500 = .magenta
