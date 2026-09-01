@@ -6,56 +6,32 @@ import UIKit
 
 /// Shared color tokens every Stream SDK draws from.
 ///
-/// - Important: Start by adjusting the `brand` and `chrome` ramps. Most
-/// semantic tokens derive from them, so a handful of overrides reskins
-/// every SDK that shares this instance. Reach for an individual token
-/// only when one surface needs to deviate from what the ramps produce.
+/// - Important: Start by adjusting ``palette``. Most semantic tokens
+/// derive from its brand and chrome scales, so a handful of overrides
+/// reskins every SDK that shares this instance. Reach for an individual
+/// token only when one surface needs to deviate from the palette.
 ///
-/// Tokens derive lazily, so override the ramps before the first read.
+/// Tokens derive lazily, so override the palette before the first read.
 extension DesignSystemTokens {
     public final class Colors {
-        // MARK: - Brand
-
-        public lazy var brand50: UIColor = UIColor(light: .blue50, dark: .blue900)
-        public lazy var brand100: UIColor = UIColor(light: .blue100, dark: .blue800)
-        public lazy var brand150: UIColor = UIColor(light: .blue150, dark: .blue700)
-        public lazy var brand200: UIColor = UIColor(light: .blue200, dark: .blue600)
-        public lazy var brand300: UIColor = UIColor(light: .blue300, dark: .blue500)
-        public lazy var brand400: UIColor = .blue400
-        public lazy var brand500: UIColor = UIColor(light: .blue500, dark: .blue300)
-        public lazy var brand600: UIColor = UIColor(light: .blue600, dark: .blue200)
-        public lazy var brand700: UIColor = UIColor(light: .blue700, dark: .blue150)
-        public lazy var brand800: UIColor = UIColor(light: .blue800, dark: .blue100)
-        public lazy var brand900: UIColor = UIColor(light: .blue900, dark: .blue50)
-
-        // MARK: - Chrome
-
-        public lazy var chrome0: UIColor = UIColor(light: .baseWhite, dark: .baseBlack)
-        public lazy var chrome50: UIColor = UIColor(light: .slate50, dark: .neutral900)
-        public lazy var chrome100: UIColor = UIColor(light: .slate100, dark: .neutral800)
-        public lazy var chrome150: UIColor = UIColor(light: .slate150, dark: .neutral700)
-        public lazy var chrome200: UIColor = UIColor(light: .slate200, dark: .neutral600)
-        public lazy var chrome300: UIColor = UIColor(light: .slate300, dark: .neutral500)
-        public lazy var chrome400: UIColor = UIColor(light: .slate400, dark: .neutral400)
-        public lazy var chrome500: UIColor = UIColor(light: .slate500, dark: .neutral300)
-        public lazy var chrome600: UIColor = UIColor(light: .slate600, dark: .neutral200)
-        public lazy var chrome700: UIColor = UIColor(light: .slate700, dark: .neutral150)
-        public lazy var chrome800: UIColor = UIColor(light: .slate800, dark: .neutral100)
-        public lazy var chrome900: UIColor = UIColor(light: .slate900, dark: .neutral50)
-        public lazy var chrome1000: UIColor = UIColor(light: .baseBlack, dark: .baseWhite)
+        /// Brand and chrome scales semantic tokens derive from.
+        public var palette: Palette
 
         // MARK: - Accent
 
         public lazy var accentError: UIColor = UIColor(light: .red500, dark: .red400)
-        public lazy var accentNeutral: UIColor = chrome500
-        public lazy var accentPrimary: UIColor = UIColor(light: brand500, dark: brand400)
+        public lazy var accentNeutral: UIColor = palette.chrome500
+        public lazy var accentPrimary: UIColor = UIColor(
+            light: palette.brand500,
+            dark: palette.brand400
+        )
         public lazy var accentSuccess: UIColor = UIColor(light: .green400, dark: .green300)
         public lazy var accentWarning: UIColor = UIColor(light: .yellow400, dark: .yellow300)
 
         // MARK: - Avatar
 
         public lazy var avatarBackgroundDefault: UIColor = avatarPaletteBackground1
-        public lazy var avatarBackgroundPlaceholder: UIColor = chrome150
+        public lazy var avatarBackgroundPlaceholder: UIColor = palette.chrome150
         public lazy var avatarPaletteBackground1: UIColor = UIColor(light: .blue150, dark: .blue600)
         public lazy var avatarPaletteBackground2: UIColor = UIColor(light: .cyan150, dark: .cyan600)
         public lazy var avatarPaletteBackground3: UIColor = UIColor(light: .green150, dark: .green600)
@@ -70,18 +46,30 @@ extension DesignSystemTokens {
         public lazy var avatarPresenceBackgroundOnline: UIColor = accentSuccess
         public lazy var avatarPresenceBorder: UIColor = borderCoreOnInverse
         public lazy var avatarTextDefault: UIColor = avatarPaletteText1
-        public lazy var avatarTextPlaceholder: UIColor = chrome500
+        public lazy var avatarTextPlaceholder: UIColor = palette.chrome500
 
         // MARK: - Background
 
-        public lazy var backgroundCoreApp: UIColor = chrome0
-        public lazy var backgroundCoreElevation0: UIColor = chrome0
-        public lazy var backgroundCoreElevation1: UIColor = UIColor(light: chrome0, dark: chrome50)
-        public lazy var backgroundCoreElevation2: UIColor = UIColor(light: chrome0, dark: chrome100)
-        public lazy var backgroundCoreElevation3: UIColor = UIColor(light: chrome0, dark: chrome200)
+        public lazy var backgroundCoreApp: UIColor = palette.chrome0
+        public lazy var backgroundCoreElevation0: UIColor = palette.chrome0
+        public lazy var backgroundCoreElevation1: UIColor = UIColor(
+            light: palette.chrome0,
+            dark: palette.chrome50
+        )
+        public lazy var backgroundCoreElevation2: UIColor = UIColor(
+            light: palette.chrome0,
+            dark: palette.chrome100
+        )
+        public lazy var backgroundCoreElevation3: UIColor = UIColor(
+            light: palette.chrome0,
+            dark: palette.chrome200
+        )
         public lazy var backgroundCoreHighlight: UIColor = UIColor(light: .yellow50, dark: .yellow800)
-        public lazy var backgroundCoreInverse: UIColor = chrome1000
-        public lazy var backgroundCoreOnAccent: UIColor = UIColor(light: chrome0, dark: chrome1000)
+        public lazy var backgroundCoreInverse: UIColor = palette.chrome1000
+        public lazy var backgroundCoreOnAccent: UIColor = UIColor(
+            light: palette.chrome0,
+            dark: palette.chrome1000
+        )
         public lazy var backgroundCoreOverlayDark: UIColor = UIColor(
             light: UIColor(hex: 0x1a1b2540),
             dark: UIColor(hex: 0x00000080)
@@ -95,11 +83,14 @@ extension DesignSystemTokens {
             dark: UIColor(hex: 0x000000bf)
         )
         public lazy var backgroundCoreScrim: UIColor = UIColor(light: UIColor(hex: 0x1a1b2580), dark: UIColor(hex: 0x000000bf))
-        public lazy var backgroundCoreSurfaceCard: UIColor = UIColor(light: chrome50, dark: chrome100)
-        public lazy var backgroundCoreSurfaceDefault: UIColor = chrome100
-        public lazy var backgroundCoreSurfaceStrong: UIColor = chrome150
-        public lazy var backgroundCoreSurfaceSubtle: UIColor = chrome50
-        public lazy var backgroundUtilityDisabled: UIColor = chrome100
+        public lazy var backgroundCoreSurfaceCard: UIColor = UIColor(
+            light: palette.chrome50,
+            dark: palette.chrome100
+        )
+        public lazy var backgroundCoreSurfaceDefault: UIColor = palette.chrome100
+        public lazy var backgroundCoreSurfaceStrong: UIColor = palette.chrome150
+        public lazy var backgroundCoreSurfaceSubtle: UIColor = palette.chrome50
+        public lazy var backgroundUtilityDisabled: UIColor = palette.chrome100
         public lazy var backgroundUtilityHover: UIColor = UIColor(light: UIColor(hex: 0x1a1b251a), dark: UIColor(hex: 0xffffff26))
         public lazy var backgroundUtilityPressed: UIColor = UIColor(light: UIColor(hex: 0x1a1b2526), dark: UIColor(hex: 0xffffff33))
         public lazy var backgroundUtilitySelected: UIColor = UIColor(
@@ -111,7 +102,7 @@ extension DesignSystemTokens {
 
         public lazy var badgeBackgroundDefault: UIColor = backgroundCoreElevation3
         public lazy var badgeBackgroundError: UIColor = accentError
-        public lazy var badgeBackgroundInverse: UIColor = chrome1000
+        public lazy var badgeBackgroundInverse: UIColor = palette.chrome1000
         public lazy var badgeBackgroundNeutral: UIColor = accentNeutral
         public lazy var badgeBackgroundOverlay: UIColor = UIColor(hex: 0x000000bf)
         public lazy var badgeBackgroundPrimary: UIColor = accentPrimary
@@ -122,20 +113,26 @@ extension DesignSystemTokens {
 
         // MARK: - Border
 
-        public lazy var borderCoreDefault: UIColor = UIColor(light: chrome150, dark: chrome200)
-        public lazy var borderCoreInverse: UIColor = chrome0
-        public lazy var borderCoreOnAccent: UIColor = UIColor(light: chrome0, dark: chrome1000)
-        public lazy var borderCoreOnInverse: UIColor = chrome0
-        public lazy var borderCoreOnSurface: UIColor = chrome300
+        public lazy var borderCoreDefault: UIColor = UIColor(
+            light: palette.chrome150,
+            dark: palette.chrome200
+        )
+        public lazy var borderCoreInverse: UIColor = palette.chrome0
+        public lazy var borderCoreOnAccent: UIColor = UIColor(
+            light: palette.chrome0,
+            dark: palette.chrome1000
+        )
+        public lazy var borderCoreOnInverse: UIColor = palette.chrome0
+        public lazy var borderCoreOnSurface: UIColor = palette.chrome300
         public lazy var borderCoreOpacityStrong: UIColor = UIColor(light: UIColor(hex: 0x1a1b2540), dark: UIColor(hex: 0xffffff40))
         public lazy var borderCoreOpacitySubtle: UIColor = UIColor(light: UIColor(hex: 0x1a1b251a), dark: UIColor(hex: 0xffffff33))
-        public lazy var borderCoreStrong: UIColor = chrome300
-        public lazy var borderCoreSubtle: UIColor = chrome100
+        public lazy var borderCoreStrong: UIColor = palette.chrome300
+        public lazy var borderCoreSubtle: UIColor = palette.chrome100
         public lazy var borderUtilityActive: UIColor = accentPrimary
-        public lazy var borderUtilityDisabled: UIColor = chrome100
-        public lazy var borderUtilityDisabledOnSurface: UIColor = chrome150
+        public lazy var borderUtilityDisabled: UIColor = palette.chrome100
+        public lazy var borderUtilityDisabledOnSurface: UIColor = palette.chrome150
         public lazy var borderUtilityError: UIColor = accentError
-        public lazy var borderUtilityFocused: UIColor = brand150
+        public lazy var borderUtilityFocused: UIColor = palette.brand150
         public lazy var borderUtilityHover: UIColor = UIColor(light: UIColor(hex: 0x1a1b251a), dark: UIColor(hex: 0xffffff1a))
         public lazy var borderUtilityPressed: UIColor = UIColor(light: UIColor(hex: 0x1a1b2533), dark: UIColor(hex: 0xffffff33))
         public lazy var borderUtilitySelected: UIColor = UIColor(light: UIColor(hex: 0x1a1b2526), dark: UIColor(hex: 0xffffff26))
@@ -153,7 +150,7 @@ extension DesignSystemTokens {
         public lazy var buttonDestructiveTextOnDark: UIColor = textOnInverse
         public lazy var buttonPrimaryBackground: UIColor = accentPrimary
         public lazy var buttonPrimaryBackgroundLiquidGlass: UIColor = .baseTransparent0
-        public lazy var buttonPrimaryBorder: UIColor = brand200
+        public lazy var buttonPrimaryBorder: UIColor = palette.brand200
         public lazy var buttonPrimaryBorderOnDark: UIColor = borderCoreOnInverse
         public lazy var buttonPrimaryText: UIColor = accentPrimary
         public lazy var buttonPrimaryTextOnAccent: UIColor = textOnAccent
@@ -234,18 +231,26 @@ extension DesignSystemTokens {
         public lazy var systemBackgroundBlur: UIColor = UIColor(light: UIColor(hex: 0xffffff03), dark: UIColor(hex: 0x00000003))
         public lazy var systemCaret: UIColor = accentPrimary
         public lazy var systemScrollbar: UIColor = UIColor(light: UIColor(hex: 0x00000080), dark: UIColor(hex: 0xffffff80))
-        public lazy var systemText: UIColor = chrome1000
+        public lazy var systemText: UIColor = palette.chrome1000
 
         // MARK: - Text
 
-        public lazy var textDisabled: UIColor = chrome300
-        public lazy var textLink: UIColor = UIColor(light: brand500, dark: brand600)
-        public lazy var textOnAccent: UIColor = UIColor(light: chrome0, dark: chrome1000)
-        public lazy var textOnInverse: UIColor = chrome0
-        public lazy var textPrimary: UIColor = chrome900
-        public lazy var textSecondary: UIColor = chrome700
-        public lazy var textTertiary: UIColor = chrome500
+        public lazy var textDisabled: UIColor = palette.chrome300
+        public lazy var textLink: UIColor = UIColor(
+            light: palette.brand500,
+            dark: palette.brand600
+        )
+        public lazy var textOnAccent: UIColor = UIColor(
+            light: palette.chrome0,
+            dark: palette.chrome1000
+        )
+        public lazy var textOnInverse: UIColor = palette.chrome0
+        public lazy var textPrimary: UIColor = palette.chrome900
+        public lazy var textSecondary: UIColor = palette.chrome700
+        public lazy var textTertiary: UIColor = palette.chrome500
 
-        public init() { /* Public init. */ }
+        public init(palette: Palette = Palette()) {
+            self.palette = palette
+        }
     }
 }

@@ -19,25 +19,27 @@ final class DesignSystemTokens_Tests: XCTestCase {
     func test_separateInstances_overrideDoesNotLeakBetweenThem() {
         let other = DesignSystemTokens()
 
-        subject.colors.brand500 = .magenta
+        subject.colors.palette.brand500 = .magenta
 
-        XCTAssertNotEqual(other.colors.brand500, .magenta)
+        XCTAssertNotEqual(other.colors.palette.brand500, .magenta)
     }
 
     func test_init_injectedGroupsAreUsed() {
-        let colors = DesignSystemTokens.Colors()
+        let palette = DesignSystemTokens.Colors.Palette()
+        let colors = DesignSystemTokens.Colors(palette: palette)
         let layout = DesignSystemTokens.Layout()
 
         subject = .init(colors: colors, layout: layout)
 
         XCTAssertTrue(subject.colors === colors)
+        XCTAssertTrue(subject.colors.palette === palette)
         XCTAssertTrue(subject.layout === layout)
     }
 
-    // MARK: - Color ramps
+    // MARK: - Palette
 
     func test_chromeRampOverridden_beforeFirstRead_derivedTokenUsesOverride() {
-        subject.colors.chrome500 = .magenta
+        subject.colors.palette.chrome500 = .magenta
 
         XCTAssertEqual(subject.colors.accentNeutral, .magenta)
         XCTAssertEqual(subject.colors.textTertiary, .magenta)
@@ -46,13 +48,13 @@ final class DesignSystemTokens_Tests: XCTestCase {
     func test_chromeRampOverridden_afterFirstRead_derivedTokenKeepsResolvedValue() {
         let original = subject.colors.accentNeutral
 
-        subject.colors.chrome500 = .magenta
+        subject.colors.palette.chrome500 = .magenta
 
         XCTAssertEqual(subject.colors.accentNeutral, original)
     }
 
     func test_brandRampOverridden_beforeFirstRead_derivedTokenUsesOverride() {
-        subject.colors.brand150 = .magenta
+        subject.colors.palette.brand150 = .magenta
 
         XCTAssertEqual(subject.colors.borderUtilityFocused, .magenta)
     }

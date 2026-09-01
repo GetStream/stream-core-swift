@@ -11,7 +11,8 @@ by hand, so this note is what makes a re-sync repeatable.
 
 1. Take the generated palette and layout tokens.
 2. Remove the product groups listed below and keep the remainder here, in
-   `DesignSystemTokens.Colors` and `DesignSystemTokens.Layout`.
+   `DesignSystemTokens.Colors` (semantic tokens plus `palette`) and
+   `DesignSystemTokens.Layout`.
 3. Hand each removed group to its SDK's appearance colors (or layout),
    derived from the shared `DesignSystemTokens` instance the appearance is
    constructed with.

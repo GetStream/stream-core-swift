@@ -6,8 +6,9 @@ import UIKit
 
 /// The raw color ramps the semantic tokens are built from.
 ///
-/// These are deliberately not public: consumers should override semantic
-/// tokens on ``DesignSystemTokens/Colors`` rather than the primitives. The
+/// These are deliberately not public: consumers should override
+/// ``DesignSystemTokens/Colors/palette`` or semantic tokens on
+/// ``DesignSystemTokens/Colors`` rather than the primitives. The
 /// initialisers stay internal too, because SDKs already vend their own
 /// public equivalents and a second one would be ambiguous at call sites
 /// that import both modules.

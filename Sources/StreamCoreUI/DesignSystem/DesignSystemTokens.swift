@@ -17,9 +17,9 @@ import UIKit
 /// let chatAppearance = ChatAppearance(tokens: tokens)
 /// ```
 ///
-/// - Important: Start by adjusting the `brand` and `chrome` ramps on
-/// ``DesignSystemTokens/Colors``. Most semantic color tokens derive from them.
-/// Tokens derive lazily, so override the ramps before the first read.
+/// - Important: Start by adjusting ``DesignSystemTokens/Colors/palette``.
+/// Most semantic color tokens derive from its brand and chrome scales.
+/// Tokens derive lazily, so override the palette before the first read.
 public final class DesignSystemTokens {
     /// Shared color tokens.
     public var colors: Colors
