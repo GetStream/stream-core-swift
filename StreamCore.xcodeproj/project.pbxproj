@@ -94,6 +94,7 @@
 		4F911FD12EA7C2E90085A36B /* Exceptions for "StreamCoreUI" folder in "StreamCoreUI" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				DesignSystem/TokenScope.md,
 				Info.plist,
 			);
 			target = 8415DA0A2E462E9F00FEE25F /* StreamCoreUI */;
@@ -111,6 +112,7 @@
 				StreamAttachmentsTests/StreamAttachments.xctestplan,
 				StreamAttachmentsTests/StreamAttachmentsTests.swift,
 				StreamCoreUITests/CDN/StreamImageCDN_Tests.swift,
+				StreamCoreUITests/DesignSystem/DesignSystemTokens_Tests.swift,
 			);
 			target = 845495272DBA3A1300211413 /* StreamCoreTests */;
 		};
@@ -118,6 +120,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				StreamCoreUITests/CDN/StreamImageCDN_Tests.swift,
+				StreamCoreUITests/DesignSystem/DesignSystemTokens_Tests.swift,
 			);
 			target = 8415DA162E462EEF00FEE25F /* StreamCoreUITests */;
 		};
