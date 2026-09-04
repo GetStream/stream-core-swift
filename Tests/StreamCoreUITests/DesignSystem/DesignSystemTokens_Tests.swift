@@ -3,7 +3,7 @@
 //
 
 import StreamCoreUI
-import UIKit
+import SwiftUI
 import XCTest
 
 final class DesignSystemTokens_Tests: XCTestCase {
@@ -28,12 +28,14 @@ final class DesignSystemTokens_Tests: XCTestCase {
         let palette = DesignSystemTokens.Colors.Palette()
         let colors = DesignSystemTokens.Colors(palette: palette)
         let layout = DesignSystemTokens.Layout()
+        let fonts = DesignSystemTokens.Fonts()
 
-        subject = .init(colors: colors, layout: layout)
+        subject = .init(colors: colors, layout: layout, fonts: fonts)
 
         XCTAssertTrue(subject.colors === colors)
         XCTAssertTrue(subject.colors.palette === palette)
         XCTAssertTrue(subject.layout === layout)
+        XCTAssertTrue(subject.fonts === fonts)
     }
 
     // MARK: - Palette
@@ -85,5 +87,24 @@ final class DesignSystemTokens_Tests: XCTestCase {
         subject.layout.spacingMd = 99
 
         XCTAssertEqual(subject.layout.spacingMd, 99)
+    }
+
+    // MARK: - Fonts
+
+    func test_fontOverridden_readsBackOverride() {
+        let custom = Font.system(size: 99)
+
+        subject.fonts.body = custom
+
+        XCTAssertEqual(subject.fonts.body, custom)
+    }
+
+    func test_separateInstances_fontOverrideDoesNotLeakBetweenThem() {
+        let other = DesignSystemTokens()
+        let custom = Font.system(size: 99)
+
+        subject.fonts.body = custom
+
+        XCTAssertNotEqual(other.fonts.body, custom)
     }
 }

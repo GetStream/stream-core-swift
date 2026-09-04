@@ -2,7 +2,7 @@
 
 The `design-system-tokens` generator emits one flat Swift file covering every
 Stream product. This module carries only the part every SDK draws from, on
-``DesignSystemTokens`` (`colors` and `layout`; fonts will be a later group).
+``DesignSystemTokens`` (`colors`, `layout`, and `fonts`).
 Product-specific colors and layout live on each SDK's appearance
 (`VideoAppearance.colors`, `ChatAppearance.colors`). The split is applied
 by hand, so this note is what makes a re-sync repeatable.
@@ -80,5 +80,10 @@ Video-only colors are `videoAppearance.colors`. Chat-only colors are
 deprecated computed properties on the old appearance type so existing call
 sites keep compiling.
 
-Fonts, icons and images stay on each SDK. Shared typography and iconography
-are out of scope here.
+**Fonts (14 styles).** Shared SwiftUI typography on ``DesignSystemTokens/Fonts``:
+`caption1`, `footnoteBold`, `footnote`, `subheadline`, `subheadlineBold`,
+`body`, `bodyBold`, `bodyItalic`, `headline`, `headlineBold`, `title`,
+`title2`, `title3`, `emoji`. UIKit ``UIFont`` faces stay on product UIKit
+SDKs (for example StreamChatUI), not in Core.
+
+Icons and images stay on each SDK until a follow-up.
