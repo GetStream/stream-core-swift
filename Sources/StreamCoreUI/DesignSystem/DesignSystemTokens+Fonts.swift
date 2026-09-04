@@ -6,8 +6,7 @@ import SwiftUI
 
 /// Shared typography tokens every Stream SDK draws from.
 ///
-/// Core exposes SwiftUI ``Font`` values. UIKit ``UIFont`` faces stay on
-/// product UIKit SDKs (for example StreamChatUI).
+/// Core exposes SwiftUI ``Font`` values.
 extension DesignSystemTokens {
     public final class Fonts {
         public var caption1: Font = .caption
