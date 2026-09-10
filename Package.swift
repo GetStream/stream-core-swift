@@ -32,8 +32,7 @@ let package = Package(
         ),
         .target(
             name: "StreamCoreUI",
-            dependencies: ["StreamCore"],
-            exclude: ["DesignSystem/TokenScope.md"]
+            dependencies: ["StreamCore"]
         ),
         .testTarget(
             name: "StreamCoreUITests",
