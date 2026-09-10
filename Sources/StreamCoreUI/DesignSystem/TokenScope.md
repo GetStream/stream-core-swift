@@ -1,68 +1,36 @@
 # Token scope
 
-The `design-system-tokens` generator emits one flat Swift file covering every
-Stream product. This module carries only the part every SDK draws from, on
-``DesignSystemTokens`` (`colors`, `layout`, and `fonts`).
-Product-specific colors and layout live on each SDK's appearance
-(`VideoAppearance.colors`, `ChatAppearance.colors`). The split is applied
-by hand, so this note is what makes a re-sync repeatable.
+The `design-system-tokens` repository owns token classification and emits
+separate Swift artifacts for Core, Chat, and Video.
+
+- `tokens/core` contains shared foundations, primitives, semantics, and
+  components.
+- `tokens/chat` contains Chat-specific semantics and components.
+- `tokens/video` contains Video-specific semantics and components.
+
+StreamCoreUI consumes only the generated files under `build/ios/core`.
+Product tokens live on their SDK appearance types and derive values from the
+same `DesignSystemTokens` instance.
 
 ## Re-syncing
 
-1. Take the generated palette and layout tokens.
-2. Remove the product groups listed below and keep the remainder here, in
-   `DesignSystemTokens.Colors` (semantic tokens plus `palette`) and
-   `DesignSystemTokens.Layout`.
-3. Hand each removed group to its SDK's appearance colors (or layout),
-   derived from the shared `DesignSystemTokens` instance the appearance is
-   constructed with.
-4. Check the counts: 175 shared color tokens and 66 shared layout tokens as
-   of this note. A changed count means a token moved scope and the lists below
-   need updating too.
+From a sibling `design-system-tokens` checkout, run:
 
-## Color tokens
+```sh
+IOS_CORE_OUTPUT_DIR=../stream-core-swift/Sources/StreamCoreUI/DesignSystem \
+  npm run build:ios
+```
 
-**Messaging (37), owned by the Chat SDK.** Every `chat*` token:
-`chatBackgroundAttachmentIncoming`, `chatBackgroundAttachmentOutgoing`,
-`chatBackgroundIncoming`, `chatBackgroundMention`,
-`chatBackgroundMentionBroadcast`, `chatBackgroundMentionGroup`,
-`chatBackgroundMentionRole`, `chatBackgroundMentionUser`,
-`chatBackgroundOutgoing`, `chatBorderIncoming`, `chatBorderOnChatIncoming`,
-`chatBorderOnChatOutgoing`, `chatBorderOutgoing`,
-`chatPollProgressFillIncoming`, `chatPollProgressFillOutgoing`,
-`chatPollProgressTrackIncoming`, `chatPollProgressTrackOutgoing`,
-`chatReplyIndicatorIncoming`, `chatReplyIndicatorOutgoing`, `chatTextIncoming`,
-`chatTextLink`, `chatTextMention`, `chatTextMentionBroadcast`,
-`chatTextMentionGroup`, `chatTextMentionRole`, `chatTextMentionUser`,
-`chatTextOutgoing`, `chatTextReaction`, `chatTextRead`, `chatTextSystem`,
-`chatTextTimestamp`, `chatTextTypingIndicator`, `chatTextUsername`,
-`chatThreadConnectorIncoming`, `chatThreadConnectorOutgoing`,
-`chatWaveformBar`, `chatWaveformBarPlaying`.
+This updates:
 
-**Video (14).** The `Indicator` group
-(`indicatorFair`, `indicatorGreat`, `indicatorPoor`, `indicatorSpeaking`), the
-`Label` group (`labelBackgroundNeutral`, `labelBackgroundPrimary`,
-`labelTextNeutral`, `labelTextPrimary`), `controlAcceptCallBackground`,
-`controlAcceptCallText`, `controlVideoBackgroundControlBackground`,
-`controlVideoBackgroundControlBackgroundSelected`,
-`controlVideoBackgroundControlText`,
-`controlVideoBackgroundControlTextSelected`.
+- `DesignSystemTokens+Colors+Palette.swift`
+- `DesignSystemTokens+Colors.swift`
+- `DesignSystemTokens+Layout.swift`
+- `UIColor+Primitives.swift`
 
-Every product token derives from a shared one, so each SDK can define its
-group against the `DesignSystemTokens` instance it was given. The exception is
-`chatBackgroundMention`, which resolves to the raw `.baseTransparent0`; the
-ramps are internal here, so Chat needs either a public primitive or a shared
-semantic token for transparent before it can adopt.
-
-## Layout tokens
-
-**Composer (2) and Message (6), owned by the Chat SDK.**
-`composerRadiusFixed`, `composerRadiusFloating`,
-`messageBubbleRadiusAttachment`, `messageBubbleRadiusAttachmentInline`,
-`messageBubbleRadiusGroupBottom`, `messageBubbleRadiusGroupMiddle`,
-`messageBubbleRadiusGroupTop`, `messageBubbleRadiusTail`.
-
-The Video SDK contributes no layout tokens today.
+Run SwiftFormat after syncing. Typography remains hand-authored in
+`DesignSystemTokens+Fonts.swift` because Core exposes SwiftUI `Font` values
+rather than generated UIKit fonts.
 
 ## Product appearances
 
@@ -75,15 +43,5 @@ let videoAppearance = VideoAppearance(tokens: tokens)
 let chatAppearance = ChatAppearance(tokens: tokens)
 ```
 
-Video-only colors are `videoAppearance.colors`. Chat-only colors are
-`chatAppearance.colors`. When Chat adopts, keep its existing token names as
-deprecated computed properties on the old appearance type so existing call
-sites keep compiling.
-
-**Fonts (14 styles).** Shared SwiftUI typography on ``DesignSystemTokens/Fonts``:
-`caption1`, `footnoteBold`, `footnote`, `subheadline`, `subheadlineBold`,
-`body`, `bodyBold`, `bodyItalic`, `headline`, `headlineBold`, `title`,
-`title2`, `title3`, `emoji`. UIKit ``UIFont`` faces stay on product UIKit
-SDKs (for example StreamChatUI), not in Core.
-
-Icons and images stay on each SDK until a follow-up.
+Video-only and Chat-only tokens are available through their respective
+appearance types. UIKit font faces remain in product UIKit SDKs.

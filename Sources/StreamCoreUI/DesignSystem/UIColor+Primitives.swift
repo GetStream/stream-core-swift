@@ -2,28 +2,23 @@
 // Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
+// This file is auto-generated. Do not edit.
+
 import UIKit
 
-/// The raw color ramps the semantic tokens are built from.
-///
-/// These are deliberately not public: consumers should override
-/// ``DesignSystemTokens/Colors/palette`` or semantic tokens on
-/// ``DesignSystemTokens/Colors`` rather than the primitives. The
-/// initialisers stay internal too, because SDKs already vend their own
-/// public equivalents and a second one would be ambiguous at call sites
-/// that import both modules.
+/// Raw color ramps used to construct semantic color tokens.
 extension UIColor {
     convenience init(hex: UInt32) {
-        let r = CGFloat((hex >> 24) & 0xff) / 255.0
-        let g = CGFloat((hex >> 16) & 0xff) / 255.0
-        let b = CGFloat((hex >> 8) & 0xff) / 255.0
-        let a = CGFloat(hex & 0xff) / 255.0
-        self.init(red: r, green: g, blue: b, alpha: a)
+        let red = CGFloat((hex >> 24) & 0xff) / 255
+        let green = CGFloat((hex >> 16) & 0xff) / 255
+        let blue = CGFloat((hex >> 8) & 0xff) / 255
+        let alpha = CGFloat(hex & 0xff) / 255
+        self.init(red: red, green: green, blue: blue, alpha: alpha)
     }
 
     convenience init(light: UIColor, dark: UIColor) {
-        self.init { trait in
-            trait.userInterfaceStyle == .dark ? dark : light
+        self.init { traits in
+            traits.userInterfaceStyle == .dark ? dark : light
         }
     }
 
