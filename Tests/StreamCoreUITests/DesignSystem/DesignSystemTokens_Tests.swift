@@ -59,6 +59,7 @@ final class DesignSystemTokens_Tests: XCTestCase {
         subject.colors.palette.brand150 = .magenta
 
         XCTAssertEqual(subject.colors.borderUtilityFocused, .magenta)
+        XCTAssertEqual(subject.colors.avatarBackgroundDefault, .magenta)
     }
 
     func test_accentPrimary_write_readsBack() {

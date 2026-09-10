@@ -94,7 +94,6 @@
 		4F911FD12EA7C2E90085A36B /* Exceptions for "StreamCoreUI" folder in "StreamCoreUI" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				DesignSystem/TokenScope.md,
 				Info.plist,
 			);
 			target = 8415DA0A2E462E9F00FEE25F /* StreamCoreUI */;
