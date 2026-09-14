@@ -89,10 +89,17 @@ Shared design tokens live on ``DesignSystemTokens``. Product SDKs pass the same 
 ### Types and ownership
 
 - **`DesignSystemTokens`**: `colors` (semantic + `palette`), `layout` (spacing, radii, strokes, elevations), and `fonts` (shared SwiftUI typography). Colors use UIKit `UIColor`; fonts use SwiftUI `Font`. UIKit `UIFont` faces stay on product UIKit SDKs (for example StreamChatUI), not in Core.
-- **Product tokens** stay on each SDK: `VideoAppearance.colors`, `ChatAppearance.colors`. Do not add `chat*` or Video-only tokens here.
+- **Product tokens** stay on each SDK: `VideoAppearance.colors`, `ChatAppearance.colors`. Do not add Chat or Video-only tokens here.
 - **Icons and images** stay on each SDK until a follow-up.
 
-Token split rules and re-sync steps: `Sources/StreamCoreUI/DesignSystem/TokenScope.md`.
+Token ownership lives in `design-system-tokens` (`tokens/core`, `tokens/chat`, `tokens/video`). StreamCoreUI consumes only `build/ios/core`. To regenerate:
+
+```sh
+IOS_CORE_OUTPUT_DIR=../stream-core-swift/Sources/StreamCoreUI/DesignSystem \
+  npm run build:ios
+```
+
+Then run SwiftFormat. Typography stays hand-authored in `DesignSystemTokens+Fonts.swift`.
 
 ```swift
 let tokens = DesignSystemTokens()

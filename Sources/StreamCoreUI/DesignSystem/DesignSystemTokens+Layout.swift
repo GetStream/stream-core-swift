@@ -2,14 +2,11 @@
 // Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
+// This file is auto-generated. Do not edit.
+
 import UIKit
 
-/// Shared layout tokens every Stream SDK draws from: spacing, radii,
-/// icon sizing, stroke widths and elevations.
-///
-/// Semantic tokens derive from the foundation scale, so overriding a
-/// scale token cascades. Because the derivation is lazy, apply
-/// overrides before the first read.
+/// Shared layout tokens every Stream SDK draws from.
 extension DesignSystemTokens {
     public final class Layout {
         // MARK: - Button
@@ -39,10 +36,10 @@ extension DesignSystemTokens {
 
         // MARK: - Dark
 
-        public lazy var darkElevation1: BoxShadow = .init(x: 0, y: 1, blur: 3, spread: 0, color: UIColor(hex: 0x00000033))
-        public lazy var darkElevation2: BoxShadow = .init(x: 0, y: 2, blur: 6, spread: 0, color: UIColor(hex: 0x00000038))
-        public lazy var darkElevation3: BoxShadow = .init(x: 0, y: 4, blur: 12, spread: 0, color: UIColor(hex: 0x0000003d))
-        public lazy var darkElevation4: BoxShadow = .init(x: 0, y: 8, blur: 24, spread: 0, color: UIColor(hex: 0x00000047))
+        public lazy var darkElevation1: BoxShadow = BoxShadow(x: 0, y: 1, blur: 3, spread: 0, color: UIColor(hex: 0x00000033))
+        public lazy var darkElevation2: BoxShadow = BoxShadow(x: 0, y: 2, blur: 6, spread: 0, color: UIColor(hex: 0x00000038))
+        public lazy var darkElevation3: BoxShadow = BoxShadow(x: 0, y: 4, blur: 12, spread: 0, color: UIColor(hex: 0x0000003d))
+        public lazy var darkElevation4: BoxShadow = BoxShadow(x: 0, y: 8, blur: 24, spread: 0, color: UIColor(hex: 0x00000047))
 
         // MARK: - Device
 
@@ -63,17 +60,16 @@ extension DesignSystemTokens {
         // MARK: - Input
 
         public lazy var inputRadiusOptionCard: CGFloat = radiusXl
-        public lazy var inputRadiusPollOptionInput: CGFloat = radiusXl
         public lazy var inputRadiusSearchInput: CGFloat = radiusFull
         public lazy var inputRadiusSelectInput: CGFloat = radiusXl
         public lazy var inputRadiusTextInput: CGFloat = radiusXl
 
         // MARK: - Light
 
-        public lazy var lightElevation1: BoxShadow = .init(x: 0, y: 1, blur: 3, spread: 0, color: UIColor(hex: 0x0000001f))
-        public lazy var lightElevation2: BoxShadow = .init(x: 0, y: 2, blur: 6, spread: 0, color: UIColor(hex: 0x00000024))
-        public lazy var lightElevation3: BoxShadow = .init(x: 0, y: 4, blur: 12, spread: 0, color: UIColor(hex: 0x00000029))
-        public lazy var lightElevation4: BoxShadow = .init(x: 0, y: 8, blur: 24, spread: 0, color: UIColor(hex: 0x00000033))
+        public lazy var lightElevation1: BoxShadow = BoxShadow(x: 0, y: 1, blur: 3, spread: 0, color: UIColor(hex: 0x0000001f))
+        public lazy var lightElevation2: BoxShadow = BoxShadow(x: 0, y: 2, blur: 6, spread: 0, color: UIColor(hex: 0x00000024))
+        public lazy var lightElevation3: BoxShadow = BoxShadow(x: 0, y: 4, blur: 12, spread: 0, color: UIColor(hex: 0x00000029))
+        public lazy var lightElevation4: BoxShadow = BoxShadow(x: 0, y: 8, blur: 24, spread: 0, color: UIColor(hex: 0x00000033))
 
         // MARK: - Radius
 
@@ -187,6 +183,6 @@ extension DesignSystemTokens {
         let w400: CGFloat = 4
         let w80: CGFloat = 0.8
 
-        public init() { /* Public init. */ }
+        public init() {}
     }
 }

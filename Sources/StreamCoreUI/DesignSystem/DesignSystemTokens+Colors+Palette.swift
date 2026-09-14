@@ -2,13 +2,12 @@
 // Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
+// This file is auto-generated. Do not edit.
+
 import UIKit
 
-/// Brand and chrome scales semantic color tokens derive from.
-///
-/// Override these before the first read of a derived token. A handful
-/// of palette changes reskins every SDK that shares this instance.
 extension DesignSystemTokens.Colors {
+    /// Brand and chrome scales semantic tokens derive from.
     public final class Palette {
         // MARK: - Brand
 
@@ -40,6 +39,6 @@ extension DesignSystemTokens.Colors {
         public lazy var chrome900: UIColor = UIColor(light: .slate900, dark: .neutral50)
         public lazy var chrome1000: UIColor = UIColor(light: .baseBlack, dark: .baseWhite)
 
-        public init() { /* Public init. */ }
+        public init() {}
     }
 }
