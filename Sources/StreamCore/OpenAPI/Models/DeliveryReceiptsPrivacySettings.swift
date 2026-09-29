@@ -4,7 +4,7 @@
 
 import Foundation
 
-public final class DeliveryReceiptsResponse: @unchecked Sendable, Codable, JSONEncodable, Hashable {
+public final class DeliveryReceiptsPrivacySettings: @unchecked Sendable, Codable, JSONEncodable, Hashable {
     public var enabled: Bool
 
     public init(enabled: Bool) {
@@ -15,7 +15,7 @@ public final class DeliveryReceiptsResponse: @unchecked Sendable, Codable, JSONE
         case enabled
     }
 
-    public static func == (lhs: DeliveryReceiptsResponse, rhs: DeliveryReceiptsResponse) -> Bool {
+    public static func == (lhs: DeliveryReceiptsPrivacySettings, rhs: DeliveryReceiptsPrivacySettings) -> Bool {
         lhs.enabled == rhs.enabled
     }
 

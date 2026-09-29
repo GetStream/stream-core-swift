@@ -4,7 +4,7 @@
 
 import Foundation
 
-public final class ReadReceiptsResponse: @unchecked Sendable, Codable, JSONEncodable, Hashable {
+public final class TypingIndicatorPrivacySettings: @unchecked Sendable, Codable, JSONEncodable, Hashable {
     public var enabled: Bool
 
     public init(enabled: Bool) {
@@ -15,7 +15,7 @@ public final class ReadReceiptsResponse: @unchecked Sendable, Codable, JSONEncod
         case enabled
     }
 
-    public static func == (lhs: ReadReceiptsResponse, rhs: ReadReceiptsResponse) -> Bool {
+    public static func == (lhs: TypingIndicatorPrivacySettings, rhs: TypingIndicatorPrivacySettings) -> Bool {
         lhs.enabled == rhs.enabled
     }
 

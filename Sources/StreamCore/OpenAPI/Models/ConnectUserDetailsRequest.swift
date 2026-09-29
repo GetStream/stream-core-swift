@@ -11,7 +11,7 @@ public final class ConnectUserDetailsRequest: @unchecked Sendable, Codable, JSON
     public var invisible: Bool?
     public var language: String?
     public var name: String?
-    public var privacySettings: PrivacySettingsResponse?
+    public var privacySettings: UserPrivacySettings?
 
     public init(
         custom: [String: RawJSON]? = nil,
@@ -20,7 +20,7 @@ public final class ConnectUserDetailsRequest: @unchecked Sendable, Codable, JSON
         invisible: Bool? = nil,
         language: String? = nil,
         name: String? = nil,
-        privacySettings: PrivacySettingsResponse? = nil
+        privacySettings: UserPrivacySettings? = nil
     ) {
         self.custom = custom
         self.id = id

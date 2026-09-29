@@ -4,15 +4,15 @@
 
 import Foundation
 
-public final class PrivacySettingsResponse: @unchecked Sendable, Codable, JSONEncodable, Hashable {
-    public var deliveryReceipts: DeliveryReceiptsResponse?
-    public var readReceipts: ReadReceiptsResponse?
-    public var typingIndicators: TypingIndicatorsResponse?
+public final class UserPrivacySettings: @unchecked Sendable, Codable, JSONEncodable, Hashable {
+    public var deliveryReceipts: DeliveryReceiptsPrivacySettings?
+    public var readReceipts: ReadReceiptsPrivacySettings?
+    public var typingIndicators: TypingIndicatorPrivacySettings?
 
     public init(
-        deliveryReceipts: DeliveryReceiptsResponse? = nil,
-        readReceipts: ReadReceiptsResponse? = nil,
-        typingIndicators: TypingIndicatorsResponse? = nil
+        deliveryReceipts: DeliveryReceiptsPrivacySettings? = nil,
+        readReceipts: ReadReceiptsPrivacySettings? = nil,
+        typingIndicators: TypingIndicatorPrivacySettings? = nil
     ) {
         self.deliveryReceipts = deliveryReceipts
         self.readReceipts = readReceipts
@@ -25,7 +25,7 @@ public final class PrivacySettingsResponse: @unchecked Sendable, Codable, JSONEn
         case typingIndicators = "typing_indicators"
     }
 
-    public static func == (lhs: PrivacySettingsResponse, rhs: PrivacySettingsResponse) -> Bool {
+    public static func == (lhs: UserPrivacySettings, rhs: UserPrivacySettings) -> Bool {
         lhs.deliveryReceipts == rhs.deliveryReceipts &&
             lhs.readReceipts == rhs.readReceipts &&
             lhs.typingIndicators == rhs.typingIndicators
