@@ -5,9 +5,9 @@
 import Foundation
 
 public final class DeliveryReceiptsResponse: @unchecked Sendable, Codable, JSONEncodable, Hashable {
-    public var enabled: Bool?
+    public var enabled: Bool
 
-    public init(enabled: Bool? = nil) {
+    public init(enabled: Bool) {
         self.enabled = enabled
     }
 
