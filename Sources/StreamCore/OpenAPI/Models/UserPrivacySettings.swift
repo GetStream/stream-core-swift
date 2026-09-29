@@ -10,9 +10,9 @@ public final class UserPrivacySettings: @unchecked Sendable, Codable, JSONEncoda
     public var typingIndicators: TypingIndicatorPrivacySettings?
 
     public init(
-        deliveryReceipts: DeliveryReceiptsPrivacySettings? = nil,
+        typingIndicators: TypingIndicatorPrivacySettings? = nil,
         readReceipts: ReadReceiptsPrivacySettings? = nil,
-        typingIndicators: TypingIndicatorPrivacySettings? = nil
+        deliveryReceipts: DeliveryReceiptsPrivacySettings? = nil
     ) {
         self.deliveryReceipts = deliveryReceipts
         self.readReceipts = readReceipts
