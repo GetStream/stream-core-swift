@@ -7,7 +7,7 @@ import Foundation
 public final class TypingIndicatorPrivacySettings: @unchecked Sendable, Codable, JSONEncodable, Hashable {
     public var enabled: Bool
 
-    public init(enabled: Bool) {
+    public init(enabled: Bool = true) {
         self.enabled = enabled
     }
 
