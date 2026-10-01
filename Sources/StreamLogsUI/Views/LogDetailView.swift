@@ -114,10 +114,61 @@ struct LogDetailView: View {
                 }
             }
 
-            LogSelectableTextView(text: entry.message)
+            let preview = LogMessageParser.preview(of: entry.message)
+            LogSelectableTextView(text: preview.map { "\($0)…" } ?? entry.message)
                 .padding()
                 .background(Color(.systemBackground))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.systemGray4), lineWidth: 1))
+
+            if preview != nil {
+                NavigationLink {
+                    LogFullMessageView(message: entry.message)
+                } label: {
+                    Label("View Full Message", systemImage: "text.alignleft")
+                        .font(.subheadline.weight(.medium))
+                }
+            }
+        }
+    }
+}
+
+// Text views lay out a whole paragraph at once, and messages can contain very long lines,
+// such as minified JSON responses, so the message is shown in lazily loaded chunks.
+@available(iOS 16.0, *)
+private struct LogFullMessageView: View {
+    let message: String
+    @State private var chunks: [String]?
+
+    var body: some View {
+        Group {
+            if let chunks {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        ForEach(chunks.indices, id: \.self) { index in
+                            Text(chunks[index].isEmpty ? " " : chunks[index])
+                                .font(.system(.footnote, design: .monospaced))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                    .textSelection(.enabled)
+                    .padding()
+                }
+            } else {
+                ProgressView()
+            }
+        }
+        .task {
+            let message = message
+            chunks = await Task.detached(priority: .userInitiated) {
+                LogMessageParser.chunks(of: message)
+            }.value
+        }
+        .navigationTitle("Log Message")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                CopyButton(title: "Copy", systemImage: "doc.on.doc", tint: .blue, text: message)
+            }
         }
     }
 }

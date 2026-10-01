@@ -5,6 +5,36 @@
 import Foundation
 
 enum LogMessageParser {
+    // Returns the start of a message longer than `maxLength`, ending at a line break when one is close to the limit,
+    // or `nil` when the whole message fits.
+    static func preview(of message: String, maxLength: Int = 3000) -> String? {
+        guard let limit = message.index(message.startIndex, offsetBy: maxLength, limitedBy: message.endIndex),
+              limit < message.endIndex else {
+            return nil
+        }
+        let start = message[..<limit]
+        let halfway = message.index(message.startIndex, offsetBy: maxLength / 2)
+        if let lineBreak = start.lastIndex(of: "\n"), lineBreak >= halfway {
+            return String(message[..<lineBreak])
+        }
+        return String(start)
+    }
+
+    // Splits a message into its lines, cutting lines longer than `maxLength` into several chunks.
+    static func chunks(of message: String, maxLength: Int = 1000) -> [String] {
+        message.split(separator: "\n", omittingEmptySubsequences: false).flatMap { line -> [String] in
+            guard line.count > maxLength else { return [String(line)] }
+            var chunks: [String] = []
+            var start = line.startIndex
+            while start < line.endIndex {
+                let end = line.index(start, offsetBy: maxLength, limitedBy: line.endIndex) ?? line.endIndex
+                chunks.append(String(line[start..<end]))
+                start = end
+            }
+            return chunks
+        }
+    }
+
     static func curlCommand(in message: String) -> String? {
         guard let range = message.range(of: #"(?m)^\$?[ \t]*curl "#, options: .regularExpression) else {
             return nil

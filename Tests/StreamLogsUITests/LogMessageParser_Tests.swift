@@ -6,6 +6,42 @@
 import XCTest
 
 final class LogMessageParser_Tests: XCTestCase {
+    func test_chunks_splitsLinesAndKeepsEmptyLines() {
+        XCTAssertEqual(LogMessageParser.chunks(of: "first\n\nthird", maxLength: 10), ["first", "", "third"])
+    }
+
+    func test_chunks_cutsLongLines() {
+        let message = "short\n" + String(repeating: "a", count: 25)
+
+        XCTAssertEqual(
+            LogMessageParser.chunks(of: message, maxLength: 10),
+            ["short", String(repeating: "a", count: 10), String(repeating: "a", count: 10), String(repeating: "a", count: 5)]
+        )
+    }
+
+    func test_preview_shortMessage_returnsNil() {
+        XCTAssertNil(LogMessageParser.preview(of: "Short message", maxLength: 20))
+        XCTAssertNil(LogMessageParser.preview(of: String(repeating: "a", count: 20), maxLength: 20))
+    }
+
+    func test_preview_longMessageWithoutLineBreaks_cutsAtMaxLength() {
+        let message = String(repeating: "a", count: 30)
+
+        XCTAssertEqual(LogMessageParser.preview(of: message, maxLength: 20), String(repeating: "a", count: 20))
+    }
+
+    func test_preview_lineBreakNearLimit_cutsAtLineBreak() {
+        let message = String(repeating: "a", count: 15) + "\n" + String(repeating: "b", count: 15)
+
+        XCTAssertEqual(LogMessageParser.preview(of: message, maxLength: 20), String(repeating: "a", count: 15))
+    }
+
+    func test_preview_lineBreakFarFromLimit_cutsAtMaxLength() {
+        let message = "aaa\n" + String(repeating: "b", count: 30)
+
+        XCTAssertEqual(LogMessageParser.preview(of: message, maxLength: 20), "aaa\n" + String(repeating: "b", count: 16))
+    }
+
     func test_curlCommand_returnsCommandAtEndOfMessage() {
         let message = """
         200 api/v2/channels
