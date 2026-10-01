@@ -89,12 +89,15 @@ public struct LogListView: View {
                 }
             }
             .sheet(isPresented: $isShowingLevelPicker) {
-                LogLevelPickerView(levels: viewModel.availableLevels, selectedLevels: $viewModel.selectedLevels)
-                    .logViewerAppearance(appearance)
+                LogLevelPickerView(
+                    levels: Set(settings.availableLevels).union(viewModel.availableLevels).sorted(),
+                    selectedLevels: $viewModel.selectedLevels
+                )
+                .logViewerAppearance(appearance)
             }
             .sheet(isPresented: $isShowingSubsystemPicker) {
                 LogSubsystemPickerView(
-                    subsystems: viewModel.availableSubsystems,
+                    subsystems: Set(settings.availableSubsystems).union(viewModel.availableSubsystems).sorted(),
                     selectedSubsystems: $viewModel.selectedSubsystems
                 )
             }

@@ -20,10 +20,14 @@ public final class LogSettings: ObservableObject {
         didSet { notifyHandlers() }
     }
 
-    /// The levels that can be chosen in ``LogSettingsView``. Defaults to ``LogEntry/Level/standardLevels``.
+    /// The levels that can be chosen in ``LogSettingsView`` and in the level filter of ``LogListView``.
+    ///
+    /// The level filter also lists any other level that has been recorded. Defaults to ``LogEntry/Level/standardLevels``.
     @Published public var availableLevels = LogEntry.Level.standardLevels
 
-    /// The names of the subsystems that can be enabled or disabled.
+    /// The names of the subsystems that can be enabled or disabled, and chosen in the subsystem filter of ``LogListView``.
+    ///
+    /// The subsystem filter also lists any other subsystem that has been recorded.
     @Published public var availableSubsystems: [String] = [] {
         didSet { notifyHandlers() }
     }
