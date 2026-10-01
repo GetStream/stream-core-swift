@@ -18,7 +18,7 @@ struct LogViewerFloatingButtonLayout: Equatable {
 
     var side: Side = .right
     // 0 places the button at the top of the safe area, 1 at the bottom.
-    var verticalPosition: CGFloat = 0.7
+    var verticalPosition: CGFloat = 0.85
     var isStashed = false
 
     func center(in bounds: CGRect, safeAreaInsets: UIEdgeInsets) -> CGPoint {

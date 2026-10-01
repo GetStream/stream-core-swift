@@ -17,31 +17,48 @@ final class LogViewerFloatingButton: UIView {
     var onStash: (() -> Void)?
     var onUnstash: (() -> Void)?
 
-    private let backgroundView = UIVisualEffectView(effect: UIBlurEffect(style: .systemThickMaterial))
+    private let usesGlass: Bool = if #available(iOS 26.0, *) { true } else { false }
+    private let backgroundView = UIVisualEffectView(effect: LogViewerFloatingButton.backgroundEffect)
     private let iconView = UIImageView(image: UIImage(systemName: "ladybug.fill"))
     private let chevronView = UIImageView()
+
+    private static var backgroundEffect: UIVisualEffect {
+        if #available(iOS 26.0, *) {
+            let effect = UIGlassEffect(style: .regular)
+            effect.isInteractive = true
+            return effect
+        }
+        return UIBlurEffect(style: .systemThickMaterial)
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
 
-        backgroundView.isUserInteractionEnabled = false
-        backgroundView.clipsToBounds = true
+        // Interactive glass reacts to touches on itself, so it must receive them.
+        backgroundView.isUserInteractionEnabled = usesGlass
+        if #available(iOS 26.0, *) {
+            backgroundView.cornerConfiguration = .capsule()
+        } else {
+            backgroundView.clipsToBounds = true
+        }
         addSubview(backgroundView)
 
         iconView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 22, weight: .semibold)
         iconView.tintColor = .label
         iconView.contentMode = .center
-        addSubview(iconView)
+        backgroundView.contentView.addSubview(iconView)
 
         chevronView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 14, weight: .bold)
         chevronView.tintColor = .secondaryLabel
         chevronView.contentMode = .center
-        addSubview(chevronView)
+        backgroundView.contentView.addSubview(chevronView)
 
-        layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOpacity = 0.25
-        layer.shadowRadius = 8
-        layer.shadowOffset = CGSize(width: 0, height: 4)
+        if !usesGlass {
+            layer.shadowColor = UIColor.black.cgColor
+            layer.shadowOpacity = 0.25
+            layer.shadowRadius = 8
+            layer.shadowOffset = CGSize(width: 0, height: 4)
+        }
 
         isAccessibilityElement = true
         accessibilityIdentifier = "LogViewerFloatingButton"
@@ -57,12 +74,14 @@ final class LogViewerFloatingButton: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         backgroundView.frame = bounds
-        backgroundView.layer.cornerRadius = bounds.width / 2
         iconView.frame = bounds
         let visibleWidth = LogViewerFloatingButtonLayout.stashedVisibleWidth
         let chevronX = side == .left ? bounds.width - visibleWidth : 0
         chevronView.frame = CGRect(x: chevronX, y: 0, width: visibleWidth, height: bounds.height)
-        layer.shadowPath = UIBezierPath(ovalIn: bounds).cgPath
+        if !usesGlass {
+            backgroundView.layer.cornerRadius = bounds.width / 2
+            layer.shadowPath = UIBezierPath(ovalIn: bounds).cgPath
+        }
     }
 
     override func accessibilityActivate() -> Bool {

@@ -16,7 +16,7 @@ final class LogViewerFloatingButtonLayout_Tests: XCTestCase {
         let center = LogViewerFloatingButtonLayout().center(in: bounds, safeAreaInsets: safeAreaInsets)
 
         XCTAssertEqual(center.x, 350, accuracy: 0.001)
-        XCTAssertEqual(center.y, 87 + 0.7 * 683, accuracy: 0.001)
+        XCTAssertEqual(center.y, 87 + 0.85 * 683, accuracy: 0.001)
     }
 
     func test_center_leftSide_isOnTheLeftEdgeOfTheSafeArea() {
