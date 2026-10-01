@@ -10,6 +10,7 @@ struct LogHighlightedText: View {
     let searchText: String
     // Characters kept around the match, so it stays visible when the text is truncated.
     var contextLength = 100
+    @Environment(\.logViewerAppearance) private var appearance
 
     var body: some View {
         Text(attributedText)
@@ -24,7 +25,7 @@ struct LogHighlightedText: View {
         let start = text.index(match.lowerBound, offsetBy: -unusedContext, limitedBy: text.startIndex) ?? text.startIndex
 
         var highlighted = AttributedString(String(text[match]))
-        highlighted.backgroundColor = Color.yellow.opacity(0.3)
+        highlighted.backgroundColor = appearance.highlightColor
 
         var result = AttributedString(start > text.startIndex ? "…" : "")
         result += AttributedString(String(text[start..<match.lowerBound]))

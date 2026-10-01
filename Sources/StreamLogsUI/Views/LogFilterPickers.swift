@@ -9,13 +9,14 @@ struct LogLevelPickerView: View {
     let levels: [LogEntry.Level]
     @Binding var minimumLevel: LogEntry.Level?
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.logViewerAppearance) private var appearance
 
     var body: some View {
         LogPickerContainer(title: "Select Level") {
             Section {
                 option(title: "All Levels", level: nil)
                 ForEach(levels, id: \.self) { level in
-                    option(title: level.name, level: level)
+                    option(title: level.name, level: level, style: appearance.levelStyle(level))
                 }
             } header: {
                 Text("Minimum Level")
@@ -25,12 +26,12 @@ struct LogLevelPickerView: View {
         }
     }
 
-    private func option(title: String, level: LogEntry.Level?) -> some View {
+    private func option(title: String, level: LogEntry.Level?, style: LogViewerAppearance.LevelStyle? = nil) -> some View {
         Button {
             minimumLevel = level
             dismiss()
         } label: {
-            LogPickerRow(title: title, isSelected: minimumLevel == level)
+            LogPickerRow(title: title, isSelected: minimumLevel == level, style: style)
         }
     }
 }
@@ -89,9 +90,15 @@ private struct LogPickerContainer<Content: View>: View {
 private struct LogPickerRow: View {
     let title: String
     let isSelected: Bool
+    var style: LogViewerAppearance.LevelStyle?
 
     var body: some View {
         HStack {
+            if let style {
+                Image(systemName: style.iconName)
+                    .foregroundColor(style.color)
+                    .accessibilityHidden(true)
+            }
             Text(title)
                 .foregroundColor(.primary)
                 .fontWeight(isSelected ? .semibold : .regular)

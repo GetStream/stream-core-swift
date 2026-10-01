@@ -8,13 +8,15 @@ import SwiftUI
 struct LogRowView: View {
     let entry: LogEntry
     let searchText: String
+    @Environment(\.logViewerAppearance) private var appearance
 
     var body: some View {
+        let levelStyle = appearance.levelStyle(entry.level)
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label(entry.level.name, systemImage: entry.level.iconName)
+                Label(entry.level.name, systemImage: levelStyle.iconName)
                     .font(.caption.weight(.medium))
-                    .foregroundColor(entry.level.color)
+                    .foregroundColor(levelStyle.color)
 
                 Spacer()
 
@@ -29,8 +31,8 @@ struct LogRowView: View {
                         .font(.caption)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.blue.opacity(0.1))
-                        .foregroundColor(.blue)
+                        .background(appearance.subsystemColor.opacity(0.1))
+                        .foregroundColor(appearance.subsystemColor)
                         .clipShape(RoundedRectangle(cornerRadius: 4))
                 }
             }

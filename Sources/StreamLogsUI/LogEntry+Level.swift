@@ -2,7 +2,7 @@
 // Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
-import SwiftUI
+import Foundation
 
 public extension LogEntry {
     /// The severity of a log entry.
@@ -44,32 +44,6 @@ public extension LogEntry {
 
         public static func < (lhs: Level, rhs: Level) -> Bool {
             lhs.severity < rhs.severity
-        }
-    }
-}
-
-extension LogEntry.Level {
-    var color: Color {
-        switch self {
-        case ..<Self.debug: .gray
-        case ..<Self.info: .purple
-        case ..<Self.notice: .blue
-        case ..<Self.warning: .teal
-        case ..<Self.error: .orange
-        case ..<Self.critical: .red
-        default: .pink
-        }
-    }
-
-    var iconName: String {
-        switch self {
-        case ..<Self.debug: "text.alignleft"
-        case ..<Self.info: "ant.circle"
-        case ..<Self.notice: "info.circle"
-        case ..<Self.warning: "bell.circle"
-        case ..<Self.error: "exclamationmark.triangle"
-        case ..<Self.critical: "xmark.circle"
-        default: "exclamationmark.octagon"
         }
     }
 }

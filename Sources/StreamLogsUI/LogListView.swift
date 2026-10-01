@@ -16,6 +16,7 @@ public struct LogListView: View {
     @ObservedObject private var settings: LogSettings
     @State private var isShowingLevelPicker = false
     @State private var isShowingSubsystemPicker = false
+    @Environment(\.logViewerAppearance) private var appearance
 
     private let topID = "top"
 
@@ -88,6 +89,7 @@ public struct LogListView: View {
             }
             .sheet(isPresented: $isShowingLevelPicker) {
                 LogLevelPickerView(levels: viewModel.availableLevels, minimumLevel: $viewModel.minimumLevel)
+                    .logViewerAppearance(appearance)
             }
             .sheet(isPresented: $isShowingSubsystemPicker) {
                 LogSubsystemPickerView(
@@ -109,7 +111,7 @@ public struct LogListView: View {
                     }
                     .buttonStyle(LogFilterButtonStyle(
                         isSelected: viewModel.minimumLevel != nil,
-                        tint: viewModel.minimumLevel?.color
+                        tint: viewModel.minimumLevel.map { appearance.levelStyle($0).color }
                     ))
                     .accessibilityLabel(viewModel.minimumLevel.map { "Level \($0.name) and above" } ?? "All levels")
 
