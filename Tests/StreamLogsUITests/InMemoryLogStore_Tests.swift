@@ -45,6 +45,23 @@ struct InMemoryLogStore_Tests {
         #expect(subject.entries.isEmpty)
     }
 
+    @Test func appendedEntriesArePublishedTogether() async {
+        let subject = InMemoryLogStore(capacity: 10, publishInterval: 0.05)
+
+        (1...3).forEach { subject.append(makeEntry(message: "\($0)")) }
+
+        let published = await subject.entriesPublisher.values.first { !$0.isEmpty }
+        #expect(published?.map(\.message) == ["1", "2", "3"])
+    }
+
+    @Test func entriesNeverExceedCapacity() {
+        let subject = InMemoryLogStore(capacity: 10)
+
+        (1...25).forEach { subject.append(makeEntry(message: "\($0)")) }
+
+        #expect(subject.entries.map(\.message) == (16...25).map { "\($0)" })
+    }
+
     // MARK: - Private Helpers
 
     private func makeEntry(message: String) -> LogEntry {

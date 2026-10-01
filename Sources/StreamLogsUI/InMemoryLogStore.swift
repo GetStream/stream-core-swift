@@ -6,20 +6,30 @@ import Combine
 import Foundation
 
 /// A thread-safe ``LogStore`` that keeps the most recent log entries in memory.
+///
+/// Appended entries are published in batches, at most once per ``publishInterval``.
+/// Removals are published immediately.
 public final class InMemoryLogStore: LogStore, @unchecked Sendable {
     /// The store displayed by ``LogListView`` by default.
     public static let shared = InMemoryLogStore()
 
     /// The maximum number of entries kept in memory. The oldest entries are dropped first.
     public let capacity: Int
+    /// The minimum time between two publications of appended entries.
+    public let publishInterval: TimeInterval
 
     private let queue = DispatchQueue(label: "io.getstream.logs-ui.in-memory-log-store")
     private let entriesSubject = CurrentValueSubject<[LogEntry], Never>([])
     private let recordingLock = NSLock()
     private var _isRecording = true
+    // Only accessed on `queue`.
+    private var buffer: [LogEntry] = []
+    private var hasUnpublishedChanges = false
+    private var isPublishScheduled = false
 
-    public init(capacity: Int = 5000) {
+    public init(capacity: Int = 5000, publishInterval: TimeInterval = 0.25) {
         self.capacity = capacity
+        self.publishInterval = publishInterval
     }
 
     /// Whether new log entries are recorded. Defaults to `true`.
@@ -29,7 +39,11 @@ public final class InMemoryLogStore: LogStore, @unchecked Sendable {
     }
 
     public var entries: [LogEntry] {
-        queue.sync { entriesSubject.value }
+        queue.sync {
+            // Publishing pending changes first keeps `entries` and `entriesPublisher` consistent.
+            publishIfNeeded()
+            return entriesSubject.value
+        }
     }
 
     public var entriesPublisher: AnyPublisher<[LogEntry], Never> {
@@ -39,24 +53,44 @@ public final class InMemoryLogStore: LogStore, @unchecked Sendable {
     public func append(_ entry: LogEntry) {
         guard isRecording else { return }
         queue.async { [self] in
-            var entries = entriesSubject.value
-            entries.append(entry)
-            if entries.count > capacity {
-                entries.removeFirst(entries.count - capacity)
+            buffer.append(entry)
+            // Trimming in batches avoids shifting the whole buffer on every append.
+            if buffer.count >= capacity + max(capacity / 10, 1) {
+                buffer.removeFirst(buffer.count - capacity)
             }
-            entriesSubject.send(entries)
+            hasUnpublishedChanges = true
+            schedulePublish()
         }
     }
 
     public func removeEntry(id: LogEntry.ID) {
         queue.async { [self] in
-            entriesSubject.send(entriesSubject.value.filter { $0.id != id })
+            buffer.removeAll { $0.id == id }
+            hasUnpublishedChanges = true
+            publishIfNeeded()
         }
     }
 
     public func removeAll() {
         queue.async { [self] in
-            entriesSubject.send([])
+            buffer.removeAll()
+            hasUnpublishedChanges = true
+            publishIfNeeded()
         }
+    }
+
+    private func schedulePublish() {
+        guard !isPublishScheduled else { return }
+        isPublishScheduled = true
+        queue.asyncAfter(deadline: .now() + publishInterval) { [self] in
+            isPublishScheduled = false
+            publishIfNeeded()
+        }
+    }
+
+    private func publishIfNeeded() {
+        guard hasUnpublishedChanges else { return }
+        hasUnpublishedChanges = false
+        entriesSubject.send(buffer.count > capacity ? Array(buffer.suffix(capacity)) : buffer)
     }
 }
