@@ -21,8 +21,10 @@ public struct LogListView: View {
     private let topID = "top"
 
     /// Creates a view that lists the entries of the given store, with access to the given logger settings.
-    public init(store: any LogStore = InMemoryLogStore.shared, settings: LogSettings = .shared) {
-        _viewModel = StateObject(wrappedValue: LogListViewModel(store: store))
+    ///
+    /// - Parameter filter: The filter applied when the view appears. It can then be changed from the view.
+    public init(store: any LogStore = InMemoryLogStore.shared, settings: LogSettings = .shared, filter: LogFilter = LogFilter()) {
+        _viewModel = StateObject(wrappedValue: LogListViewModel(store: store, filter: filter))
         self.settings = settings
     }
 

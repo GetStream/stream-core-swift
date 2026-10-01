@@ -22,18 +22,26 @@ public enum LogViewer {
         }
     }
 
+    /// The filter applied when the viewer is presented, unless another one is passed to ``present(store:settings:appearance:filter:)``.
+    ///
+    /// Also used when the viewer is presented by shaking the device. Defaults to showing every entry.
+    public static var defaultFilter = LogFilter()
+
     /// Presents the entries of the given store from the top-most view controller of the key window.
+    ///
+    /// - Parameter filter: The filter applied when the viewer appears. Defaults to ``defaultFilter``.
     public static func present(
         store: any LogStore = InMemoryLogStore.shared,
         settings: LogSettings = .shared,
-        appearance: LogViewerAppearance = LogViewerAppearance()
+        appearance: LogViewerAppearance = LogViewerAppearance(),
+        filter: LogFilter = defaultFilter
     ) {
         guard #available(iOS 16.0, *), let presenter = topViewController(), !(presenter is LogViewerHostingController) else {
             return
         }
         let viewController = LogViewerHostingController(rootView: AnyView(
             NavigationStack {
-                LogListView(store: store, settings: settings)
+                LogListView(store: store, settings: settings, filter: filter)
             }
             .logViewerAppearance(appearance)
         ))

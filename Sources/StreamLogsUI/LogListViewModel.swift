@@ -7,14 +7,8 @@ import Foundation
 
 @MainActor
 final class LogListViewModel: ObservableObject {
-    struct Filter: Equatable, Sendable {
-        var searchText = ""
-        var minimumLevel: LogEntry.Level?
-        var subsystems: Set<String> = []
-    }
-
     struct Content: Equatable, Sendable {
-        var filter = Filter()
+        var filter = LogFilter()
         var filteredEntries: [LogEntry] = []
         var availableLevels: [LogEntry.Level] = []
         var availableSubsystems: [String] = []
@@ -43,17 +37,24 @@ final class LogListViewModel: ObservableObject {
     private var heldContent: Content?
     private var cancellable: AnyCancellable?
 
-    init(store: any LogStore, searchDebounceInterval: DispatchQueue.SchedulerTimeType.Stride = .milliseconds(200)) {
+    init(
+        store: any LogStore,
+        filter initialFilter: LogFilter = LogFilter(),
+        searchDebounceInterval: DispatchQueue.SchedulerTimeType.Stride = .milliseconds(200)
+    ) {
         self.store = store
         isRecording = store.isRecording
-        content = Self.makeContent(entries: store.entries, filter: Filter())
+        searchText = initialFilter.searchText
+        minimumLevel = initialFilter.minimumLevel
+        selectedSubsystems = initialFilter.subsystems
+        content = Self.makeContent(entries: store.entries, filter: initialFilter)
 
         let searchText = $searchText
             .dropFirst()
             .debounce(for: searchDebounceInterval, scheduler: DispatchQueue.main)
             .prepend(self.searchText)
         let filter = Publishers.CombineLatest3(searchText, $minimumLevel, $selectedSubsystems)
-            .map { Filter(searchText: $0, minimumLevel: $1, subsystems: $2) }
+            .map { LogFilter(searchText: $0, minimumLevel: $1, subsystems: $2) }
             .removeDuplicates()
             .eraseToAnyPublisher()
         cancellable = Self.contentPublisher(entries: store.entriesPublisher, filter: filter)
@@ -114,7 +115,7 @@ final class LogListViewModel: ObservableObject {
     // Built outside of the main actor, so that filtering runs on the processing queue.
     private nonisolated static func contentPublisher(
         entries: AnyPublisher<[LogEntry], Never>,
-        filter: AnyPublisher<Filter, Never>
+        filter: AnyPublisher<LogFilter, Never>
     ) -> AnyPublisher<Content, Never> {
         let processingQueue = DispatchQueue(label: "io.getstream.logs-ui.log-list", qos: .userInitiated)
         return entries
@@ -125,7 +126,7 @@ final class LogListViewModel: ObservableObject {
             .eraseToAnyPublisher()
     }
 
-    nonisolated static func makeContent(entries: [LogEntry], filter: Filter) -> Content {
+    nonisolated static func makeContent(entries: [LogEntry], filter: LogFilter) -> Content {
         var levels = Set(filter.minimumLevel.map { [$0] } ?? [])
         var subsystems = filter.subsystems
         var filteredEntries: [LogEntry] = []
@@ -145,7 +146,7 @@ final class LogListViewModel: ObservableObject {
     }
 }
 
-private extension LogListViewModel.Filter {
+private extension LogFilter {
     func matches(_ entry: LogEntry) -> Bool {
         if let minimumLevel, entry.level < minimumLevel {
             return false

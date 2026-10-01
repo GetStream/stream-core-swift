@@ -31,6 +31,23 @@ final class LogListViewModel_Tests: XCTestCase {
         XCTAssertFalse(subject.isFiltering)
     }
 
+    func test_initialFilter_isApplied() {
+        subject = LogListViewModel(store: store, filter: LogFilter(minimumLevel: .error, subsystems: ["Offline"]))
+
+        XCTAssertEqual(subject.filteredEntries.map(\.message), ["Failed to save"])
+        XCTAssertEqual(subject.minimumLevel, .error)
+        XCTAssertEqual(subject.selectedSubsystems, ["Offline"])
+        XCTAssertTrue(subject.isFiltering)
+    }
+
+    func test_initialFilter_canBeCleared() async {
+        subject = LogListViewModel(store: store, filter: LogFilter(minimumLevel: .error), searchDebounceInterval: .zero)
+
+        subject.minimumLevel = nil
+
+        await waitForFilteredMessages(["Failed to save", "Socket disconnected", "GET channels"])
+    }
+
     func test_filteredEntries_filtersByMinimumLevel() async {
         subject.minimumLevel = .error
 
