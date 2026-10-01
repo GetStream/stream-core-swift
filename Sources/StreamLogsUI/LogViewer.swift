@@ -27,7 +27,9 @@ public enum LogViewer {
         guard #available(iOS 16.0, *), let presenter = topViewController(), !(presenter is LogViewerHostingController) else {
             return
         }
-        let viewController = LogViewerHostingController(rootView: AnyView(LogListView(store: store, settings: settings)))
+        let viewController = LogViewerHostingController(rootView: AnyView(NavigationStack {
+            LogListView(store: store, settings: settings)
+        }))
         viewController.modalPresentationStyle = .pageSheet
         if let sheet = viewController.sheetPresentationController {
             sheet.detents = [.medium(), .large()]

@@ -13,13 +13,15 @@ final class LogListViewModel: ObservableObject {
         var subsystems: Set<String> = []
     }
 
-    struct Content: Sendable {
+    struct Content: Equatable, Sendable {
+        var filter = Filter()
         var filteredEntries: [LogEntry] = []
         var availableLevels: [LogEntry.Level] = []
         var availableSubsystems: [String] = []
     }
 
     @Published private(set) var content = Content()
+    @Published private(set) var newEntriesCount = 0
     @Published var searchText = ""
     @Published var minimumLevel: LogEntry.Level?
     @Published var selectedSubsystems: Set<String> = []
@@ -27,7 +29,19 @@ final class LogListViewModel: ObservableObject {
         didSet { store.isRecording = isRecording }
     }
 
+    // While the list is scrolled away from the newest entries, new entries are held back
+    // until `showNewEntries()`, so that the visible rows don't move.
+    var isFollowingNewEntries = true {
+        didSet {
+            if isFollowingNewEntries {
+                showNewEntries()
+            }
+        }
+    }
+
     private let store: any LogStore
+    private var heldContent: Content?
+    private var cancellable: AnyCancellable?
 
     init(store: any LogStore, searchDebounceInterval: DispatchQueue.SchedulerTimeType.Stride = .milliseconds(200)) {
         self.store = store
@@ -42,8 +56,8 @@ final class LogListViewModel: ObservableObject {
             .map { Filter(searchText: $0, minimumLevel: $1, subsystems: $2) }
             .removeDuplicates()
             .eraseToAnyPublisher()
-        Self.contentPublisher(entries: store.entriesPublisher, filter: filter)
-            .assign(to: &$content)
+        cancellable = Self.contentPublisher(entries: store.entriesPublisher, filter: filter)
+            .sink { [weak self] in self?.receive($0) }
     }
 
     var filteredEntries: [LogEntry] { content.filteredEntries }
@@ -62,6 +76,39 @@ final class LogListViewModel: ObservableObject {
 
     func removeAll() {
         store.removeAll()
+    }
+
+    func showNewEntries() {
+        guard let heldContent else { return }
+        self.heldContent = nil
+        newEntriesCount = 0
+        content = heldContent
+    }
+
+    func refreshRecordingState() {
+        if isRecording != store.isRecording {
+            isRecording = store.isRecording
+        }
+    }
+
+    private func receive(_ newContent: Content) {
+        guard !isFollowingNewEntries, newContent.filter == content.filter else {
+            heldContent = nil
+            newEntriesCount = 0
+            content = newContent
+            return
+        }
+        let displayedIDs = Set(content.filteredEntries.map(\.id))
+        let remainingIDs = Set(newContent.filteredEntries.map(\.id))
+        let count = newContent.filteredEntries.count { !displayedIDs.contains($0.id) }
+        heldContent = count > 0 ? newContent : nil
+        newEntriesCount = count
+
+        var visibleContent = newContent
+        visibleContent.filteredEntries = content.filteredEntries.filter { remainingIDs.contains($0.id) }
+        if visibleContent != content {
+            content = visibleContent
+        }
     }
 
     // Built outside of the main actor, so that filtering runs on the processing queue.
@@ -90,6 +137,7 @@ final class LogListViewModel: ObservableObject {
             }
         }
         return Content(
+            filter: filter,
             filteredEntries: filteredEntries,
             availableLevels: levels.sorted(),
             availableSubsystems: subsystems.sorted()

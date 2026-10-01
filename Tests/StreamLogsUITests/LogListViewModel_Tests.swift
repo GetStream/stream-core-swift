@@ -91,10 +91,64 @@ final class LogListViewModel_Tests: XCTestCase {
         await waitForContent { $0.availableSubsystems == ["Auth", "Database", "HTTP", "Offline", "WebSocket"] }
     }
 
+    func test_newEntries_whileNotFollowing_areHeldUntilShown() async {
+        subject.isFollowingNewEntries = false
+
+        store.append(makeEntry(level: .info, subsystems: ["HTTP"], message: "POST message"))
+
+        await waitForNewEntriesCount(1)
+        XCTAssertEqual(subject.filteredEntries.map(\.message), ["Failed to save", "Socket disconnected", "GET channels"])
+
+        subject.showNewEntries()
+
+        XCTAssertEqual(subject.newEntriesCount, 0)
+        XCTAssertEqual(
+            subject.filteredEntries.map(\.message),
+            ["POST message", "Failed to save", "Socket disconnected", "GET channels"]
+        )
+    }
+
+    func test_newEntries_whenFollowingResumes_areShown() async {
+        subject.isFollowingNewEntries = false
+        store.append(makeEntry(level: .info, subsystems: ["HTTP"], message: "POST message"))
+        await waitForNewEntriesCount(1)
+
+        subject.isFollowingNewEntries = true
+
+        XCTAssertEqual(subject.newEntriesCount, 0)
+        XCTAssertEqual(subject.filteredEntries.first?.message, "POST message")
+    }
+
+    func test_removedEntries_whileNotFollowing_areRemovedImmediately() async {
+        subject.isFollowingNewEntries = false
+        let removedEntry = subject.filteredEntries[2]
+
+        subject.removeEntry(removedEntry)
+
+        await waitForFilteredMessages(["Failed to save", "Socket disconnected"])
+        XCTAssertEqual(subject.newEntriesCount, 0)
+    }
+
+    func test_filterChanges_whileNotFollowing_areAppliedImmediately() async {
+        subject.isFollowingNewEntries = false
+
+        subject.minimumLevel = .error
+
+        await waitForFilteredMessages(["Failed to save", "Socket disconnected"])
+    }
+
     func test_isRecording_updatesStore() {
         subject.isRecording = false
 
         XCTAssertFalse(store.isRecording)
+    }
+
+    func test_refreshRecordingState_readsStore() {
+        store.isRecording = false
+
+        subject.refreshRecordingState()
+
+        XCTAssertFalse(subject.isRecording)
     }
 
     func test_customStore_providesEntriesAndReceivesRemovals() {
@@ -125,8 +179,19 @@ final class LogListViewModel_Tests: XCTestCase {
     }
 
     private func waitForContent(where predicate: @escaping (LogListViewModel.Content) -> Bool) async {
-        let expectation = expectation(description: "Content matches")
-        let cancellable = subject.$content
+        await waitForValue(of: subject.$content, where: predicate)
+    }
+
+    private func waitForNewEntriesCount(_ count: Int) async {
+        await waitForValue(of: subject.$newEntriesCount) { $0 == count }
+    }
+
+    private func waitForValue<Value>(
+        of publisher: Published<Value>.Publisher,
+        where predicate: @escaping (Value) -> Bool
+    ) async {
+        let expectation = expectation(description: "Value matches")
+        let cancellable = publisher
             .first(where: predicate)
             .sink { _ in expectation.fulfill() }
         await fulfillment(of: [expectation], timeout: 2)

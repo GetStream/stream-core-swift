@@ -8,12 +8,16 @@ import UIKit
 /// A debugging view that lists the log entries recorded in a ``LogStore``.
 ///
 /// Entries can be searched, filtered by level and subsystem, inspected, and copied.
+///
+/// Place the view inside a `NavigationStack`, which it uses to show entry details and the log settings.
 @available(iOS 16.0, *)
 public struct LogListView: View {
     @StateObject private var viewModel: LogListViewModel
     @ObservedObject private var settings: LogSettings
     @State private var isShowingLevelPicker = false
     @State private var isShowingSubsystemPicker = false
+
+    private let topID = "top"
 
     /// Creates a view that lists the entries of the given store, with access to the given logger settings.
     public init(store: any LogStore = InMemoryLogStore.shared, settings: LogSettings = .shared) {
@@ -22,14 +26,31 @@ public struct LogListView: View {
     }
 
     public var body: some View {
-        NavigationStack {
+        ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    Color.clear
+                        .frame(height: 1)
+                        .id(topID)
+                        .onAppear { viewModel.isFollowingNewEntries = true }
+                        .onDisappear { viewModel.isFollowingNewEntries = false }
+
                     Section(header: filterBar) {
                         content
                     }
                 }
             }
+            .overlay(alignment: .bottom) {
+                if viewModel.newEntriesCount > 0 {
+                    newEntriesButton {
+                        viewModel.showNewEntries()
+                        withAnimation {
+                            proxy.scrollTo(topID, anchor: .top)
+                        }
+                    }
+                }
+            }
+            .onAppear { viewModel.refreshRecordingState() }
             .navigationTitle("Logs")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: LogEntry.self) { entry in
@@ -130,6 +151,22 @@ public struct LogListView: View {
             Divider()
         }
         .background(Color(.systemBackground))
+    }
+
+    private func newEntriesButton(action: @escaping () -> Void) -> some View {
+        let count = viewModel.newEntriesCount
+        let title = "\(count) new log\(count == 1 ? "" : "s")"
+        return Button(action: action) {
+            Label(title, systemImage: "arrow.up")
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Capsule().fill(Color.accentColor))
+                .shadow(radius: 4)
+        }
+        .padding(.bottom)
+        .accessibilityLabel("Show \(title)")
     }
 
     private func filterLabel(_ title: String, systemImage: String) -> some View {
