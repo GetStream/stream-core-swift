@@ -5,7 +5,10 @@
 import Foundation
 
 /// A log entry displayed by ``LogListView``.
-public struct LogEntry: Identifiable, Sendable {
+///
+/// Only the date, level and message are required, so entries can be created from any logger.
+/// Extra information that has no dedicated field, like a logger category, can be added to ``metadata``.
+public struct LogEntry: Identifiable, Hashable, Sendable {
     /// The severity of a log entry.
     public enum Level: Int, CaseIterable, Sendable {
         case debug
@@ -19,32 +22,36 @@ public struct LogEntry: Identifiable, Sendable {
     public let level: Level
     /// The names of the subsystems the entry belongs to.
     public let subsystems: [String]
-    public let threadName: String
-    public let functionName: String
-    public let fileName: String
-    public let lineNumber: UInt
     public let message: String
+    public let threadName: String?
+    public let functionName: String?
+    public let fileName: String?
+    public let lineNumber: UInt?
+    /// Additional key-value pairs displayed with the entry and matched when searching.
+    public let metadata: [String: String]
 
     public init(
         id: UUID = UUID(),
-        date: Date,
+        date: Date = Date(),
         level: Level,
-        subsystems: [String],
-        threadName: String,
-        functionName: String,
-        fileName: String,
-        lineNumber: UInt,
-        message: String
+        subsystems: [String] = [],
+        message: String,
+        threadName: String? = nil,
+        functionName: String? = nil,
+        fileName: String? = nil,
+        lineNumber: UInt? = nil,
+        metadata: [String: String] = [:]
     ) {
         self.id = id
         self.date = date
         self.level = level
         self.subsystems = subsystems
+        self.message = message
         self.threadName = threadName
         self.functionName = functionName
         self.fileName = fileName
         self.lineNumber = lineNumber
-        self.message = message
+        self.metadata = metadata
     }
 
     /// Creates an entry from the raw values reported by a logger.
@@ -60,17 +67,46 @@ public struct LogEntry: Identifiable, Sendable {
         fileName: StaticString,
         lineNumber: UInt,
         message: String,
-        error: Error?
+        error: Error?,
+        metadata: [String: String] = [:]
     ) {
+        let threadName = threadName.trimmingCharacters(in: CharacterSet(charactersIn: "[] "))
         self.init(
             date: date,
             level: level,
             subsystems: subsystems,
-            threadName: threadName.trimmingCharacters(in: CharacterSet(charactersIn: "[] ")),
+            message: error.map { "\(message)\n\($0)" } ?? message,
+            threadName: threadName.isEmpty ? nil : threadName,
             functionName: String(describing: functionName),
             fileName: (String(describing: fileName) as NSString).lastPathComponent,
             lineNumber: lineNumber,
-            message: error.map { "\(message)\n\($0)" } ?? message
+            metadata: metadata
         )
+    }
+
+    // Entries are immutable and uniquely identified, so comparing identifiers avoids hashing long messages.
+    public static func == (lhs: LogEntry, rhs: LogEntry) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
+extension LogEntry {
+    /// The source location, e.g. `[File.swift:42] function()`, or `nil` when the entry has none.
+    var sourceDescription: String? {
+        let location = fileName.map { fileName in lineNumber.map { "\(fileName):\($0)" } ?? fileName }
+        switch (location, functionName) {
+        case let (location?, functionName?):
+            return "[\(location)] \(functionName)"
+        case let (location?, nil):
+            return "[\(location)]"
+        case let (nil, functionName?):
+            return functionName
+        case (nil, nil):
+            return nil
+        }
     }
 }

@@ -4,7 +4,7 @@
 
 import Foundation
 import StreamCore
-import StreamLogsUI
+@testable import StreamLogsUI
 import Testing
 
 struct InMemoryLogStore_Tests {
@@ -86,6 +86,27 @@ struct InMemoryLogStore_Tests {
         )
 
         #expect(entry.message == "Hello")
+        #expect(entry.threadName == nil)
+    }
+
+    @Test func entryWithOnlyRequiredFieldsHasNoSourceDescription() {
+        let entry = LogEntry(level: .info, message: "Hello")
+
+        #expect(entry.subsystems.isEmpty)
+        #expect(entry.metadata.isEmpty)
+        #expect(entry.sourceDescription == nil)
+    }
+
+    @Test(arguments: [
+        ("File.swift", UInt(42), "function()", "[File.swift:42] function()"),
+        ("File.swift", nil, "function()", "[File.swift] function()"),
+        ("File.swift", UInt(42), nil, "[File.swift:42]"),
+        (nil, UInt(42), "function()", "function()")
+    ] as [(String?, UInt?, String?, String)])
+    func sourceDescriptionIncludesAvailableFields(fileName: String?, lineNumber: UInt?, functionName: String?, expected: String) {
+        let entry = LogEntry(level: .info, message: "", functionName: functionName, fileName: fileName, lineNumber: lineNumber)
+
+        #expect(entry.sourceDescription == expected)
     }
 
     // MARK: - Private Helpers
@@ -95,11 +116,11 @@ struct InMemoryLogStore_Tests {
             date: Date(),
             level: .debug,
             subsystems: ["Other"],
+            message: message,
             threadName: "main",
             functionName: "function()",
             fileName: "File.swift",
-            lineNumber: 1,
-            message: message
+            lineNumber: 1
         )
     }
 }

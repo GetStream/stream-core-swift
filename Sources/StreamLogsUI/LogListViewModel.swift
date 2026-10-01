@@ -36,9 +36,12 @@ final class LogListViewModel: ObservableObject {
             }
             if !searchText.isEmpty {
                 return entry.message.localizedCaseInsensitiveContains(searchText)
-                    || entry.functionName.localizedCaseInsensitiveContains(searchText)
-                    || entry.fileName.localizedCaseInsensitiveContains(searchText)
+                    || entry.functionName?.localizedCaseInsensitiveContains(searchText) == true
+                    || entry.fileName?.localizedCaseInsensitiveContains(searchText) == true
                     || entry.subsystems.contains { $0.localizedCaseInsensitiveContains(searchText) }
+                    || entry.metadata.contains {
+                        $0.key.localizedCaseInsensitiveContains(searchText) || $0.value.localizedCaseInsensitiveContains(searchText)
+                    }
             }
             return true
         }

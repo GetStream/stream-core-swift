@@ -56,6 +56,15 @@ final class LogListViewModel_Tests: XCTestCase {
         XCTAssertEqual(subject.filteredEntries.map(\.message), ["GET channels"])
     }
 
+    func test_filteredEntries_searchMatchesMetadata() {
+        store.append(LogEntry(level: .info, message: "Tapped", metadata: ["category": "Navigation"]))
+        subject = LogListViewModel(store: store)
+
+        subject.searchText = "navigation"
+
+        XCTAssertEqual(subject.filteredEntries.map(\.message), ["Tapped"])
+    }
+
     func test_availableSubsystems_includesRecordedAndSelectedSubsystemsSorted() {
         subject.selectedSubsystems = ["Auth"]
 
@@ -87,11 +96,11 @@ final class LogListViewModel_Tests: XCTestCase {
             date: Date(),
             level: level,
             subsystems: subsystems,
+            message: message,
             threadName: "main",
             functionName: "function()",
             fileName: "File.swift",
-            lineNumber: 1,
-            message: message
+            lineNumber: 1
         )
     }
 }

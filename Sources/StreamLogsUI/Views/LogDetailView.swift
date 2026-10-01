@@ -50,28 +50,40 @@ struct LogDetailView: View {
             Divider()
 
             VStack(alignment: .leading, spacing: 12) {
-                InfoRow(title: "Subsystems") {
-                    HStack(spacing: 6) {
-                        ForEach(entry.subsystems, id: \.self) { subsystem in
-                            Text(subsystem)
-                                .font(.caption)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.blue.opacity(0.1))
-                                .foregroundColor(.blue)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                if !entry.subsystems.isEmpty {
+                    InfoRow(title: "Subsystems") {
+                        HStack(spacing: 6) {
+                            ForEach(entry.subsystems, id: \.self) { subsystem in
+                                Text(subsystem)
+                                    .font(.caption)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.blue.opacity(0.1))
+                                    .foregroundColor(.blue)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                            }
                         }
                     }
                 }
-                InfoRow(title: "File") {
-                    Text("\(entry.fileName):\(entry.lineNumber)")
+                if let fileName = entry.fileName {
+                    InfoRow(title: "File") {
+                        Text(entry.lineNumber.map { "\(fileName):\($0)" } ?? fileName)
+                    }
                 }
-                InfoRow(title: "Function") {
-                    Text(entry.functionName)
+                if let functionName = entry.functionName {
+                    InfoRow(title: "Function") {
+                        Text(functionName)
+                    }
                 }
-                if !entry.threadName.isEmpty {
+                if let threadName = entry.threadName {
                     InfoRow(title: "Thread") {
-                        Text(entry.threadName)
+                        Text(threadName)
+                    }
+                }
+                ForEach(entry.metadata.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
+                    InfoRow(title: key) {
+                        Text(value)
+                            .textSelection(.enabled)
                     }
                 }
             }

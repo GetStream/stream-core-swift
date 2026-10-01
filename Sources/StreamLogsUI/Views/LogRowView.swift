@@ -35,12 +35,11 @@ struct LogRowView: View {
                 }
             }
 
-            LogHighlightedText(
-                text: "[\(entry.fileName):\(entry.lineNumber)] \(entry.functionName)",
-                searchText: searchText
-            )
-            .font(.caption.weight(.medium))
-            .foregroundColor(.primary)
+            if let sourceDescription = entry.sourceDescription {
+                LogHighlightedText(text: sourceDescription, searchText: searchText)
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(.primary)
+            }
 
             LogHighlightedText(text: entry.message, searchText: searchText)
                 .font(.footnote)
