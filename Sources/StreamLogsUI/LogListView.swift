@@ -197,8 +197,8 @@ public struct LogListView: View {
                     .font(.headline)
                     .foregroundColor(.secondary)
 
-                if !settings.isEnabled {
-                    Text("Logging is disabled in the log settings")
+                if settings.enabledDestinations.isEmpty {
+                    Text("All destinations are disabled in the log settings")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)

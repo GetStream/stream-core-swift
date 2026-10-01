@@ -189,7 +189,7 @@ DDLog.add(InMemoryLogger())
 
 ### Customization
 
-- **Settings:** `LogSettings` holds the level and subsystems shown in the settings screen. Use `apply(_:)` to update your logger when they change.
+- **Settings:** `LogSettings` holds the destinations shown in the settings screen, each with its own switch, level and subsystems. Use `apply(_:)` to rebuild your logger's destinations when they change.
 - **Initial filter:** set `LogViewer.defaultFilter`, or pass a `LogFilter` to `LogViewer.present(filter:)` or `LogListView(filter:)`, to open the viewer with a level, subsystems or search text already applied.
 - **Appearance:** `LogViewerAppearance` sets the color and icon of each level, and the subsystem and search highlight colors. Pass it to `LogViewer.present(appearance:)` or apply it with the `logViewerAppearance(_:)` modifier.
 - **Storage:** `InMemoryLogStore` keeps the latest 5,000 entries by default. To keep entries elsewhere, implement `LogStore` and pass it to `LogViewer.present(store:)` or `LogListView(store:)`.

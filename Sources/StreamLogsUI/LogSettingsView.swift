@@ -4,7 +4,9 @@
 
 import SwiftUI
 
-/// A form to enable, disable and configure the logger at runtime.
+/// A form that lists the log destinations and configures them at runtime.
+///
+/// Place the view inside a `NavigationStack`, which it uses to show the settings of each destination.
 @available(iOS 16.0, *)
 public struct LogSettingsView: View {
     @ObservedObject private var settings: LogSettings
@@ -17,25 +19,17 @@ public struct LogSettingsView: View {
     public var body: some View {
         Form {
             Section {
-                Toggle("Logging", isOn: $settings.isEnabled)
-            } footer: {
-                Text("When disabled, logs are neither printed nor recorded.")
-            }
-
-            Section {
-                Picker("Level", selection: $settings.level) {
-                    ForEach(settings.availableLevels, id: \.self) { level in
-                        Text(level.name).tag(level)
+                ForEach($settings.destinations) { $destination in
+                    NavigationLink {
+                        LogDestinationSettingsView(destination: $destination, settings: settings)
+                    } label: {
+                        row(for: destination)
                     }
                 }
+            } header: {
+                Text("Destinations")
             } footer: {
-                Text("Logs below this level are ignored.")
-            }
-            .disabled(!settings.isEnabled)
-
-            if !settings.availableSubsystems.isEmpty {
-                subsystemsSection
-                    .disabled(!settings.isEnabled)
+                Text("Each destination decides which logs it receives.")
             }
 
             Section {
@@ -48,19 +42,24 @@ public struct LogSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private var subsystemsSection: some View {
-        Section("Subsystems") {
-            let areAllEnabled = settings.enabledSubsystems.count == settings.availableSubsystems.count
-            Button(areAllEnabled ? "Disable All" : "Enable All") {
-                settings.disabledSubsystems = areAllEnabled ? Set(settings.availableSubsystems) : []
-            }
-
-            ForEach(settings.availableSubsystems, id: \.self) { subsystem in
-                Toggle(subsystem, isOn: Binding(
-                    get: { !settings.disabledSubsystems.contains(subsystem) },
-                    set: { settings.setSubsystem(subsystem, isEnabled: $0) }
-                ))
-            }
+    private func row(for destination: LogDestinationSettings) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(destination.name)
+            Text(summary(of: destination))
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func summary(of destination: LogDestinationSettings) -> String {
+        guard destination.isEnabled else { return "Off" }
+        let enabledSubsystems = settings.enabledSubsystems(for: destination)
+        let subsystems = if destination.disabledSubsystems.isEmpty {
+            "all subsystems"
+        } else {
+            "\(enabledSubsystems.count) of \(settings.availableSubsystems.count) subsystems"
+        }
+        return "\(destination.level.name) and above, \(subsystems)"
     }
 }

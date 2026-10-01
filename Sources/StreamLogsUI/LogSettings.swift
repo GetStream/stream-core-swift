@@ -7,25 +7,16 @@ import Foundation
 
 /// Logger configuration that can be changed at runtime from ``LogSettingsView``.
 ///
-/// The settings are kept in memory only, so every launch starts from the defaults set with ``setDefaults(isEnabled:level:disabledSubsystems:)``.
+/// Every destination, e.g. the console or the log viewer, has its own level and subsystems.
+/// The settings are kept in memory only, so every launch starts from the defaults set with ``setDefaults(_:)``.
 /// They don't depend on any logger. Use ``apply(_:)`` to update the app's logger whenever they change.
 @MainActor
 public final class LogSettings: ObservableObject {
     /// The settings displayed by ``LogSettingsView`` and ``LogListView`` by default.
     public static let shared = LogSettings()
 
-    /// Whether logging is enabled. When `false`, no log should be processed.
-    @Published public var isEnabled = true {
-        didSet { notifyHandlers() }
-    }
-
-    /// The minimum level of the logs.
-    @Published public var level = LogEntry.Level.warning {
-        didSet { notifyHandlers() }
-    }
-
-    /// The subsystems whose logs are ignored.
-    @Published public var disabledSubsystems: Set<String> = [] {
+    /// The destinations that logs are sent to.
+    @Published public var destinations: [LogDestinationSettings] = [] {
         didSet { notifyHandlers() }
     }
 
@@ -37,25 +28,31 @@ public final class LogSettings: ObservableObject {
         didSet { notifyHandlers() }
     }
 
-    /// The available subsystems that are not disabled.
-    public var enabledSubsystems: [String] {
-        availableSubsystems.filter { !disabledSubsystems.contains($0) }
+    /// The destinations that receive logs.
+    public var enabledDestinations: [LogDestinationSettings] {
+        destinations.filter(\.isEnabled)
     }
 
-    private var defaultIsEnabled = true
-    private var defaultLevel = LogEntry.Level.warning
-    private var defaultDisabledSubsystems: Set<String> = []
+    private var defaultDestinations: [LogDestinationSettings] = []
     private var isRestoringDefaults = false
     private var handlers: [@MainActor (LogSettings) -> Void] = []
 
-    /// Creates settings with logging enabled at the warning level for all subsystems.
+    /// Creates settings without any destination.
     public init() {}
 
-    /// Sets the values used when the settings are reset, and applies them.
-    public func setDefaults(isEnabled: Bool = true, level: LogEntry.Level, disabledSubsystems: Set<String> = []) {
-        defaultIsEnabled = isEnabled
-        defaultLevel = level
-        defaultDisabledSubsystems = disabledSubsystems
+    /// The settings of the destination with the given identifier.
+    public subscript(destinationID: String) -> LogDestinationSettings? {
+        destinations.first { $0.id == destinationID }
+    }
+
+    /// The available subsystems that the given destination does not ignore.
+    public func enabledSubsystems(for destination: LogDestinationSettings) -> [String] {
+        availableSubsystems.filter { !destination.disabledSubsystems.contains($0) }
+    }
+
+    /// Sets the destinations used when the settings are reset, and applies them.
+    public func setDefaults(_ destinations: [LogDestinationSettings]) {
+        defaultDestinations = destinations
         reset()
     }
 
@@ -65,20 +62,10 @@ public final class LogSettings: ObservableObject {
         handler(self)
     }
 
-    public func setSubsystem(_ subsystem: String, isEnabled: Bool) {
-        if isEnabled {
-            disabledSubsystems.remove(subsystem)
-        } else {
-            disabledSubsystems.insert(subsystem)
-        }
-    }
-
     /// Restores the default values.
     public func reset() {
         isRestoringDefaults = true
-        isEnabled = defaultIsEnabled
-        level = defaultLevel
-        disabledSubsystems = defaultDisabledSubsystems
+        destinations = defaultDestinations
         isRestoringDefaults = false
         notifyHandlers()
     }
