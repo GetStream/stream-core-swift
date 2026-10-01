@@ -20,6 +20,11 @@ let package = Package(
         .library(
             name: "StreamAttachments",
             targets: ["StreamAttachments"]
+        ),
+        // Debugging tools, meant for demo apps and debug builds only
+        .library(
+            name: "StreamLogsUI",
+            targets: ["StreamLogsUI"]
         )
     ],
     targets: [
@@ -46,6 +51,14 @@ let package = Package(
         .testTarget(
             name: "StreamAttachmentsTests",
             dependencies: ["StreamAttachments"]
+        ),
+        // Debugging tools. No dependencies, so that apps embedding StreamCore in a framework don't duplicate it.
+        .target(
+            name: "StreamLogsUI"
+        ),
+        .testTarget(
+            name: "StreamLogsUITests",
+            dependencies: ["StreamLogsUI"]
         )
     ]
 )
