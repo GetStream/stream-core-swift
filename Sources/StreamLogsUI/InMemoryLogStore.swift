@@ -47,6 +47,33 @@ public struct LogEntry: Identifiable, Sendable {
         self.lineNumber = lineNumber
         self.message = message
     }
+
+    /// Creates an entry from the raw values reported by a logger.
+    ///
+    /// The thread name is trimmed of brackets and whitespace, the file name is reduced to its last path component,
+    /// and the error, if any, is appended to the message.
+    public init(
+        date: Date,
+        level: Level,
+        subsystems: [String],
+        threadName: String,
+        functionName: StaticString,
+        fileName: StaticString,
+        lineNumber: UInt,
+        message: String,
+        error: Error?
+    ) {
+        self.init(
+            date: date,
+            level: level,
+            subsystems: subsystems,
+            threadName: threadName.trimmingCharacters(in: CharacterSet(charactersIn: "[] ")),
+            functionName: String(describing: functionName),
+            fileName: (String(describing: fileName) as NSString).lastPathComponent,
+            lineNumber: lineNumber,
+            message: error.map { "\(message)\n\($0)" } ?? message
+        )
+    }
 }
 
 /// A thread-safe, in-memory store of the log entries displayed by ``LogListView``.

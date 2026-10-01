@@ -3,6 +3,7 @@
 //
 
 import Foundation
+import StreamCore
 import StreamLogsUI
 import Testing
 
@@ -43,6 +44,48 @@ struct InMemoryLogStore_Tests {
 
         subject.removeAll()
         #expect(subject.entries.isEmpty)
+    }
+
+    @Test func levelRawValuesMatchStreamCoreLogLevel() {
+        let coreLevels: [LogLevel] = [.debug, .info, .warning, .error]
+
+        #expect(LogEntry.Level.allCases.map(\.rawValue) == coreLevels.map(\.rawValue))
+    }
+
+    @Test func entryFromRawLoggerValuesIsNormalized() {
+        let entry = LogEntry(
+            date: Date(),
+            level: .error,
+            subsystems: ["httpRequests"],
+            threadName: "[main] ",
+            functionName: "function()",
+            fileName: "StreamCore/Logger/Logger.swift",
+            lineNumber: 42,
+            message: "Hello",
+            error: NSError(domain: "Boom", code: 1)
+        )
+
+        #expect(entry.threadName == "main")
+        #expect(entry.functionName == "function()")
+        #expect(entry.fileName == "Logger.swift")
+        #expect(entry.message.hasPrefix("Hello\n"))
+        #expect(entry.message.contains("Boom"))
+    }
+
+    @Test func entryFromRawLoggerValuesWithoutErrorKeepsMessage() {
+        let entry = LogEntry(
+            date: Date(),
+            level: .info,
+            subsystems: [],
+            threadName: "",
+            functionName: "function()",
+            fileName: "File.swift",
+            lineNumber: 1,
+            message: "Hello",
+            error: nil
+        )
+
+        #expect(entry.message == "Hello")
     }
 
     // MARK: - Private Helpers

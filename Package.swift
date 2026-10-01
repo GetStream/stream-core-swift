@@ -58,7 +58,7 @@ let package = Package(
         ),
         .testTarget(
             name: "StreamLogsUITests",
-            dependencies: ["StreamLogsUI"]
+            dependencies: ["StreamLogsUI", "StreamCore"]
         )
     ]
 )

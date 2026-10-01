@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F1060242F7E01AA00C0FFEE /* StreamCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 845495202DBA3A1300211413 /* StreamCore.framework */; };
 		4F1060192F7E01AA00C0FFEE /* StreamLogsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F10600A2F7E01AA00C0FFEE /* StreamLogsUI.framework */; };
 		4F1E6A862E9FB58700BA0F44 /* StreamAttachments.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F1E6A7D2E9FB58600BA0F44 /* StreamAttachments.framework */; };
 		4F1E6AED2E9FB82900BA0F44 /* StreamCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 845495202DBA3A1300211413 /* StreamCore.framework */; };
@@ -16,6 +17,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		4F1060252F7E01AA00C0FFEE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 845495172DBA3A1300211413 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8454951F2DBA3A1300211413;
+			remoteInfo = StreamCore;
+		};
 		4F10601C2F7E01AA00C0FFEE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 845495172DBA3A1300211413 /* Project object */;
@@ -215,6 +223,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4F1060192F7E01AA00C0FFEE /* StreamLogsUI.framework in Frameworks */,
+				4F1060242F7E01AA00C0FFEE /* StreamCore.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,6 +388,7 @@
 			);
 			dependencies = (
 				4F10601D2F7E01AA00C0FFEE /* PBXTargetDependency */,
+				4F1060262F7E01AA00C0FFEE /* PBXTargetDependency */,
 			);
 			name = StreamLogsUITests;
 			packageProductDependencies = (
@@ -704,6 +714,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4F1060262F7E01AA00C0FFEE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8454951F2DBA3A1300211413 /* StreamCore */;
+			targetProxy = 4F1060252F7E01AA00C0FFEE /* PBXContainerItemProxy */;
+		};
 		4F10601D2F7E01AA00C0FFEE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4F10600F2F7E01AA00C0FFEE /* StreamLogsUI */;
