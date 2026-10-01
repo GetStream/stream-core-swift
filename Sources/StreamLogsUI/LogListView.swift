@@ -5,7 +5,7 @@
 import SwiftUI
 import UIKit
 
-/// A debugging view that lists the log entries recorded in an ``InMemoryLogStore``.
+/// A debugging view that lists the log entries recorded in a ``LogStore``.
 ///
 /// Entries can be searched, filtered by level and subsystem, inspected, and copied.
 @available(iOS 16.0, *)
@@ -16,7 +16,7 @@ public struct LogListView: View {
     @State private var isShowingSubsystemPicker = false
 
     /// Creates a view that lists the entries of the given store, with access to the given logger settings.
-    public init(store: InMemoryLogStore = .shared, settings: LogSettings = .shared) {
+    public init(store: any LogStore = InMemoryLogStore.shared, settings: LogSettings = .shared) {
         _viewModel = StateObject(wrappedValue: LogListViewModel(store: store))
         self.settings = settings
     }

@@ -15,9 +15,9 @@ final class LogListViewModel: ObservableObject {
         didSet { store.isRecording = isRecording }
     }
 
-    private let store: InMemoryLogStore
+    private let store: any LogStore
 
-    init(store: InMemoryLogStore) {
+    init(store: any LogStore) {
         self.store = store
         entries = store.entries
         isRecording = store.isRecording

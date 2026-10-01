@@ -2,6 +2,7 @@
 // Copyright © 2026 Stream.io Inc. All rights reserved.
 //
 
+import Combine
 @testable import StreamLogsUI
 import XCTest
 
@@ -67,6 +68,18 @@ final class LogListViewModel_Tests: XCTestCase {
         XCTAssertFalse(store.isRecording)
     }
 
+    func test_customStore_providesEntriesAndReceivesRemovals() {
+        let customStore = SpyLogStore(entries: [makeEntry(level: .info, subsystems: ["HTTP"], message: "Custom")])
+        let subject = LogListViewModel(store: customStore)
+
+        subject.removeEntry(customStore.entries[0])
+        subject.removeAll()
+
+        XCTAssertEqual(subject.filteredEntries.map(\.message), ["Custom"])
+        XCTAssertEqual(customStore.removedEntryIDs, [customStore.entries[0].id])
+        XCTAssertEqual(customStore.removeAllCallCount, 1)
+    }
+
     // MARK: - Private Helpers
 
     private func makeEntry(level: LogEntry.Level, subsystems: [String], message: String) -> LogEntry {
@@ -80,5 +93,30 @@ final class LogListViewModel_Tests: XCTestCase {
             lineNumber: 1,
             message: message
         )
+    }
+}
+
+private final class SpyLogStore: LogStore, @unchecked Sendable {
+    var isRecording = true
+    let entries: [LogEntry]
+    private(set) var removedEntryIDs: [LogEntry.ID] = []
+    private(set) var removeAllCallCount = 0
+
+    init(entries: [LogEntry]) {
+        self.entries = entries
+    }
+
+    var entriesPublisher: AnyPublisher<[LogEntry], Never> {
+        Just(entries).eraseToAnyPublisher()
+    }
+
+    func append(_ entry: LogEntry) {}
+
+    func removeEntry(id: LogEntry.ID) {
+        removedEntryIDs.append(id)
+    }
+
+    func removeAll() {
+        removeAllCallCount += 1
     }
 }
