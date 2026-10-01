@@ -32,6 +32,9 @@ public struct LogListView: View {
             }
             .navigationTitle("Logs")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: LogEntry.self) { entry in
+                LogDetailView(entry: entry)
+            }
             .searchable(
                 text: $viewModel.searchText,
                 placement: .navigationBarDrawer(displayMode: .automatic),
@@ -174,9 +177,7 @@ public struct LogListView: View {
     }
 
     private func row(for entry: LogEntry) -> some View {
-        NavigationLink {
-            LogDetailView(entry: entry)
-        } label: {
+        NavigationLink(value: entry) {
             VStack(spacing: 0) {
                 LogRowView(entry: entry, searchText: viewModel.searchText)
                     .padding(.horizontal)

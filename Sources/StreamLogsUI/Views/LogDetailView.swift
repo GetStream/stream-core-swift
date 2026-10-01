@@ -8,14 +8,8 @@ import UIKit
 @available(iOS 16.0, *)
 struct LogDetailView: View {
     let entry: LogEntry
-    private let curlCommand: String?
-    private let json: String?
-
-    init(entry: LogEntry) {
-        self.entry = entry
-        curlCommand = LogMessageParser.curlCommand(in: entry.message)
-        json = LogMessageParser.json(in: entry.message)
-    }
+    @State private var curlCommand: String?
+    @State private var json: String?
 
     var body: some View {
         ScrollView {
@@ -27,6 +21,14 @@ struct LogDetailView: View {
         }
         .navigationTitle("Log Details")
         .navigationBarTitleDisplayMode(.inline)
+        .task(id: entry.id) {
+            let message = entry.message
+            let parsed = await Task.detached(priority: .userInitiated) {
+                (LogMessageParser.curlCommand(in: message), LogMessageParser.json(in: message))
+            }.value
+            curlCommand = parsed.0
+            json = parsed.1
+        }
     }
 
     private var header: some View {
