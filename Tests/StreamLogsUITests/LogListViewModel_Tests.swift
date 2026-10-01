@@ -32,33 +32,45 @@ final class LogListViewModel_Tests: XCTestCase {
     }
 
     func test_initialFilter_isApplied() {
-        subject = LogListViewModel(store: store, filter: LogFilter(minimumLevel: .error, subsystems: ["Offline"]))
+        subject = LogListViewModel(store: store, filter: LogFilter(levels: [.error], subsystems: ["Offline"]))
 
         XCTAssertEqual(subject.filteredEntries.map(\.message), ["Failed to save"])
-        XCTAssertEqual(subject.minimumLevel, .error)
+        XCTAssertEqual(subject.selectedLevels, [.error])
         XCTAssertEqual(subject.selectedSubsystems, ["Offline"])
         XCTAssertTrue(subject.isFiltering)
     }
 
     func test_initialFilter_canBeCleared() async {
-        subject = LogListViewModel(store: store, filter: LogFilter(minimumLevel: .error), searchDebounceInterval: .zero)
+        subject = LogListViewModel(store: store, filter: LogFilter(levels: [.error]), searchDebounceInterval: .zero)
 
-        subject.minimumLevel = nil
+        subject.selectedLevels = []
 
         await waitForFilteredMessages(["Failed to save", "Socket disconnected", "GET channels"])
     }
 
-    func test_filteredEntries_filtersByMinimumLevel() async {
-        subject.minimumLevel = .error
+    func test_filteredEntries_filtersByLevel() async {
+        subject.selectedLevels = [.error]
 
         await waitForFilteredMessages(["Failed to save", "Socket disconnected"])
         XCTAssertTrue(subject.isFiltering)
     }
 
-    func test_filteredEntries_minimumLevelIncludesMoreSevereLevels() async {
-        subject.minimumLevel = .warning
+    func test_filteredEntries_levelExcludesOtherLevels() async {
+        subject.selectedLevels = [.warning]
 
-        await waitForFilteredMessages(["Failed to save", "Socket disconnected"])
+        await waitForFilteredMessages([])
+    }
+
+    func test_filteredEntries_multipleLevels_includesEachLevel() async {
+        subject.selectedLevels = [.debug, .error]
+
+        await waitForFilteredMessages(["Failed to save", "Socket disconnected", "GET channels"])
+    }
+
+    func test_availableLevels_includesSelectedLevelsWithoutEntries() {
+        subject = LogListViewModel(store: store, filter: LogFilter(levels: [.warning]))
+
+        XCTAssertEqual(subject.availableLevels, [.debug, .warning, .error])
     }
 
     func test_availableLevels_includesRecordedLevelsSortedBySeverity() {
@@ -149,7 +161,7 @@ final class LogListViewModel_Tests: XCTestCase {
     func test_filterChanges_whileNotFollowing_areAppliedImmediately() async {
         subject.isFollowingNewEntries = false
 
-        subject.minimumLevel = .error
+        subject.selectedLevels = [.error]
 
         await waitForFilteredMessages(["Failed to save", "Socket disconnected"])
     }

@@ -89,7 +89,7 @@ public struct LogListView: View {
                 }
             }
             .sheet(isPresented: $isShowingLevelPicker) {
-                LogLevelPickerView(levels: viewModel.availableLevels, minimumLevel: $viewModel.minimumLevel)
+                LogLevelPickerView(levels: viewModel.availableLevels, selectedLevels: $viewModel.selectedLevels)
                     .logViewerAppearance(appearance)
             }
             .sheet(isPresented: $isShowingSubsystemPicker) {
@@ -108,13 +108,13 @@ public struct LogListView: View {
                     Button {
                         isShowingLevelPicker = true
                     } label: {
-                        filterLabel(viewModel.minimumLevel.map { "\($0.name)+" } ?? "All Levels", systemImage: "slider.horizontal.3")
+                        filterLabel(levelsTitle, systemImage: "slider.horizontal.3")
                     }
                     .buttonStyle(LogFilterButtonStyle(
-                        isSelected: viewModel.minimumLevel != nil,
-                        tint: viewModel.minimumLevel.map { appearance.levelStyle($0).color }
+                        isSelected: !viewModel.selectedLevels.isEmpty,
+                        tint: viewModel.selectedLevels.count == 1 ? viewModel.selectedLevels.first.map { appearance.levelStyle($0).color } : nil
                     ))
-                    .accessibilityLabel(viewModel.minimumLevel.map { "Level \($0.name) and above" } ?? "All levels")
+                    .accessibilityLabel(viewModel.selectedLevels.isEmpty ? "All levels" : "Levels \(levelsTitle)")
 
                     Button {
                         isShowingSubsystemPicker = true
@@ -150,6 +150,15 @@ public struct LogListView: View {
                     .padding(.horizontal)
                     .padding(.bottom, 4)
             }
+        }
+    }
+
+    private var levelsTitle: String {
+        let levels = viewModel.selectedLevels.sorted()
+        switch levels.count {
+        case 0: return "All Levels"
+        case 1, 2: return levels.map(\.name).joined(separator: ", ")
+        default: return "\(levels.count) Levels"
         }
     }
 

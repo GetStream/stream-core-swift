@@ -7,31 +7,33 @@ import SwiftUI
 @available(iOS 16.0, *)
 struct LogLevelPickerView: View {
     let levels: [LogEntry.Level]
-    @Binding var minimumLevel: LogEntry.Level?
-    @Environment(\.dismiss) private var dismiss
+    @Binding var selectedLevels: Set<LogEntry.Level>
     @Environment(\.logViewerAppearance) private var appearance
 
     var body: some View {
-        LogPickerContainer(title: "Select Level") {
+        LogPickerContainer(title: "Select Levels") {
             Section {
-                option(title: "All Levels", level: nil)
+                Button {
+                    selectedLevels.removeAll()
+                } label: {
+                    LogPickerRow(title: "All Levels", isSelected: selectedLevels.isEmpty)
+                }
                 ForEach(levels, id: \.self) { level in
-                    option(title: level.name, level: level, style: appearance.levelStyle(level))
+                    Button {
+                        if selectedLevels.contains(level) {
+                            selectedLevels.remove(level)
+                        } else {
+                            selectedLevels.insert(level)
+                        }
+                    } label: {
+                        LogPickerRow(title: level.name, isSelected: selectedLevels.contains(level), style: appearance.levelStyle(level))
+                    }
                 }
             } header: {
-                Text("Minimum Level")
+                Text("Levels")
             } footer: {
-                Text("Shows logs of the selected level and above.")
+                Text("Shows only logs with the selected levels.")
             }
-        }
-    }
-
-    private func option(title: String, level: LogEntry.Level?, style: LogViewerAppearance.LevelStyle? = nil) -> some View {
-        Button {
-            minimumLevel = level
-            dismiss()
-        } label: {
-            LogPickerRow(title: title, isSelected: minimumLevel == level, style: style)
         }
     }
 }

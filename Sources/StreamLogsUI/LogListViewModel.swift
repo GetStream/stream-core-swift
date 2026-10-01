@@ -17,7 +17,7 @@ final class LogListViewModel: ObservableObject {
     @Published private(set) var content = Content()
     @Published private(set) var newEntriesCount = 0
     @Published var searchText = ""
-    @Published var minimumLevel: LogEntry.Level?
+    @Published var selectedLevels: Set<LogEntry.Level> = []
     @Published var selectedSubsystems: Set<String> = []
     @Published var isRecording: Bool {
         didSet { store.isRecording = isRecording }
@@ -45,7 +45,7 @@ final class LogListViewModel: ObservableObject {
         self.store = store
         isRecording = store.isRecording
         searchText = initialFilter.searchText
-        minimumLevel = initialFilter.minimumLevel
+        selectedLevels = initialFilter.levels
         selectedSubsystems = initialFilter.subsystems
         content = Self.makeContent(entries: store.entries, filter: initialFilter)
 
@@ -53,8 +53,8 @@ final class LogListViewModel: ObservableObject {
             .dropFirst()
             .debounce(for: searchDebounceInterval, scheduler: DispatchQueue.main)
             .prepend(self.searchText)
-        let filter = Publishers.CombineLatest3(searchText, $minimumLevel, $selectedSubsystems)
-            .map { LogFilter(searchText: $0, minimumLevel: $1, subsystems: $2) }
+        let filter = Publishers.CombineLatest3(searchText, $selectedLevels, $selectedSubsystems)
+            .map { LogFilter(searchText: $0, levels: $1, subsystems: $2) }
             .removeDuplicates()
             .eraseToAnyPublisher()
         cancellable = Self.contentPublisher(entries: store.entriesPublisher, filter: filter)
@@ -68,7 +68,7 @@ final class LogListViewModel: ObservableObject {
     var availableSubsystems: [String] { content.availableSubsystems }
 
     var isFiltering: Bool {
-        !searchText.isEmpty || minimumLevel != nil || !selectedSubsystems.isEmpty
+        !searchText.isEmpty || !selectedLevels.isEmpty || !selectedSubsystems.isEmpty
     }
 
     func removeEntry(_ entry: LogEntry) {
@@ -127,7 +127,7 @@ final class LogListViewModel: ObservableObject {
     }
 
     nonisolated static func makeContent(entries: [LogEntry], filter: LogFilter) -> Content {
-        var levels = Set(filter.minimumLevel.map { [$0] } ?? [])
+        var levels = filter.levels
         var subsystems = filter.subsystems
         var filteredEntries: [LogEntry] = []
         for entry in entries.reversed() {
@@ -148,7 +148,7 @@ final class LogListViewModel: ObservableObject {
 
 private extension LogFilter {
     func matches(_ entry: LogEntry) -> Bool {
-        if let minimumLevel, entry.level < minimumLevel {
+        if !levels.isEmpty, !levels.contains(entry.level) {
             return false
         }
         if !subsystems.isEmpty, subsystems.isDisjoint(with: entry.subsystems) {

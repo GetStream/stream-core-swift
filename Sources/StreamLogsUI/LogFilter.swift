@@ -8,14 +8,14 @@ import Foundation
 public struct LogFilter: Equatable, Sendable {
     /// Text that the message, source, subsystems or metadata of an entry must contain. Empty matches every entry.
     public var searchText: String
-    /// The least severe level shown. `nil` shows every level.
-    public var minimumLevel: LogEntry.Level?
+    /// Shows only entries with one of these levels. Empty shows every level.
+    public var levels: Set<LogEntry.Level>
     /// Shows only entries in at least one of these subsystems. Empty shows every subsystem.
     public var subsystems: Set<String>
 
-    public init(searchText: String = "", minimumLevel: LogEntry.Level? = nil, subsystems: Set<String> = []) {
+    public init(searchText: String = "", levels: Set<LogEntry.Level> = [], subsystems: Set<String> = []) {
         self.searchText = searchText
-        self.minimumLevel = minimumLevel
+        self.levels = levels
         self.subsystems = subsystems
     }
 }
