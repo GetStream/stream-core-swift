@@ -23,11 +23,11 @@ public enum LogViewer {
     }
 
     /// Presents the entries of the given store from the top-most view controller of the key window.
-    public static func present(store: InMemoryLogStore = .shared) {
+    public static func present(store: InMemoryLogStore = .shared, settings: LogSettings = .shared) {
         guard #available(iOS 16.0, *), let presenter = topViewController(), !(presenter is LogViewerHostingController) else {
             return
         }
-        let viewController = LogViewerHostingController(rootView: AnyView(LogListView(store: store)))
+        let viewController = LogViewerHostingController(rootView: AnyView(LogListView(store: store, settings: settings)))
         viewController.modalPresentationStyle = .pageSheet
         if let sheet = viewController.sheetPresentationController {
             sheet.detents = [.medium(), .large()]

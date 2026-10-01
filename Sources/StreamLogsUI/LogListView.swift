@@ -11,12 +11,14 @@ import UIKit
 @available(iOS 16.0, *)
 public struct LogListView: View {
     @StateObject private var viewModel: LogListViewModel
+    @ObservedObject private var settings: LogSettings
     @State private var isShowingLevelPicker = false
     @State private var isShowingSubsystemPicker = false
 
-    /// Creates a view that lists the entries of the given store.
-    public init(store: InMemoryLogStore = .shared) {
+    /// Creates a view that lists the entries of the given store, with access to the given logger settings.
+    public init(store: InMemoryLogStore = .shared, settings: LogSettings = .shared) {
         _viewModel = StateObject(wrappedValue: LogListViewModel(store: store))
+        self.settings = settings
     }
 
     public var body: some View {
@@ -51,6 +53,13 @@ public struct LogListView: View {
                         Image(systemName: "trash")
                     }
                     .accessibilityLabel("Clear logs")
+
+                    NavigationLink {
+                        LogSettingsView(settings: settings)
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Log settings")
                 }
             }
             .sheet(isPresented: $isShowingLevelPicker) {
@@ -143,7 +152,12 @@ public struct LogListView: View {
                     .font(.headline)
                     .foregroundColor(.secondary)
 
-                if viewModel.isFiltering {
+                if !settings.isEnabled {
+                    Text("Logging is disabled in the log settings")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                } else if viewModel.isFiltering {
                     Text("Try adjusting your search terms or filters")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
