@@ -6,26 +6,31 @@ import SwiftUI
 
 @available(iOS 16.0, *)
 struct LogLevelPickerView: View {
-    @Binding var selectedLevel: LogEntry.Level?
+    let levels: [LogEntry.Level]
+    @Binding var minimumLevel: LogEntry.Level?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         LogPickerContainer(title: "Select Level") {
-            Section("Log Level") {
+            Section {
                 option(title: "All Levels", level: nil)
-                ForEach(LogEntry.Level.allCases, id: \.self) { level in
-                    option(title: level.displayName, level: level)
+                ForEach(levels, id: \.self) { level in
+                    option(title: level.name, level: level)
                 }
+            } header: {
+                Text("Minimum Level")
+            } footer: {
+                Text("Shows logs of the selected level and above.")
             }
         }
     }
 
     private func option(title: String, level: LogEntry.Level?) -> some View {
         Button {
-            selectedLevel = level
+            minimumLevel = level
             dismiss()
         } label: {
-            LogPickerRow(title: title, isSelected: selectedLevel == level)
+            LogPickerRow(title: title, isSelected: minimumLevel == level)
         }
     }
 }

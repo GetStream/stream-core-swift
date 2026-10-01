@@ -32,7 +32,7 @@ struct LogDetailView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Label(entry.level.displayName, systemImage: entry.level.iconName)
+                Label(entry.level.name, systemImage: entry.level.iconName)
                     .font(.title2.weight(.semibold))
                     .foregroundColor(entry.level.color)
 

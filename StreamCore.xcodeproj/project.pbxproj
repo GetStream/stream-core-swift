@@ -105,6 +105,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				StreamLogsUITests/InMemoryLogStore_Tests.swift,
+				StreamLogsUITests/LogEntry_Tests.swift,
 				StreamLogsUITests/LogListViewModel_Tests.swift,
 				StreamLogsUITests/LogMessageParser_Tests.swift,
 				StreamLogsUITests/LogSettings_Tests.swift,
@@ -149,6 +150,7 @@
 				StreamCoreUITests/CDN/StreamImageCDN_Tests.swift,
 				StreamCoreUITests/DesignSystem/DesignSystemTokens_Tests.swift,
 				StreamLogsUITests/InMemoryLogStore_Tests.swift,
+				StreamLogsUITests/LogEntry_Tests.swift,
 				StreamLogsUITests/LogListViewModel_Tests.swift,
 				StreamLogsUITests/LogMessageParser_Tests.swift,
 				StreamLogsUITests/LogSettings_Tests.swift,

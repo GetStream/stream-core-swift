@@ -9,7 +9,7 @@ import Foundation
 final class LogListViewModel: ObservableObject {
     @Published private(set) var entries: [LogEntry]
     @Published var searchText = ""
-    @Published var selectedLevel: LogEntry.Level?
+    @Published var minimumLevel: LogEntry.Level?
     @Published var selectedSubsystems: Set<String> = []
     @Published var isRecording: Bool {
         didSet { store.isRecording = isRecording }
@@ -28,7 +28,7 @@ final class LogListViewModel: ObservableObject {
 
     var filteredEntries: [LogEntry] {
         entries.reversed().filter { entry in
-            if let selectedLevel, entry.level != selectedLevel {
+            if let minimumLevel, entry.level < minimumLevel {
                 return false
             }
             if !selectedSubsystems.isEmpty, selectedSubsystems.isDisjoint(with: entry.subsystems) {
@@ -51,8 +51,12 @@ final class LogListViewModel: ObservableObject {
         Set(entries.flatMap(\.subsystems)).union(selectedSubsystems).sorted()
     }
 
+    var availableLevels: [LogEntry.Level] {
+        Set(entries.map(\.level)).union(minimumLevel.map { [$0] } ?? []).sorted()
+    }
+
     var isFiltering: Bool {
-        !searchText.isEmpty || selectedLevel != nil || !selectedSubsystems.isEmpty
+        !searchText.isEmpty || minimumLevel != nil || !selectedSubsystems.isEmpty
     }
 
     func removeEntry(_ entry: LogEntry) {

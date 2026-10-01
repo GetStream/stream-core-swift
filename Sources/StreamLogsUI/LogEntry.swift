@@ -9,14 +9,6 @@ import Foundation
 /// Only the date, level and message are required, so entries can be created from any logger.
 /// Extra information that has no dedicated field, like a logger category, can be added to ``metadata``.
 public struct LogEntry: Identifiable, Hashable, Sendable {
-    /// The severity of a log entry.
-    public enum Level: Int, CaseIterable, Sendable {
-        case debug
-        case info
-        case warning
-        case error
-    }
-
     public let id: UUID
     public let date: Date
     public let level: Level

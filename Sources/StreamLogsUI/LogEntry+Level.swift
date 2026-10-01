@@ -4,31 +4,72 @@
 
 import SwiftUI
 
-extension LogEntry.Level {
-    var displayName: String {
-        switch self {
-        case .debug: "DEBUG"
-        case .info: "INFO"
-        case .warning: "WARNING"
-        case .error: "ERROR"
+public extension LogEntry {
+    /// The severity of a log entry.
+    ///
+    /// Levels are ordered by ``severity``. Besides the predefined levels, apps can define their own,
+    /// for example `LogEntry.Level(severity: 45, name: "SECURITY")`.
+    /// Levels with the same severity are equal, so give each custom level a severity that no other level uses.
+    struct Level: Hashable, Comparable, Sendable, CustomStringConvertible {
+        /// The rank of the level. Higher values are more severe.
+        public let severity: Int
+        /// The name displayed for the level, e.g. `WARNING`.
+        public let name: String
+
+        public init(severity: Int, name: String) {
+            self.severity = severity
+            self.name = name
+        }
+
+        public static let trace = Level(severity: 0, name: "TRACE")
+        public static let debug = Level(severity: 10, name: "DEBUG")
+        public static let info = Level(severity: 20, name: "INFO")
+        public static let notice = Level(severity: 30, name: "NOTICE")
+        public static let warning = Level(severity: 40, name: "WARNING")
+        public static let error = Level(severity: 50, name: "ERROR")
+        public static let critical = Level(severity: 60, name: "CRITICAL")
+
+        /// The predefined levels, from the least to the most severe.
+        public static let standardLevels: [Level] = [.trace, .debug, .info, .notice, .warning, .error, .critical]
+
+        public var description: String { name }
+
+        public static func == (lhs: Level, rhs: Level) -> Bool {
+            lhs.severity == rhs.severity
+        }
+
+        public func hash(into hasher: inout Hasher) {
+            hasher.combine(severity)
+        }
+
+        public static func < (lhs: Level, rhs: Level) -> Bool {
+            lhs.severity < rhs.severity
         }
     }
+}
 
+extension LogEntry.Level {
     var color: Color {
         switch self {
-        case .debug: .purple
-        case .info: .blue
-        case .warning: .orange
-        case .error: .red
+        case ..<Self.debug: .gray
+        case ..<Self.info: .purple
+        case ..<Self.notice: .blue
+        case ..<Self.warning: .teal
+        case ..<Self.error: .orange
+        case ..<Self.critical: .red
+        default: .pink
         }
     }
 
     var iconName: String {
         switch self {
-        case .debug: "ant.circle"
-        case .info: "info.circle"
-        case .warning: "exclamationmark.triangle"
-        case .error: "xmark.circle"
+        case ..<Self.debug: "text.alignleft"
+        case ..<Self.info: "ant.circle"
+        case ..<Self.notice: "info.circle"
+        case ..<Self.warning: "bell.circle"
+        case ..<Self.error: "exclamationmark.triangle"
+        case ..<Self.critical: "xmark.circle"
+        default: "exclamationmark.octagon"
         }
     }
 }

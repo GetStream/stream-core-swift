@@ -12,7 +12,7 @@ struct LogRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label(entry.level.displayName, systemImage: entry.level.iconName)
+                Label(entry.level.name, systemImage: entry.level.iconName)
                     .font(.caption.weight(.medium))
                     .foregroundColor(entry.level.color)
 

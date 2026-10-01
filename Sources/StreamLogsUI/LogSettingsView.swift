@@ -24,8 +24,8 @@ public struct LogSettingsView: View {
 
             Section {
                 Picker("Level", selection: $settings.level) {
-                    ForEach(LogEntry.Level.allCases, id: \.self) { level in
-                        Text(level.displayName).tag(level)
+                    ForEach(settings.availableLevels, id: \.self) { level in
+                        Text(level.name).tag(level)
                     }
                 }
             } footer: {

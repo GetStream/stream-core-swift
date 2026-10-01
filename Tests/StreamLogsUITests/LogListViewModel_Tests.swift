@@ -31,11 +31,25 @@ final class LogListViewModel_Tests: XCTestCase {
         XCTAssertFalse(subject.isFiltering)
     }
 
-    func test_filteredEntries_filtersByLevel() {
-        subject.selectedLevel = .error
+    func test_filteredEntries_filtersByMinimumLevel() {
+        subject.minimumLevel = .error
 
         XCTAssertEqual(subject.filteredEntries.map(\.message), ["Failed to save", "Socket disconnected"])
         XCTAssertTrue(subject.isFiltering)
+    }
+
+    func test_filteredEntries_minimumLevelIncludesMoreSevereLevels() {
+        subject.minimumLevel = .warning
+
+        XCTAssertEqual(subject.filteredEntries.map(\.message), ["Failed to save", "Socket disconnected"])
+    }
+
+    func test_availableLevels_includesRecordedLevelsSortedBySeverity() {
+        let security = LogEntry.Level(severity: 45, name: "SECURITY")
+        store.append(LogEntry(level: security, message: "Token refreshed"))
+        subject = LogListViewModel(store: store)
+
+        XCTAssertEqual(subject.availableLevels, [.debug, security, .error])
     }
 
     func test_filteredEntries_filtersBySubsystems() {

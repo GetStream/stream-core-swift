@@ -63,7 +63,7 @@ public struct LogListView: View {
                 }
             }
             .sheet(isPresented: $isShowingLevelPicker) {
-                LogLevelPickerView(selectedLevel: $viewModel.selectedLevel)
+                LogLevelPickerView(levels: viewModel.availableLevels, minimumLevel: $viewModel.minimumLevel)
             }
             .sheet(isPresented: $isShowingSubsystemPicker) {
                 LogSubsystemPickerView(
@@ -81,12 +81,13 @@ public struct LogListView: View {
                     Button {
                         isShowingLevelPicker = true
                     } label: {
-                        filterLabel(viewModel.selectedLevel?.displayName ?? "All Levels", systemImage: "slider.horizontal.3")
+                        filterLabel(viewModel.minimumLevel.map { "\($0.name)+" } ?? "All Levels", systemImage: "slider.horizontal.3")
                     }
                     .buttonStyle(LogFilterButtonStyle(
-                        isSelected: viewModel.selectedLevel != nil,
-                        tint: viewModel.selectedLevel?.color
+                        isSelected: viewModel.minimumLevel != nil,
+                        tint: viewModel.minimumLevel?.color
                     ))
+                    .accessibilityLabel(viewModel.minimumLevel.map { "Level \($0.name) and above" } ?? "All levels")
 
                     Button {
                         isShowingSubsystemPicker = true
