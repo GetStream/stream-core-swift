@@ -35,8 +35,12 @@ Since this SDK is internal, we do not recommend adding it directly to your proje
 ```swift
 import StreamLogsUI
 
-// Presents the viewer as a sheet on top of the app.
+// Presents the viewer as a resizable sheet above the app.
+// At the small and medium heights, the app behind it stays interactive.
 LogViewer.present()
+
+// Or show a floating button that opens it. Drag the button past a screen edge to tuck it away.
+LogViewer.showsFloatingButton = true
 
 // Or present it when the device is shaken. Only enable this in debug builds.
 LogViewer.presentsOnShake = true

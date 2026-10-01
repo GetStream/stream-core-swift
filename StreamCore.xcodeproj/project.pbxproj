@@ -111,6 +111,7 @@
 				StreamLogsUITests/LogMessageParser_Tests.swift,
 				StreamLogsUITests/LogSettings_Tests.swift,
 				StreamLogsUITests/LogViewerAppearance_Tests.swift,
+				StreamLogsUITests/LogViewerFloatingButtonLayout_Tests.swift,
 				StreamLogsUITests/StreamLogsUI.xctestplan,
 			);
 			target = 4F1060102F7E01AA00C0FFEE /* StreamLogsUITests */;
@@ -158,6 +159,7 @@
 				StreamLogsUITests/LogMessageParser_Tests.swift,
 				StreamLogsUITests/LogSettings_Tests.swift,
 				StreamLogsUITests/LogViewerAppearance_Tests.swift,
+				StreamLogsUITests/LogViewerFloatingButtonLayout_Tests.swift,
 				StreamLogsUITests/StreamLogsUI.xctestplan,
 			);
 			target = 845495272DBA3A1300211413 /* StreamCoreTests */;

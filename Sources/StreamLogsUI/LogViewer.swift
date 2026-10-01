@@ -6,7 +6,7 @@ import ObjectiveC
 import SwiftUI
 import UIKit
 
-/// Presents ``LogListView`` as a sheet on top of the app.
+/// Presents ``LogListView`` as a sheet above the app.
 ///
 /// Requires iOS 16 or later; on earlier versions presenting does nothing.
 @MainActor
@@ -27,7 +27,29 @@ public enum LogViewer {
     /// Also used when the viewer is presented by shaking the device. Defaults to showing every entry.
     public static var defaultFilter = LogFilter()
 
-    /// Presents the entries of the given store from the top-most view controller of the key window.
+    /// Whether a floating button that opens the log viewer is shown above the app. Defaults to `false`.
+    ///
+    /// The button can be dragged to any side of the screen, and flung past an edge to tuck it away.
+    public static var showsFloatingButton = false {
+        didSet {
+            if #available(iOS 16.0, *) {
+                LogViewerOverlay.shared.showsFloatingButton = showsFloatingButton
+            }
+        }
+    }
+
+    /// Whether the log viewer is currently presented.
+    public static var isPresented: Bool {
+        if #available(iOS 16.0, *) {
+            return LogViewerOverlay.shared.isPresentingViewer
+        }
+        return false
+    }
+
+    /// Presents the entries of the given store in a sheet above the app.
+    ///
+    /// The sheet can be resized to small, medium and large heights. At the small and medium heights,
+    /// the app behind it stays interactive. Does nothing if the viewer is already presented.
     ///
     /// - Parameter filter: The filter applied when the viewer appears. Defaults to ``defaultFilter``.
     public static func present(
@@ -36,9 +58,7 @@ public enum LogViewer {
         appearance: LogViewerAppearance = LogViewerAppearance(),
         filter: LogFilter = defaultFilter
     ) {
-        guard #available(iOS 16.0, *), let presenter = topViewController(), !(presenter is LogViewerHostingController) else {
-            return
-        }
+        guard #available(iOS 16.0, *), !isPresented else { return }
         let viewController = LogViewerHostingController(rootView: AnyView(
             NavigationStack {
                 LogListView(store: store, settings: settings, filter: filter)
@@ -47,26 +67,41 @@ public enum LogViewer {
         ))
         viewController.modalPresentationStyle = .pageSheet
         if let sheet = viewController.sheetPresentationController {
-            sheet.detents = [.medium(), .large()]
+            let small = UISheetPresentationController.Detent.custom(identifier: .logViewerSmall) { context in
+                context.maximumDetentValue * 0.3
+            }
+            sheet.detents = [small, .medium(), .large()]
+            sheet.selectedDetentIdentifier = .medium
+            sheet.largestUndimmedDetentIdentifier = .medium
             sheet.prefersGrabberVisible = true
+            sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+            sheet.prefersEdgeAttachedInCompactHeight = true
         }
-        presenter.present(viewController, animated: true)
+        LogViewerOverlay.shared.present(viewController)
     }
 
-    private static func topViewController() -> UIViewController? {
-        let keyWindow = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap(\.windows)
-            .first(where: \.isKeyWindow)
-        var topViewController = keyWindow?.rootViewController
-        while let presented = topViewController?.presentedViewController, !presented.isBeingDismissed {
-            topViewController = presented
+    /// Dismisses the log viewer if it is presented.
+    public static func dismiss() {
+        if #available(iOS 16.0, *) {
+            LogViewerOverlay.shared.dismissViewer()
         }
-        return topViewController
     }
 }
 
-private final class LogViewerHostingController: UIHostingController<AnyView> {}
+@available(iOS 16.0, *)
+private extension UISheetPresentationController.Detent.Identifier {
+    static let logViewerSmall = Self("io.getstream.logs-ui.small")
+}
+
+@available(iOS 16.0, *)
+private final class LogViewerHostingController: UIHostingController<AnyView> {
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if isBeingDismissed {
+            LogViewerOverlay.shared.viewerDidDismiss()
+        }
+    }
+}
 
 extension UIWindow {
     private typealias MotionEnded = @convention(c) (UIWindow, Selector, UIEvent.EventSubtype, UIEvent?) -> Void
