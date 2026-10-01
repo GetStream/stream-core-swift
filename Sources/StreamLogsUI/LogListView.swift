@@ -31,18 +31,17 @@ public struct LogListView: View {
     public var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                LazyVStack(alignment: .leading, spacing: 0) {
                     Color.clear
                         .frame(height: 1)
                         .id(topID)
                         .onAppear { viewModel.isFollowingNewEntries = true }
                         .onDisappear { viewModel.isFollowingNewEntries = false }
 
-                    Section(header: filterBar) {
-                        content
-                    }
+                    content
                 }
             }
+            .topBar { filterBar }
             .overlay(alignment: .bottom) {
                 if viewModel.newEntriesCount > 0 {
                     newEntriesButton {
@@ -151,10 +150,7 @@ public struct LogListView: View {
                     .padding(.horizontal)
                     .padding(.bottom, 4)
             }
-
-            Divider()
         }
-        .background(Color(.systemBackground))
     }
 
     private func newEntriesButton(action: @escaping () -> Void) -> some View {
@@ -240,6 +236,23 @@ public struct LogListView: View {
                 viewModel.removeEntry(entry)
             } label: {
                 Label("Delete", systemImage: "trash")
+            }
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func topBar(@ViewBuilder _ content: () -> some View) -> some View {
+        if #available(iOS 26.0, *) {
+            safeAreaBar(edge: .top, spacing: 0, content: content)
+        } else {
+            safeAreaInset(edge: .top, spacing: 0) {
+                VStack(spacing: 0) {
+                    content()
+                    Divider()
+                }
+                .background(.bar)
             }
         }
     }
