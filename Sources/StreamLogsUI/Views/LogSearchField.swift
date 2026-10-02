@@ -73,19 +73,19 @@ struct LogSearchField: View {
 @available(iOS 16.0, *)
 struct LogExpandButton: View {
     let isExpanded: Bool
-    let expandLabel: String
-    let collapseLabel: String
+    let expandTitle: String
+    let collapseTitle: String
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: isExpanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
-                .font(.subheadline.weight(.semibold))
-                .frame(width: 32, height: 32)
-                .background(LogTokens.Colors.backgroundSurfaceCard, in: Circle())
-                .overlay(Circle().strokeBorder(LogTokens.Colors.borderDefault))
-                .foregroundColor(LogTokens.Colors.accentPrimary)
+            Label(
+                isExpanded ? collapseTitle : expandTitle,
+                systemImage: isExpanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right"
+            )
+            .font(.footnote.weight(.semibold))
+            .foregroundColor(LogTokens.Colors.accentPrimary)
         }
-        .accessibilityLabel(isExpanded ? collapseLabel : expandLabel)
+        .buttonStyle(.borderless)
     }
 }

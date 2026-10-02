@@ -6,68 +6,6 @@ import SwiftUI
 import UIKit
 
 @available(iOS 16.0, *)
-struct LogJSONToolbar: View {
-    @ObservedObject var viewModel: LogJSONViewModel
-
-    var body: some View {
-        HStack(spacing: LogTokens.Spacing.xs) {
-            LogSearchField(
-                placeholder: "Search JSON",
-                text: $viewModel.searchText,
-                isSearching: viewModel.matchedText != viewModel.searchText,
-                currentMatchIndex: viewModel.currentMatchIndex,
-                matchCount: viewModel.matchIDs.count,
-                showPreviousMatch: viewModel.showPreviousMatch,
-                showNextMatch: viewModel.showNextMatch
-            )
-
-            LogExpandButton(
-                isExpanded: viewModel.isFullyExpanded,
-                expandLabel: "Expand All",
-                collapseLabel: "Collapse All"
-            ) {
-                withAnimation(.easeInOut(duration: 0.15)) {
-                    if viewModel.isFullyExpanded {
-                        viewModel.collapseAll()
-                    } else {
-                        viewModel.expandAll()
-                    }
-                }
-            }
-        }
-    }
-}
-
-@available(iOS 16.0, *)
-struct LogRawToolbar: View {
-    @ObservedObject var viewModel: LogRawTextViewModel
-
-    var body: some View {
-        HStack(spacing: LogTokens.Spacing.xs) {
-            LogSearchField(
-                placeholder: "Search log",
-                text: $viewModel.searchText,
-                isSearching: viewModel.matchedText != viewModel.searchText,
-                currentMatchIndex: viewModel.currentMatchIndex,
-                matchCount: viewModel.matchIndices.count,
-                showPreviousMatch: viewModel.showPreviousMatch,
-                showNextMatch: viewModel.showNextMatch
-            )
-
-            if viewModel.isTruncated {
-                LogExpandButton(
-                    isExpanded: viewModel.isExpanded,
-                    expandLabel: "Expand Full Log",
-                    collapseLabel: "Collapse Log"
-                ) {
-                    viewModel.isExpanded.toggle()
-                }
-            }
-        }
-    }
-}
-
-@available(iOS 16.0, *)
 struct LogJSONNodeRow: View {
     let node: LogJSONTree.Node
     let isExpanded: Bool
@@ -124,7 +62,7 @@ struct LogJSONNodeRow: View {
         if isCurrentMatch {
             return LogTokens.Colors.accentPrimary.opacity(0.12)
         }
-        return isFocused ? LogTokens.Colors.backgroundSurfaceDefault : .clear
+        return isFocused ? LogTokens.Colors.accentNeutral.opacity(0.16) : .clear
     }
 
     private var text: Text {

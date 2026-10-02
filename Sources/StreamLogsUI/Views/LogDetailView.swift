@@ -34,17 +34,15 @@ struct LogDetailView: View {
                     LogDetailSummary(entry: entry, isExpanded: $isSummaryExpanded)
                         .padding(LogTokens.Spacing.md)
 
-                    Divider()
-                        .overlay(LogTokens.Colors.borderDefault)
-                        .padding(.bottom, LogTokens.Spacing.xs)
-
                     if content != nil {
+                        panelHeader
                         switch mode {
                         case .raw:
                             rawChunks
                         case .json:
                             jsonNodes(proxy: proxy)
                         }
+                        panelFooter
                     } else {
                         ProgressView()
                             .frame(maxWidth: .infinity)
@@ -105,13 +103,90 @@ struct LogDetailView: View {
             }
             switch mode {
             case .raw:
-                LogRawToolbar(viewModel: raw)
+                LogSearchField(
+                    placeholder: "Search log",
+                    text: $raw.searchText,
+                    isSearching: raw.matchedText != raw.searchText,
+                    currentMatchIndex: raw.currentMatchIndex,
+                    matchCount: raw.matchIndices.count,
+                    showPreviousMatch: raw.showPreviousMatch,
+                    showNextMatch: raw.showNextMatch
+                )
             case .json:
-                LogJSONToolbar(viewModel: json)
+                LogSearchField(
+                    placeholder: "Search JSON",
+                    text: $json.searchText,
+                    isSearching: json.matchedText != json.searchText,
+                    currentMatchIndex: json.currentMatchIndex,
+                    matchCount: json.matchIDs.count,
+                    showPreviousMatch: json.showPreviousMatch,
+                    showNextMatch: json.showNextMatch
+                )
             }
         }
         .padding(.horizontal, LogTokens.Spacing.md)
         .padding(.vertical, LogTokens.Spacing.xs)
+    }
+
+    private var isRawPreview: Bool {
+        raw.visibleChunkCount < raw.chunks.count
+    }
+
+    private var panelHeader: some View {
+        HStack(spacing: LogTokens.Spacing.xs) {
+            Text(mode == .json ? "JSON" : isRawPreview ? "Raw · Preview" : "Raw")
+                .font(.caption.weight(.semibold))
+                .foregroundColor(LogTokens.Colors.textTertiary)
+                .textCase(.uppercase)
+            Spacer(minLength: 0)
+            switch mode {
+            case .raw:
+                if raw.isTruncated {
+                    LogExpandButton(isExpanded: raw.isExpanded, expandTitle: "Expand Full Log", collapseTitle: "Collapse Log") {
+                        raw.isExpanded.toggle()
+                    }
+                }
+            case .json:
+                LogExpandButton(isExpanded: json.isFullyExpanded, expandTitle: "Expand All", collapseTitle: "Collapse All") {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        if json.isFullyExpanded {
+                            json.collapseAll()
+                        } else {
+                            json.expandAll()
+                        }
+                    }
+                }
+            }
+        }
+        .frame(minHeight: 32)
+        .padding(.horizontal, LogTokens.Spacing.sm)
+        .padding(.vertical, LogTokens.Spacing.xxs)
+        .overlay(alignment: .bottom) {
+            Divider()
+                .overlay(LogTokens.Colors.borderDefault)
+        }
+        .padding(.bottom, LogTokens.Spacing.xs)
+        .logPanelRow(.top)
+    }
+
+    private var panelFooter: some View {
+        VStack(alignment: .leading, spacing: LogTokens.Spacing.xs) {
+            if mode == .raw, isRawPreview {
+                Text("…")
+                    .font(.system(.footnote, design: .monospaced))
+                    .foregroundColor(LogTokens.Colors.textTertiary)
+                    .accessibilityHidden(true)
+                LogExpandButton(isExpanded: false, expandTitle: "Expand Full Log", collapseTitle: "Collapse Log") {
+                    raw.isExpanded = true
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, LogTokens.Spacing.sm)
+        .padding(.top, LogTokens.Spacing.xs)
+        .padding(.bottom, LogTokens.Spacing.sm)
+        .logPanelRow(.bottom)
+        .padding(.bottom, LogTokens.Spacing.md)
     }
 
     // The raw log is shown in chunks, as text views lay out a whole paragraph at once,
@@ -130,18 +205,10 @@ struct LogDetailView: View {
                     raw.currentChunkIndex == index ? LogTokens.Colors.accentPrimary.opacity(0.12) : .clear,
                     in: RoundedRectangle(cornerRadius: LogTokens.Radius.sm)
                 )
-                .padding(.horizontal, LogTokens.Spacing.xs)
+                .padding(.horizontal, LogTokens.Spacing.xxs)
+                .logPanelRow()
                 .id(RawChunkID(index: index))
         }
-        if raw.visibleChunkCount < chunks.count {
-            Text("…")
-                .font(.system(.footnote, design: .monospaced))
-                .foregroundColor(LogTokens.Colors.textTertiary)
-                .padding(.horizontal, LogTokens.Spacing.md)
-                .accessibilityLabel("Log truncated")
-        }
-        Color.clear
-            .frame(height: LogTokens.Spacing.md)
     }
 
     private func rawChunkText(_ chunk: String) -> Text {
@@ -168,11 +235,10 @@ struct LogDetailView: View {
                 },
                 jsonText: { tree.jsonText(for: id) }
             )
+            .padding(.horizontal, LogTokens.Spacing.xxs)
+            .logPanelRow()
             .id(id)
-            .padding(.horizontal, LogTokens.Spacing.xs)
         }
-        Color.clear
-            .frame(height: LogTokens.Spacing.md)
     }
 }
 
