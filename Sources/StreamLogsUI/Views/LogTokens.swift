@@ -9,9 +9,13 @@ import UIKit
 // copied because StreamLogsUI has no dependencies.
 @usableFromInline
 enum LogTokens {
+    enum UIColors {
+        static let accentPrimary = UIColor(light: 0x005fff, dark: 0x4586ff)
+    }
+
     @usableFromInline
     enum Colors {
-        static let accentPrimary = Color(light: 0x005fff, dark: 0x4586ff)
+        static let accentPrimary = Color(UIColors.accentPrimary)
         static let accentSuccess = Color(light: 0x00a46e, dark: 0x00c384)
         // Darker than the `accentWarning` token, which is meant for backgrounds and is hard to read as text.
         static let accentWarning = Color(light: 0xf26d10, dark: 0xfa922b)
@@ -54,13 +58,17 @@ enum LogTokens {
 
 private extension Color {
     init(light: UInt32, dark: UInt32) {
-        self.init(UIColor { traits in
-            UIColor(rgb: traits.userInterfaceStyle == .dark ? dark : light)
-        })
+        self.init(UIColor(light: light, dark: dark))
     }
 }
 
 extension UIColor {
+    convenience init(light: UInt32, dark: UInt32) {
+        self.init { traits in
+            UIColor(rgb: traits.userInterfaceStyle == .dark ? dark : light)
+        }
+    }
+
     convenience init(rgb: UInt32) {
         self.init(
             red: CGFloat((rgb >> 16) & 0xff) / 255,
