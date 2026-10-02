@@ -50,6 +50,8 @@ public struct LogEntry: Identifiable, Hashable, Sendable {
     /// Both keys and values are matched when searching, and they're included when copying the entry.
     /// Entries with the HTTP keys, like ``MetadataKey/httpMethod`` and ``MetadataKey/httpURL``,
     /// are displayed as HTTP requests, with their status and bodies.
+    /// Entries with ``MetadataKey/webSocketReceivedPayload`` or ``MetadataKey/webSocketSentPayload``
+    /// are displayed as WebSocket messages, with their event type and payload.
     public let metadata: [MetadataKey: String]
 
     /// Creates an entry. Only the level and the message are required.
@@ -150,17 +152,24 @@ public extension LogEntry.MetadataKey {
     static let httpResponseBody: Self = "Response Body"
     /// A cURL command that reproduces an HTTP request.
     static let httpCURL: Self = "cURL"
+    /// The type of a WebSocket event, like `message.new`.
+    static let webSocketEventType: Self = "Event Type"
+    /// The payload of a message received through a WebSocket.
+    static let webSocketReceivedPayload: Self = "Received Payload"
+    /// The payload of a message sent through a WebSocket.
+    static let webSocketSentPayload: Self = "Sent Payload"
 }
 
 extension LogEntry.MetadataKey {
     static let httpKeys: [Self] = [.httpMethod, .httpURL, .httpStatusCode, .httpError, .httpRequestBody, .httpResponseBody, .httpCURL]
+    static let webSocketKeys: [Self] = [.webSocketEventType, .webSocketReceivedPayload, .webSocketSentPayload]
 }
 
 extension LogEntry {
     // The message followed by the metadata, one `Key: value` per line, like the StreamCore console output.
     var rawText: String {
         guard !metadata.isEmpty else { return message }
-        let order = MetadataKey.httpKeys
+        let order = MetadataKey.httpKeys + MetadataKey.webSocketKeys
         let rank = { (key: MetadataKey) in order.firstIndex(of: key) ?? order.count }
         let lines = metadata
             .sorted { lhs, rhs in

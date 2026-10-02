@@ -55,6 +55,20 @@ struct LogDetailContent_Tests {
         #expect(subject.copyOptions.map(\.title) == ["Raw"])
     }
 
+    @Test func webSocketPayloadIsAJSONDocument() {
+        let entry = LogEntry(
+            level: .debug,
+            message: "Received webSocket message {\"ignored\":true}",
+            metadata: [.webSocketEventType: "health.check", .webSocketReceivedPayload: #"{"type":"health.check"}"#]
+        )
+
+        let subject = LogDetailContent(entry: entry)
+
+        #expect(subject.jsonTree.roots.map { subject.jsonTree.nodes[$0].key } == [.title("Received Payload")])
+        #expect(subject.json == "{\n  \"type\" : \"health.check\"\n}")
+        #expect(subject.copyOptions.map(\.title) == ["Raw", "JSON"])
+    }
+
     @Test func otherEntriesUseTheJSONAndCurlCommandInTheirMessage() {
         let entry = LogEntry(level: .info, message: "Event received: {\"type\":\"health.check\"}\ncurl https://example.com")
 

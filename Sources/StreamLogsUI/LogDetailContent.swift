@@ -12,7 +12,7 @@ struct LogDetailContent: Sendable {
     let rawPreviewChunkCount: Int?
     let curlCommand: String?
     let jsonTree: LogJSONTree
-    // The last JSON document, which is the response body of HTTP requests that have one.
+    // The last JSON document, which is the response body of HTTP requests and the payload of WebSocket messages.
     let json: String?
 
     init(entry: LogEntry) {
@@ -32,6 +32,8 @@ struct LogDetailContent: Sendable {
             if let body = httpRequest.responseBody {
                 documents.append((LogEntry.MetadataKey.httpResponseBody.rawValue, body))
             }
+        } else if let webSocketMessage = entry.webSocketMessage {
+            documents.append((webSocketMessage.payloadKey.rawValue, webSocketMessage.payload))
         } else if let json = LogMessageParser.json(in: entry.message) {
             documents.append(("JSON", json))
         }

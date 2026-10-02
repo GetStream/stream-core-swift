@@ -95,6 +95,28 @@ struct LogEntry_Tests {
         #expect(entry.rawText == "201 POST /channels\nMethod: POST\nStatus Code: 201\nResponse Body:\n{\n  \"id\" : 1\n}\nCustom: value")
     }
 
+    @Test func rawTextListsWebSocketMetadataAfterHTTPMetadata() {
+        let entry = LogEntry(
+            level: .debug,
+            message: "Received webSocket message",
+            metadata: [
+                "Custom": "value",
+                .webSocketReceivedPayload: "{\n  \"type\" : \"message.new\"\n}",
+                .webSocketEventType: "message.new"
+            ]
+        )
+
+        #expect(entry.rawText == """
+        Received webSocket message
+        Event Type: message.new
+        Received Payload:
+        {
+          "type" : "message.new"
+        }
+        Custom: value
+        """)
+    }
+
     @Test func rawTextWithoutMetadataIsTheMessage() {
         #expect(LogEntry(level: .info, message: "Hello").rawText == "Hello")
     }
@@ -141,6 +163,36 @@ struct LogEntry_Tests {
         #expect(LogEntry(level: .info, message: "", metadata: [.httpMethod: "GET"]).httpRequest == nil)
         #expect(LogEntry(level: .info, message: "", metadata: [.httpURL: "https://example.com"]).httpRequest == nil)
         #expect(LogEntry(level: .info, message: "", metadata: [:]).httpRequest == nil)
+    }
+
+    @Test func receivedWebSocketMessageIsReadFromMetadata() throws {
+        let entry = LogEntry(
+            level: .debug,
+            message: "Received webSocket message",
+            metadata: [.webSocketEventType: "message.new", .webSocketReceivedPayload: "{}"]
+        )
+
+        let message = try #require(entry.webSocketMessage)
+
+        #expect(message == LogWebSocketMessage(
+            direction: .received,
+            eventType: "message.new",
+            payloadKey: .webSocketReceivedPayload,
+            payload: "{}"
+        ))
+    }
+
+    @Test func sentWebSocketMessageMayHaveNoEventType() throws {
+        let entry = LogEntry(level: .debug, message: "Sent webSocket message", metadata: [.webSocketSentPayload: "{}"])
+
+        let message = try #require(entry.webSocketMessage)
+
+        #expect(message == LogWebSocketMessage(direction: .sent, eventType: nil, payloadKey: .webSocketSentPayload, payload: "{}"))
+    }
+
+    @Test func webSocketMessageRequiresPayload() {
+        #expect(LogEntry(level: .info, message: "", metadata: [.webSocketEventType: "message.new"]).webSocketMessage == nil)
+        #expect(LogEntry(level: .info, message: "", metadata: [:]).webSocketMessage == nil)
     }
 
     @Test(arguments: [

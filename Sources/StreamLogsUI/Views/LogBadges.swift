@@ -53,6 +53,22 @@ struct LogHTTPMethodBadge: View {
 }
 
 @available(iOS 16.0, *)
+struct LogWebSocketBadge: View {
+    let direction: LogWebSocketMessage.Direction
+
+    var body: some View {
+        LogBadge(color: LogTokens.Colors.textPrimary, background: LogTokens.Colors.accentNeutral.opacity(0.16)) {
+            Image(systemName: direction == .received ? "arrow.down" : "arrow.up")
+                .font(.caption2.weight(.bold))
+            Text("WS")
+                .font(.caption2.weight(.bold).monospaced())
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(direction == .received ? "Received WebSocket message" : "Sent WebSocket message")
+    }
+}
+
+@available(iOS 16.0, *)
 struct LogHTTPStatusBadge: View {
     let status: LogHTTPRequest.Status
     // Failed requests are only shown as errors when logged as errors, as cancelled requests also fail.

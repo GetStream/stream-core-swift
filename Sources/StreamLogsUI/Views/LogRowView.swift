@@ -12,6 +12,7 @@ struct LogRowView: View {
 
     var body: some View {
         let http = entry.httpRequest
+        let webSocket = http == nil ? entry.webSocketMessage : nil
         VStack(alignment: .leading, spacing: LogTokens.Spacing.xs) {
             HStack(spacing: LogTokens.Spacing.xs) {
                 if let http {
@@ -19,6 +20,8 @@ struct LogRowView: View {
                     if let status = http.status {
                         LogHTTPStatusBadge(status: status, isError: entry.level >= .error)
                     }
+                } else if let webSocket {
+                    LogWebSocketBadge(direction: webSocket.direction)
                 } else {
                     LogLevelBadge(level: entry.level)
                 }
@@ -41,6 +44,11 @@ struct LogRowView: View {
                         .foregroundColor(LogTokens.Colors.textSecondary)
                         .lineLimit(2)
                 }
+            } else if let eventType = webSocket?.eventType {
+                LogHighlightedText(text: eventType, searchText: searchText)
+                    .font(.subheadline.weight(.medium).monospaced())
+                    .foregroundColor(LogTokens.Colors.textPrimary)
+                    .lineLimit(2)
             } else {
                 LogHighlightedText(text: entry.message, searchText: searchText)
                     .font(.subheadline)

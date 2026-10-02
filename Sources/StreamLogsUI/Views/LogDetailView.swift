@@ -249,6 +249,7 @@ private struct LogDetailSummary: View {
 
     var body: some View {
         let httpRequest = entry.httpRequest
+        let webSocketMessage = httpRequest == nil ? entry.webSocketMessage : nil
         VStack(alignment: .leading, spacing: LogTokens.Spacing.sm) {
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
@@ -259,6 +260,8 @@ private struct LogDetailSummary: View {
                         if let status = httpRequest.status {
                             LogHTTPStatusBadge(status: status, isError: entry.level >= .error)
                         }
+                    } else if let webSocketMessage {
+                        LogWebSocketBadge(direction: webSocketMessage.direction)
                     }
                     LogLevelBadge(level: entry.level)
                     Spacer(minLength: 0)
@@ -285,6 +288,11 @@ private struct LogDetailSummary: View {
                         .foregroundColor(LogTokens.Colors.textSecondary)
                         .textSelection(.enabled)
                 }
+            } else if let eventType = webSocketMessage?.eventType {
+                Text(eventType)
+                    .font(.system(.footnote, design: .monospaced).weight(.medium))
+                    .foregroundColor(LogTokens.Colors.textPrimary)
+                    .textSelection(.enabled)
             } else {
                 Text(entry.message)
                     .font(.subheadline)
@@ -296,13 +304,23 @@ private struct LogDetailSummary: View {
                 Divider()
                     .overlay(LogTokens.Colors.borderDefault)
 
-                infoRows(hidingHTTPKeys: httpRequest != nil)
+                infoRows(hiddenKeys: hiddenKeys(httpRequest: httpRequest, webSocketMessage: webSocketMessage))
             }
         }
     }
 
-    private func infoRows(hidingHTTPKeys: Bool) -> some View {
-        let hiddenKeys = hidingHTTPKeys ? Set(LogEntry.MetadataKey.httpKeys) : []
+    // The keys that are already displayed above or in their own panel.
+    private func hiddenKeys(httpRequest: LogHTTPRequest?, webSocketMessage: LogWebSocketMessage?) -> Set<LogEntry.MetadataKey> {
+        if httpRequest != nil {
+            return Set(LogEntry.MetadataKey.httpKeys)
+        }
+        if webSocketMessage != nil {
+            return Set(LogEntry.MetadataKey.webSocketKeys)
+        }
+        return []
+    }
+
+    private func infoRows(hiddenKeys: Set<LogEntry.MetadataKey>) -> some View {
         let metadata = entry.metadata
             .filter { !hiddenKeys.contains($0.key) }
             .sorted { $0.key.rawValue < $1.key.rawValue }
