@@ -21,7 +21,10 @@ struct LogRowView: View {
                         LogHTTPStatusBadge(status: status, isError: entry.level >= .error)
                     }
                 } else if let webSocket {
-                    LogWebSocketBadge(direction: webSocket.direction)
+                    LogWebSocketBadge(
+                        direction: webSocket.direction,
+                        pulses: Date().timeIntervalSince(entry.date) < Self.livePulseDuration
+                    )
                 } else {
                     LogLevelBadge(level: entry.level)
                 }
@@ -70,6 +73,8 @@ struct LogRowView: View {
     }
 
     private static let maxVisibleSubsystems = 2
+    // WebSocket messages logged less than this long ago pulse when their row appears.
+    private static let livePulseDuration: TimeInterval = 3
 
     private func footer(http: LogHTTPRequest?) -> some View {
         HStack(spacing: LogTokens.Spacing.xxs) {

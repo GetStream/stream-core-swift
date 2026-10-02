@@ -24,6 +24,7 @@ enum LogTokens {
         @usableFromInline static let accentNeutral = Color(light: 0x687385, dark: 0xababab)
         static let accentInfo = Color(light: 0x1e9ea9, dark: 0x45bcc7)
         static let accentTrace = Color(light: 0x87909f, dark: 0x8f8f8f)
+        static let webSocket = accentPrimary
 
         static let textPrimary = Color(light: 0x1a1b25, dark: 0xf8f8f8)
         static let textSecondary = Color(light: 0x414552, dark: 0xd8d8d8)
