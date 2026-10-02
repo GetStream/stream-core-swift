@@ -60,7 +60,7 @@ public struct LogListView: View {
             }
             .searchable(
                 text: $viewModel.searchText,
-                placement: .navigationBarDrawer(displayMode: .automatic),
+                placement: .navigationBarDrawer(displayMode: .always),
                 prompt: "Search logs"
             )
             .toolbar {
