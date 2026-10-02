@@ -35,12 +35,19 @@ public extension LogMetadataKey {
     static let httpResponseBody: LogMetadataKey = "Response Body"
     /// A cURL command that reproduces an HTTP request.
     static let httpCURL: LogMetadataKey = "cURL"
+    /// The type of a WebSocket event, like `message.new`.
+    static let webSocketEventType: LogMetadataKey = "Event Type"
+    /// The payload of a message received through a WebSocket.
+    static let webSocketReceivedPayload: LogMetadataKey = "Received Payload"
+    /// The payload of a message sent through a WebSocket.
+    static let webSocketSentPayload: LogMetadataKey = "Sent Payload"
 }
 
 extension LogDetails {
     // Predefined keys come first, in a fixed order, followed by the other keys sorted by name.
     private static let metadataOrder: [LogMetadataKey] = [
-        .httpMethod, .httpURL, .httpStatusCode, .httpError, .httpRequestBody, .httpResponseBody, .httpCURL
+        .httpMethod, .httpURL, .httpStatusCode, .httpError, .httpRequestBody, .httpResponseBody, .httpCURL,
+        .webSocketEventType, .webSocketReceivedPayload, .webSocketSentPayload
     ]
 
     var messageWithMetadata: String {

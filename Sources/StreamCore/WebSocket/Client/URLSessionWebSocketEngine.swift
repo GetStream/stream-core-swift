@@ -98,10 +98,9 @@ final class URLSessionWebSocketEngine: NSObject, WebSocketEngine, @unchecked Sen
         task?.send(message) { [weak self] error in
             if error == nil {
                 log.debug(
-                    """
-                    Event message sent
-                    \(String(data: data, encoding: .utf8) ?? "")
-                    """, subsystems: .webSocket
+                    "Sent webSocket message",
+                    subsystems: .webSocket,
+                    metadata: data.webSocketLogMetadata(payloadKey: .webSocketSentPayload)
                 )
                 self?.doRead()
             }
@@ -117,14 +116,22 @@ final class URLSessionWebSocketEngine: NSObject, WebSocketEngine, @unchecked Sen
             switch result {
             case let .success(message):
                 if case let .data(data) = message {
-                    log.debug("Received webSocket message: \(data.debugPrettyPrintedJSON)", subsystems: .webSocket)
+                    log.debug(
+                        "Received webSocket message",
+                        subsystems: .webSocket,
+                        metadata: data.webSocketLogMetadata(payloadKey: .webSocketReceivedPayload)
+                    )
                     callbackQueue.async { [weak self] in
                         guard self?.task != nil else { return }
                         self?.delegate?.webSocketDidReceiveMessage(data)
                     }
                 } else if case let .string(string) = message {
                     let messageData = Data(string.utf8)
-                    log.debug("Received webSocket message:\(messageData.debugPrettyPrintedJSON)", subsystems: .webSocket)
+                    log.debug(
+                        "Received webSocket message",
+                        subsystems: .webSocket,
+                        metadata: messageData.webSocketLogMetadata(payloadKey: .webSocketReceivedPayload)
+                    )
                     callbackQueue.async { [weak self] in
                         guard self?.task != nil else { return }
                         self?.delegate?.webSocketDidReceiveMessage(messageData)
@@ -211,5 +218,21 @@ final class URLSessionDelegateHandler: NSObject, URLSessionDataDelegate, URLSess
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         onCompletion?(error)
+    }
+}
+
+extension Data {
+    func webSocketLogMetadata(payloadKey: LogMetadataKey) -> [LogMetadataKey: String] {
+        guard let object = try? JSONSerialization.jsonObject(with: self),
+              let prettyData = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys]),
+              let payload = String(data: prettyData, encoding: .utf8)
+        else {
+            return [payloadKey: String(data: self, encoding: .utf8) ?? "<\(count) bytes>"]
+        }
+        var metadata = [payloadKey: payload]
+        if let eventType = (object as? [String: Any])?["type"] as? String {
+            metadata[.webSocketEventType] = eventType
+        }
+        return metadata
     }
 }
