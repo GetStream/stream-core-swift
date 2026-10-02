@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F1060242F7E01AA00C0FFEE /* StreamCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 845495202DBA3A1300211413 /* StreamCore.framework */; };
+		4F1060192F7E01AA00C0FFEE /* StreamLogsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F10600A2F7E01AA00C0FFEE /* StreamLogsUI.framework */; };
 		4F1E6A862E9FB58700BA0F44 /* StreamAttachments.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F1E6A7D2E9FB58600BA0F44 /* StreamAttachments.framework */; };
 		4F1E6AED2E9FB82900BA0F44 /* StreamCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 845495202DBA3A1300211413 /* StreamCore.framework */; };
 		4F1E6AEE2E9FB82900BA0F44 /* StreamCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 845495202DBA3A1300211413 /* StreamCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -15,6 +17,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		4F1060252F7E01AA00C0FFEE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 845495172DBA3A1300211413 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8454951F2DBA3A1300211413;
+			remoteInfo = StreamCore;
+		};
+		4F10601C2F7E01AA00C0FFEE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 845495172DBA3A1300211413 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4F10600F2F7E01AA00C0FFEE;
+			remoteInfo = StreamLogsUI;
+		};
 		4F1E6A872E9FB58700BA0F44 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 845495172DBA3A1300211413 /* Project object */;
@@ -67,6 +83,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4F10600A2F7E01AA00C0FFEE /* StreamLogsUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = StreamLogsUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		4F10600B2F7E01AA00C0FFEE /* StreamLogsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StreamLogsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F1E6A7D2E9FB58600BA0F44 /* StreamAttachments.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = StreamAttachments.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F1E6A852E9FB58700BA0F44 /* StreamAttachmentsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StreamAttachmentsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8415DA0B2E462E9F00FEE25F /* StreamCoreUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = StreamCoreUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -76,6 +94,26 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		4F10600D2F7E01AA00C0FFEE /* Exceptions for "StreamLogsUI" folder in "StreamLogsUI" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 4F10600F2F7E01AA00C0FFEE /* StreamLogsUI */;
+		};
+		4F10600E2F7E01AA00C0FFEE /* Exceptions for "Tests" folder in "StreamLogsUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				StreamLogsUITests/InMemoryLogRecorder_PerformanceTests.swift,
+				StreamLogsUITests/InMemoryLogRecorder_Tests.swift,
+				StreamLogsUITests/LogEntry_Tests.swift,
+				StreamLogsUITests/LogListViewModel_Tests.swift,
+				StreamLogsUITests/LogSettings_Tests.swift,
+				StreamLogsUITests/LogViewerAppearance_Tests.swift,
+				StreamLogsUITests/StreamLogsUI.xctestplan,
+			);
+			target = 4F1060102F7E01AA00C0FFEE /* StreamLogsUITests */;
+		};
 		4F1E6AAF2E9FB5C300BA0F44 /* Exceptions for "Tests" folder in "StreamAttachmentsTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -112,6 +150,13 @@
 				StreamAttachmentsTests/StreamAttachmentsTests.swift,
 				StreamCoreUITests/CDN/StreamImageCDN_Tests.swift,
 				StreamCoreUITests/DesignSystem/DesignSystemTokens_Tests.swift,
+				StreamLogsUITests/InMemoryLogRecorder_PerformanceTests.swift,
+				StreamLogsUITests/InMemoryLogRecorder_Tests.swift,
+				StreamLogsUITests/LogEntry_Tests.swift,
+				StreamLogsUITests/LogListViewModel_Tests.swift,
+				StreamLogsUITests/LogSettings_Tests.swift,
+				StreamLogsUITests/LogViewerAppearance_Tests.swift,
+				StreamLogsUITests/StreamLogsUI.xctestplan,
 			);
 			target = 845495272DBA3A1300211413 /* StreamCoreTests */;
 		};
@@ -126,6 +171,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		4F10600C2F7E01AA00C0FFEE /* StreamLogsUI */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4F10600D2F7E01AA00C0FFEE /* Exceptions for "StreamLogsUI" folder in "StreamLogsUI" target */,
+			);
+			path = StreamLogsUI;
+			sourceTree = "<group>";
+		};
 		4F1E6A7E2E9FB58600BA0F44 /* StreamAttachments */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -140,6 +193,7 @@
 				829528D02E69CD5200AED807 /* Exceptions for "Tests" folder in "StreamCoreTests" target */,
 				8415DA382E4630F800FEE25F /* Exceptions for "Tests" folder in "StreamCoreUITests" target */,
 				4F1E6AAF2E9FB5C300BA0F44 /* Exceptions for "Tests" folder in "StreamAttachmentsTests" target */,
+				4F10600E2F7E01AA00C0FFEE /* Exceptions for "Tests" folder in "StreamLogsUITests" target */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -163,6 +217,22 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4F1060132F7E01AA00C0FFEE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4F1060162F7E01AA00C0FFEE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4F1060192F7E01AA00C0FFEE /* StreamLogsUI.framework in Frameworks */,
+				4F1060242F7E01AA00C0FFEE /* StreamCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4F1E6A7A2E9FB58600BA0F44 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -238,6 +308,8 @@
 				8415DA172E462EEF00FEE25F /* StreamCoreUITests.xctest */,
 				4F1E6A7D2E9FB58600BA0F44 /* StreamAttachments.framework */,
 				4F1E6A852E9FB58700BA0F44 /* StreamAttachmentsTests.xctest */,
+				4F10600A2F7E01AA00C0FFEE /* StreamLogsUI.framework */,
+				4F10600B2F7E01AA00C0FFEE /* StreamLogsUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -248,6 +320,7 @@
 				845495222DBA3A1300211413 /* StreamCore */,
 				8415DA0C2E462E9F00FEE25F /* StreamCoreUI */,
 				4F1E6A7E2E9FB58600BA0F44 /* StreamAttachments */,
+				4F10600C2F7E01AA00C0FFEE /* StreamLogsUI */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -255,6 +328,13 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		4F1060112F7E01AA00C0FFEE /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4F1E6A782E9FB58600BA0F44 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -279,6 +359,50 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		4F10600F2F7E01AA00C0FFEE /* StreamLogsUI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4F1060222F7E01AA00C0FFEE /* Build configuration list for PBXNativeTarget "StreamLogsUI" */;
+			buildPhases = (
+				4F1060112F7E01AA00C0FFEE /* Headers */,
+				4F1060122F7E01AA00C0FFEE /* Sources */,
+				4F1060132F7E01AA00C0FFEE /* Frameworks */,
+				4F1060142F7E01AA00C0FFEE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				4F10600C2F7E01AA00C0FFEE /* StreamLogsUI */,
+			);
+			name = StreamLogsUI;
+			packageProductDependencies = (
+			);
+			productName = StreamLogsUI;
+			productReference = 4F10600A2F7E01AA00C0FFEE /* StreamLogsUI.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		4F1060102F7E01AA00C0FFEE /* StreamLogsUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4F1060232F7E01AA00C0FFEE /* Build configuration list for PBXNativeTarget "StreamLogsUITests" */;
+			buildPhases = (
+				4F1060152F7E01AA00C0FFEE /* Sources */,
+				4F1060162F7E01AA00C0FFEE /* Frameworks */,
+				4F1060172F7E01AA00C0FFEE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4F10601D2F7E01AA00C0FFEE /* PBXTargetDependency */,
+				4F1060262F7E01AA00C0FFEE /* PBXTargetDependency */,
+			);
+			name = StreamLogsUITests;
+			packageProductDependencies = (
+			);
+			productName = StreamLogsUITests;
+			productReference = 4F10600B2F7E01AA00C0FFEE /* StreamLogsUITests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		4F1E6A7C2E9FB58600BA0F44 /* StreamAttachments */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4F1E6A902E9FB58700BA0F44 /* Build configuration list for PBXNativeTarget "StreamAttachments" */;
@@ -424,6 +548,12 @@
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
+					4F10600F2F7E01AA00C0FFEE = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					4F1060102F7E01AA00C0FFEE = {
+						CreatedOnToolsVersion = 27.1;
+					};
 					4F1E6A7C2E9FB58600BA0F44 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
@@ -465,11 +595,27 @@
 				8415DA162E462EEF00FEE25F /* StreamCoreUITests */,
 				4F1E6A7C2E9FB58600BA0F44 /* StreamAttachments */,
 				4F1E6A842E9FB58700BA0F44 /* StreamAttachmentsTests */,
+				4F10600F2F7E01AA00C0FFEE /* StreamLogsUI */,
+				4F1060102F7E01AA00C0FFEE /* StreamLogsUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		4F1060142F7E01AA00C0FFEE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4F1060172F7E01AA00C0FFEE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4F1E6A7B2E9FB58600BA0F44 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -515,6 +661,20 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4F1060122F7E01AA00C0FFEE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4F1060152F7E01AA00C0FFEE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4F1E6A792E9FB58600BA0F44 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -560,6 +720,16 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4F1060262F7E01AA00C0FFEE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8454951F2DBA3A1300211413 /* StreamCore */;
+			targetProxy = 4F1060252F7E01AA00C0FFEE /* PBXContainerItemProxy */;
+		};
+		4F10601D2F7E01AA00C0FFEE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4F10600F2F7E01AA00C0FFEE /* StreamLogsUI */;
+			targetProxy = 4F10601C2F7E01AA00C0FFEE /* PBXContainerItemProxy */;
+		};
 		4F1E6A882E9FB58700BA0F44 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4F1E6A7C2E9FB58600BA0F44 /* StreamAttachments */;
@@ -588,6 +758,101 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		4F10601E2F7E01AA00C0FFEE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/Sources/StreamLogsUI/Info.plist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = io.getstream.StreamLogsUI;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4F10601F2F7E01AA00C0FFEE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/Sources/StreamLogsUI/Info.plist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = io.getstream.StreamLogsUI;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		4F1060202F7E01AA00C0FFEE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.getstream.StreamLogsUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4F1060212F7E01AA00C0FFEE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.getstream.StreamLogsUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		4F1E6A8C2E9FB58700BA0F44 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1023,6 +1288,24 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4F1060222F7E01AA00C0FFEE /* Build configuration list for PBXNativeTarget "StreamLogsUI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4F10601E2F7E01AA00C0FFEE /* Debug */,
+				4F10601F2F7E01AA00C0FFEE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4F1060232F7E01AA00C0FFEE /* Build configuration list for PBXNativeTarget "StreamLogsUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4F1060202F7E01AA00C0FFEE /* Debug */,
+				4F1060212F7E01AA00C0FFEE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		4F1E6A902E9FB58700BA0F44 /* Build configuration list for PBXNativeTarget "StreamAttachments" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

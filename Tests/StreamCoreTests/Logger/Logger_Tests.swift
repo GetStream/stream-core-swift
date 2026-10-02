@@ -35,6 +35,66 @@ struct Logger_Tests {
         )
     }
 
+    @Test func metadataIsPassedToDestinations() async throws {
+        let destination = CapturingDestination()
+        let logger = Logger(identifier: "test", destinations: [destination])
+
+        logger.debug("GET /channels", metadata: [.httpMethod: "GET", .httpStatusCode: "200"])
+
+        let details = try await destination.waitForDetails()
+        #expect(details.metadata == [.httpMethod: "GET", .httpStatusCode: "200"])
+    }
+
+    @Test func metadataIsNotEvaluatedWithoutEnabledDestinations() {
+        let destination = CapturingDestination(level: .error)
+        let logger = Logger(identifier: "test", destinations: [destination])
+        let isEvaluated = AllocatedUnfairLock(false)
+
+        logger.debug("GET /channels", metadata: {
+            isEvaluated.withLock { $0 = true }
+            return [:]
+        }())
+
+        #expect(isEvaluated.value == false)
+    }
+
+    @Test func messageWithMetadataListsPredefinedKeysFirstAndMultilineValuesOnTheirOwnLine() async throws {
+        let destination = CapturingDestination()
+        let logger = Logger(identifier: "test", destinations: [destination])
+
+        logger.debug(
+            "201 POST /channels",
+            metadata: [
+                "Custom": "value",
+                .httpResponseBody: "{\n  \"id\" : 1\n}",
+                .httpStatusCode: "201",
+                .httpMethod: "POST"
+            ]
+        )
+
+        let details = try await destination.waitForDetails()
+        #expect(details.messageWithMetadata == """
+        201 POST /channels
+        Method: POST
+        Status Code: 201
+        Response Body:
+        {
+          "id" : 1
+        }
+        Custom: value
+        """)
+    }
+
+    @Test func messageWithoutMetadataIsUnchanged() async throws {
+        let destination = CapturingDestination()
+        let logger = Logger(identifier: "test", destinations: [destination])
+
+        logger.info("Connected")
+
+        let details = try await destination.waitForDetails()
+        #expect(details.messageWithMetadata == "Connected")
+    }
+
     @Test func levelPublisherEmitsCurrentLevelAndChanges() {
         resetLogConfig()
         defer { resetLogConfig() }
@@ -191,12 +251,12 @@ private final class CapturingDestination: BaseLogDestination, @unchecked Sendabl
     private var logDetails: [LogDetails] = []
     private let lock = NSLock()
 
-    init() {
+    init(level: LogLevel = .debug) {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
         super.init(
             identifier: UUID().uuidString,
-            level: .debug,
+            level: level,
             subsystems: .all,
             showDate: false,
             dateFormatter: formatter,
@@ -260,5 +320,20 @@ private final class CapturingDestination: BaseLogDestination, @unchecked Sendabl
         lock.lock()
         defer { lock.unlock() }
         return logDetails.map(\.threadName)
+    }
+
+    private var firstDetails: LogDetails? {
+        lock.lock()
+        defer { lock.unlock() }
+        return logDetails.first
+    }
+
+    func waitForDetails() async throws -> LogDetails {
+        let deadline = Date().addingTimeInterval(5)
+        while Date() < deadline {
+            if let details = firstDetails { return details }
+            try await Task.sleep(nanoseconds: 10_000_000)
+        }
+        throw CancellationError()
     }
 }

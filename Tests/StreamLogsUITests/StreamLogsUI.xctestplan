@@ -1,0 +1,26 @@
+{
+  "configurations" : [
+    {
+      "id" : "3D0B9E1A-6C2F-4E8B-9A57-2F1C4D6E8B10",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "language" : "en",
+    "region" : "US",
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:StreamCore.xcodeproj",
+        "identifier" : "4F1060102F7E01AA00C0FFEE",
+        "name" : "StreamLogsUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

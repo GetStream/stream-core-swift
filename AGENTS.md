@@ -26,10 +26,12 @@ Sources/
   StreamCoreUI/            # Shared UI tokens (design system, CDN helpers)
     DesignSystem/          # DesignSystemTokens (colors, layout, fonts)
   StreamAttachments/       # Attachment upload feature module
+  StreamLogsUI/            # In-app log viewer (debug-only; not linked by product SDKs)
 Tests/
   StreamCoreTests/
   StreamCoreUITests/
   StreamAttachmentsTests/
+  StreamLogsUITests/
 fastlane/                  # Fastlane lanes for CI
 Scripts/                   # Helper scripts
 ```
@@ -51,6 +53,7 @@ Available shared schemes (under `StreamCore.xcodeproj/xcshareddata/xcschemes/`):
 - `StreamCore` — builds the core framework
 - `StreamCoreUI` — builds the shared UI framework
 - `StreamAttachments` — builds the attachments feature module
+- `StreamLogsUI` — builds the debug log viewer
 
 Agents must query existing schemes before invoking xcodebuild.
 
