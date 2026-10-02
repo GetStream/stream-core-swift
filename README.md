@@ -55,7 +55,7 @@ NavigationStack {
 
 `LogEntry` only requires a level and a message. The other fields are optional, and `metadata` holds any extra key-value pairs, which are displayed and searchable. Besides the predefined levels, apps can define their own, e.g. `LogEntry.Level(severity: 45, name: "SECURITY")`.
 
-Entries with the predefined HTTP metadata keys are shown as requests, with their method and status. Their request and response bodies are shown in the details, and their cURL command can be copied:
+Entries with the predefined HTTP metadata keys are shown as requests, with their method and status. Their request and response bodies can be browsed and searched in a JSON viewer, and their cURL command can be copied:
 
 ```swift
 InMemoryLogStore.shared.append(LogEntry(

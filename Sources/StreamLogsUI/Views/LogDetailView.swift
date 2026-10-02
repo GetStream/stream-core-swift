@@ -9,38 +9,58 @@ import UIKit
 struct LogDetailView: View {
     let entry: LogEntry
     @State private var content: LogDetailContent?
+    @State private var mode = Mode.raw
+    @StateObject private var json = LogJSONViewModel()
+
+    enum Mode: Hashable {
+        case raw
+        case json
+    }
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
-                VStack(alignment: .leading, spacing: LogTokens.Spacing.md) {
-                    LogDetailSummary(entry: entry)
-                    actions
-                }
-                .padding(.horizontal, LogTokens.Spacing.md)
-                .padding(.top, LogTokens.Spacing.md)
-                .padding(.bottom, LogTokens.Spacing.xs)
-
-                if let content {
-                    Section {
-                        rawLog(content)
-                    } header: {
-                        contentHeader
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    VStack(alignment: .leading, spacing: LogTokens.Spacing.md) {
+                        LogDetailSummary(entry: entry)
+                        actions
                     }
-                } else {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding(LogTokens.Spacing.md)
+                    .padding(.horizontal, LogTokens.Spacing.md)
+                    .padding(.top, LogTokens.Spacing.md)
+                    .padding(.bottom, LogTokens.Spacing.xs)
+
+                    if let content {
+                        Section {
+                            switch mode {
+                            case .raw:
+                                rawLog(content)
+                            case .json:
+                                jsonNodes
+                            }
+                        } header: {
+                            contentHeader(hasJSON: !content.jsonTree.isEmpty)
+                        }
+                    } else {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .padding(LogTokens.Spacing.md)
+                    }
                 }
+            }
+            .onChange(of: json.currentMatchID) { id in
+                guard let id, mode == .json else { return }
+                withAnimation { proxy.scrollTo(id, anchor: .center) }
             }
         }
         .navigationTitle("Log Details")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: entry.id) {
             let entry = entry
-            content = await Task.detached(priority: .userInitiated) {
+            let content = await Task.detached(priority: .userInitiated) {
                 LogDetailContent(entry: entry)
             }.value
+            self.content = content
+            json.load(content.jsonTree)
         }
     }
 
@@ -56,14 +76,27 @@ struct LogDetailView: View {
         }
     }
 
-    private var contentHeader: some View {
-        Text("Raw Log")
-            .font(.headline)
-            .foregroundColor(LogTokens.Colors.textPrimary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, LogTokens.Spacing.md)
-            .padding(.vertical, LogTokens.Spacing.xs)
-            .background(.bar)
+    private func contentHeader(hasJSON: Bool) -> some View {
+        VStack(alignment: .leading, spacing: LogTokens.Spacing.xs) {
+            if hasJSON {
+                Picker("Format", selection: $mode) {
+                    Text("Raw").tag(Mode.raw)
+                    Text("JSON").tag(Mode.json)
+                }
+                .pickerStyle(.segmented)
+                if mode == .json {
+                    LogJSONToolbar(viewModel: json)
+                }
+            } else {
+                Text("Raw Log")
+                    .font(.headline)
+                    .foregroundColor(LogTokens.Colors.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .padding(.horizontal, LogTokens.Spacing.md)
+        .padding(.vertical, LogTokens.Spacing.xs)
+        .background(.bar)
     }
 
     private func rawLog(_ content: LogDetailContent) -> some View {
@@ -91,6 +124,25 @@ struct LogDetailView: View {
         }
         .padding(.horizontal, LogTokens.Spacing.md)
         .padding(.vertical, LogTokens.Spacing.xs)
+    }
+
+    @ViewBuilder
+    private var jsonNodes: some View {
+        let tree = json.tree
+        ForEach(json.visibleIDs, id: \.self) { id in
+            LogJSONNodeRow(
+                node: tree.nodes[id],
+                isExpanded: json.expandedIDs.contains(id),
+                searchText: json.matchedText,
+                isCurrentMatch: json.currentMatchID == id,
+                toggle: { json.toggle(id) },
+                jsonText: { tree.jsonText(for: id) }
+            )
+            .id(id)
+            .padding(.horizontal, LogTokens.Spacing.xs)
+        }
+        Color.clear
+            .frame(height: LogTokens.Spacing.md)
     }
 }
 

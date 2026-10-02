@@ -6,7 +6,7 @@
 import Testing
 
 struct LogDetailContent_Tests {
-    @Test func httpRequestUsesTheResponseBodyAndCurlCommandOfItsMetadata() {
+    @Test func httpRequestBodiesAreJSONDocuments() {
         let entry = LogEntry(
             level: .debug,
             message: "201 POST /channels",
@@ -22,6 +22,7 @@ struct LogDetailContent_Tests {
 
         let subject = LogDetailContent(entry: entry)
 
+        #expect(subject.jsonTree.roots.map { subject.jsonTree.nodes[$0].key } == [.title("Request Body"), .title("Response Body")])
         #expect(subject.json == "{\n  \"id\" : 1\n}")
         #expect(subject.curlCommand == "curl -v \"https://example.com/channels\"")
         #expect(subject.rawText == entry.rawText)
@@ -42,6 +43,7 @@ struct LogDetailContent_Tests {
 
         let subject = LogDetailContent(entry: entry)
 
+        #expect(subject.jsonTree.isEmpty)
         #expect(subject.json == nil)
         #expect(subject.curlCommand == nil)
     }
@@ -51,6 +53,7 @@ struct LogDetailContent_Tests {
 
         let subject = LogDetailContent(entry: entry)
 
+        #expect(subject.jsonTree.roots.map { subject.jsonTree.nodes[$0].key } == [.title("JSON")])
         #expect(subject.json == "{\n  \"type\" : \"health.check\"\n}")
         #expect(subject.curlCommand == "curl https://example.com")
     }

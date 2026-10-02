@@ -8,7 +8,8 @@ struct LogDetailContent: Sendable {
     let rawText: String
     let rawPreview: String?
     let curlCommand: String?
-    // The response body of HTTP requests, or the JSON found in other messages.
+    let jsonTree: LogJSONTree
+    // The last JSON document, which is the response body of HTTP requests that have one.
     let json: String?
 
     init(entry: LogEntry) {
@@ -19,10 +20,18 @@ struct LogDetailContent: Sendable {
         curlCommand = httpRequest?.curlCommand.flatMap(LogMessageParser.curlCommand(in:))
             ?? LogMessageParser.curlCommand(in: entry.message)
 
+        var documents: [(title: String, text: String)] = []
         if let httpRequest {
-            json = httpRequest.responseBody.flatMap(LogMessageParser.json(in:))
-        } else {
-            json = LogMessageParser.json(in: entry.message)
+            if let body = httpRequest.requestBody {
+                documents.append((LogEntry.MetadataKey.httpRequestBody.rawValue, body))
+            }
+            if let body = httpRequest.responseBody {
+                documents.append((LogEntry.MetadataKey.httpResponseBody.rawValue, body))
+            }
+        } else if let json = LogMessageParser.json(in: entry.message) {
+            documents.append(("JSON", json))
         }
+        jsonTree = LogJSONTree(documents: documents)
+        json = jsonTree.roots.last.map(jsonTree.jsonText(for:))
     }
 }
