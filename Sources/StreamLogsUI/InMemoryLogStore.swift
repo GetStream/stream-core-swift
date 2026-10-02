@@ -32,6 +32,14 @@ public final class InMemoryLogStore: LogStore, @unchecked Sendable {
         self.publishInterval = publishInterval
     }
 
+    // A store with the entries of the session that doesn't record new entries.
+    convenience init(session: LogSession) {
+        self.init(capacity: max(session.entries.count, 1))
+        _isRecording = false
+        buffer = session.entries
+        entriesSubject.send(session.entries)
+    }
+
     /// Whether new log entries are recorded. Defaults to `true`.
     public var isRecording: Bool {
         get { recordingLock.withLock { _isRecording } }

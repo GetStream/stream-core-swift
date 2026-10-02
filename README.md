@@ -213,6 +213,19 @@ DDLog.add(InMemoryLogger())
 
 </details>
 
+### Sharing logs
+
+The share button in the log list exports all logs, or only the filtered ones, as a JSON file that can be sent from the share sheet, for example by a customer reporting an issue. The same menu imports a file, which opens in a separate, read-only list with the app version, OS and device that recorded it, so it never mixes with the live logs.
+
+The file is a `LogSession`, which can also be read and written in code, for example to attach logs to a bug report:
+
+```swift
+let data = try LogSession(entries: InMemoryLogStore.shared.entries).encoded()
+let session = try LogSession(data: data)
+```
+
+`LogEntry` is `Codable`, and dates are written as ISO 8601 strings with milliseconds.
+
 ### Customization
 
 - **Settings:** `LogSettings` holds the destinations shown in the settings screen, each with its own switch, level and subsystems. Use `apply(_:)` to rebuild your logger's destinations when they change.
