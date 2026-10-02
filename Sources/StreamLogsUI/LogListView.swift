@@ -262,20 +262,3 @@ public struct LogListView: View {
         }
     }
 }
-
-private extension View {
-    @ViewBuilder
-    func topBar(@ViewBuilder _ content: () -> some View) -> some View {
-        if #available(iOS 26.0, *) {
-            safeAreaBar(edge: .top, spacing: 0, content: content)
-        } else {
-            safeAreaInset(edge: .top, spacing: 0) {
-                VStack(spacing: 0) {
-                    content()
-                    Divider()
-                }
-                .background(.bar)
-            }
-        }
-    }
-}

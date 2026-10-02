@@ -24,34 +24,37 @@ struct LogDetailView: View {
         let index: Int
     }
 
-    // Keeps scrolled-to rows below the pinned format header.
+    // Keeps tapped JSON nodes in the upper part of the screen, where they were most likely tapped.
     private static let scrollAnchor = UnitPoint(x: 0.5, y: 0.3)
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                LazyVStack(alignment: .leading, spacing: 0) {
                     LogDetailSummary(entry: entry, isExpanded: $isSummaryExpanded)
-                        .padding(.horizontal, LogTokens.Spacing.md)
-                        .padding(.top, LogTokens.Spacing.md)
+                        .padding(LogTokens.Spacing.md)
+
+                    Divider()
+                        .overlay(LogTokens.Colors.borderDefault)
                         .padding(.bottom, LogTokens.Spacing.xs)
 
-                    if let content {
-                        Section {
-                            switch mode {
-                            case .raw:
-                                rawChunks
-                            case .json:
-                                jsonNodes(proxy: proxy)
-                            }
-                        } header: {
-                            contentHeader(hasJSON: !content.jsonTree.isEmpty)
+                    if content != nil {
+                        switch mode {
+                        case .raw:
+                            rawChunks
+                        case .json:
+                            jsonNodes(proxy: proxy)
                         }
                     } else {
                         ProgressView()
                             .frame(maxWidth: .infinity)
                             .padding(LogTokens.Spacing.md)
                     }
+                }
+            }
+            .topBar {
+                if let content {
+                    contentHeader(hasJSON: !content.jsonTree.isEmpty)
                 }
             }
             .onChange(of: json.currentMatchID) { id in
@@ -109,7 +112,6 @@ struct LogDetailView: View {
         }
         .padding(.horizontal, LogTokens.Spacing.md)
         .padding(.vertical, LogTokens.Spacing.xs)
-        .background(.bar)
     }
 
     // The raw log is shown in chunks, as text views lay out a whole paragraph at once,
