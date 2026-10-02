@@ -34,7 +34,10 @@ struct LogDetailView: View {
                     LogDetailSummary(entry: entry, isExpanded: $isSummaryExpanded)
                         .padding(LogTokens.Spacing.md)
 
-                    if content != nil {
+                    if let content {
+                        if !content.jsonTree.isEmpty {
+                            formatPicker
+                        }
                         panelHeader
                         switch mode {
                         case .raw:
@@ -51,8 +54,8 @@ struct LogDetailView: View {
                 }
             }
             .topBar {
-                if let content {
-                    contentHeader(hasJSON: !content.jsonTree.isEmpty)
+                if content != nil {
+                    searchBar
                 }
             }
             .onChange(of: json.currentMatchID) { id in
@@ -92,15 +95,18 @@ struct LogDetailView: View {
         }
     }
 
-    private func contentHeader(hasJSON: Bool) -> some View {
-        VStack(alignment: .leading, spacing: LogTokens.Spacing.xs) {
-            if hasJSON {
-                Picker("Format", selection: $mode) {
-                    Text("Raw").tag(Mode.raw)
-                    Text("JSON").tag(Mode.json)
-                }
-                .pickerStyle(.segmented)
-            }
+    private var formatPicker: some View {
+        Picker("Format", selection: $mode) {
+            Text("Raw").tag(Mode.raw)
+            Text("JSON").tag(Mode.json)
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal, LogTokens.Spacing.md)
+        .padding(.bottom, LogTokens.Spacing.sm)
+    }
+
+    private var searchBar: some View {
+        Group {
             switch mode {
             case .raw:
                 LogSearchField(
