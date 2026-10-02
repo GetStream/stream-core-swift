@@ -10,13 +10,22 @@ struct LogDetailView: View {
     let entry: LogEntry
     @State private var content: LogDetailContent?
     @State private var mode = Mode.raw
-    @State private var isSummaryExpanded = false
+    @State private var isSummaryExpanded = true
     @StateObject private var json = LogJSONViewModel()
+    @StateObject private var raw = LogRawTextViewModel()
+    @Environment(\.logViewerAppearance) private var appearance
 
     enum Mode: Hashable {
         case raw
         case json
     }
+
+    private struct RawChunkID: Hashable {
+        let index: Int
+    }
+
+    // Keeps scrolled-to rows below the pinned format header.
+    private static let scrollAnchor = UnitPoint(x: 0.5, y: 0.3)
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -31,9 +40,9 @@ struct LogDetailView: View {
                         Section {
                             switch mode {
                             case .raw:
-                                rawLog(content)
+                                rawChunks
                             case .json:
-                                jsonNodes
+                                jsonNodes(proxy: proxy)
                             }
                         } header: {
                             contentHeader(hasJSON: !content.jsonTree.isEmpty)
@@ -47,7 +56,12 @@ struct LogDetailView: View {
             }
             .onChange(of: json.currentMatchID) { id in
                 guard let id, mode == .json else { return }
-                withAnimation { proxy.scrollTo(id, anchor: .center) }
+                scroll(proxy, to: id)
+            }
+            .onChange(of: raw.currentChunkIndex) { index in
+                guard let index, mode == .raw else { return }
+                // Waits for the rows revealed by expanding the log to be added.
+                DispatchQueue.main.async { scroll(proxy, to: RawChunkID(index: index)) }
             }
         }
         .navigationTitle("Log Details")
@@ -63,7 +77,17 @@ struct LogDetailView: View {
                 LogDetailContent(entry: entry)
             }.value
             self.content = content
+            raw.load(chunks: content.rawChunks, previewChunkCount: content.rawPreviewChunkCount)
             json.load(content.jsonTree)
+        }
+    }
+
+    // Lazy stacks estimate the position of rows that are not laid out yet, so far away rows are
+    // scrolled to a second time once they are laid out.
+    private func scroll(_ proxy: ScrollViewProxy, to id: some Hashable) {
+        proxy.scrollTo(id, anchor: .center)
+        DispatchQueue.main.async {
+            withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }
         }
     }
 
@@ -75,14 +99,12 @@ struct LogDetailView: View {
                     Text("JSON").tag(Mode.json)
                 }
                 .pickerStyle(.segmented)
-                if mode == .json {
-                    LogJSONToolbar(viewModel: json)
-                }
-            } else {
-                Text("Raw Log")
-                    .font(.headline)
-                    .foregroundColor(LogTokens.Colors.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            switch mode {
+            case .raw:
+                LogRawToolbar(viewModel: raw)
+            case .json:
+                LogJSONToolbar(viewModel: json)
             }
         }
         .padding(.horizontal, LogTokens.Spacing.md)
@@ -90,35 +112,43 @@ struct LogDetailView: View {
         .background(.bar)
     }
 
-    private func rawLog(_ content: LogDetailContent) -> some View {
-        VStack(alignment: .leading, spacing: LogTokens.Spacing.sm) {
-            LogSelectableTextView(text: content.rawPreview.map { "\($0)…" } ?? content.rawText)
-                .padding(LogTokens.Spacing.sm)
+    // The raw log is shown in chunks, as text views lay out a whole paragraph at once,
+    // and logs can contain very long lines, such as minified JSON responses.
+    @ViewBuilder
+    private var rawChunks: some View {
+        let chunks = raw.chunks
+        ForEach(0..<raw.visibleChunkCount, id: \.self) { index in
+            rawChunkText(chunks[index])
+                .font(.system(.footnote, design: .monospaced))
+                .foregroundColor(LogTokens.Colors.textPrimary)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, LogTokens.Spacing.xs)
                 .background(
-                    LogTokens.Colors.backgroundSurfaceCard,
-                    in: RoundedRectangle(cornerRadius: LogTokens.Radius.lg)
+                    raw.currentChunkIndex == index ? LogTokens.Colors.accentPrimary.opacity(0.12) : .clear,
+                    in: RoundedRectangle(cornerRadius: LogTokens.Radius.sm)
                 )
-                .overlay(
-                    RoundedRectangle(cornerRadius: LogTokens.Radius.lg)
-                        .strokeBorder(LogTokens.Colors.borderDefault)
-                )
-
-            if content.rawPreview != nil {
-                NavigationLink {
-                    LogFullMessageView(message: content.rawText)
-                } label: {
-                    Label("View Full Log", systemImage: "text.alignleft")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundColor(LogTokens.Colors.accentPrimary)
-                }
-            }
+                .padding(.horizontal, LogTokens.Spacing.xs)
+                .id(RawChunkID(index: index))
         }
-        .padding(.horizontal, LogTokens.Spacing.md)
-        .padding(.vertical, LogTokens.Spacing.xs)
+        if raw.visibleChunkCount < chunks.count {
+            Text("…")
+                .font(.system(.footnote, design: .monospaced))
+                .foregroundColor(LogTokens.Colors.textTertiary)
+                .padding(.horizontal, LogTokens.Spacing.md)
+                .accessibilityLabel("Log truncated")
+        }
+        Color.clear
+            .frame(height: LogTokens.Spacing.md)
+    }
+
+    private func rawChunkText(_ chunk: String) -> Text {
+        guard !chunk.isEmpty else { return Text(" ") }
+        return Text(LogHighlightedText.attributedString(chunk, highlightingAll: raw.matchedText, color: appearance.highlightColor))
     }
 
     @ViewBuilder
-    private var jsonNodes: some View {
+    private func jsonNodes(proxy: ScrollViewProxy) -> some View {
         let tree = json.tree
         ForEach(json.visibleIDs, id: \.self) { id in
             LogJSONNodeRow(
@@ -126,7 +156,14 @@ struct LogDetailView: View {
                 isExpanded: json.expandedIDs.contains(id),
                 searchText: json.matchedText,
                 isCurrentMatch: json.currentMatchID == id,
-                toggle: { json.toggle(id) },
+                isFocused: json.focusedID == id,
+                toggle: {
+                    withAnimation(.easeInOut(duration: 0.15)) { json.toggle(id) }
+                    // Lazy stacks re-estimate row heights after expanding, which can shift the tapped row.
+                    DispatchQueue.main.async {
+                        withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: Self.scrollAnchor) }
+                    }
+                },
                 jsonText: { tree.jsonText(for: id) }
             )
             .id(id)
@@ -194,12 +231,6 @@ private struct LogDetailSummary: View {
                 infoRows(hidingHTTPKeys: httpRequest != nil)
             }
         }
-        .padding(LogTokens.Spacing.md)
-        .background(LogTokens.Colors.backgroundSurfaceCard, in: RoundedRectangle(cornerRadius: LogTokens.Radius.xl))
-        .overlay(
-            RoundedRectangle(cornerRadius: LogTokens.Radius.xl)
-                .strokeBorder(LogTokens.Colors.borderDefault)
-        )
     }
 
     private func infoRows(hidingHTTPKeys: Bool) -> some View {
@@ -240,48 +271,6 @@ private struct LogDetailSummary: View {
                         .lineLimit(8)
                         .textSelection(.enabled)
                 }
-            }
-        }
-    }
-}
-
-// Text views lay out a whole paragraph at once, and messages can contain very long lines,
-// such as minified JSON responses, so the message is shown in lazily loaded chunks.
-@available(iOS 16.0, *)
-private struct LogFullMessageView: View {
-    let message: String
-    @State private var chunks: [String]?
-
-    var body: some View {
-        Group {
-            if let chunks {
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        ForEach(chunks.indices, id: \.self) { index in
-                            Text(chunks[index].isEmpty ? " " : chunks[index])
-                                .font(.system(.footnote, design: .monospaced))
-                                .foregroundColor(LogTokens.Colors.textPrimary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                    }
-                    .textSelection(.enabled)
-                    .padding(LogTokens.Spacing.md)
-                }
-            } else {
-                ProgressView()
-            }
-        }
-        .task {
-            let message = message
-            chunks = await Task.detached(priority: .userInitiated) {
-                LogMessageParser.chunks(of: message)
-            }.value
-        }
-        .navigationTitle("Raw Log")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                LogCopyButton(options: [LogCopyOption(title: "Raw", text: message)])
             }
         }
     }

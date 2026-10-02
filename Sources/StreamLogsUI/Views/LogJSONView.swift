@@ -11,75 +11,59 @@ struct LogJSONToolbar: View {
 
     var body: some View {
         HStack(spacing: LogTokens.Spacing.xs) {
-            HStack(spacing: LogTokens.Spacing.xs) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(LogTokens.Colors.textTertiary)
-                    .accessibilityHidden(true)
-                TextField("Search JSON", text: $viewModel.searchText)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .submitLabel(.search)
-                    .onSubmit { viewModel.showNextMatch() }
-                if !viewModel.searchText.isEmpty {
-                    Text(matchSummary)
-                        .font(.caption.monospacedDigit())
-                        .foregroundColor(LogTokens.Colors.textTertiary)
-                    Button {
-                        viewModel.searchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(LogTokens.Colors.textTertiary)
+            LogSearchField(
+                placeholder: "Search JSON",
+                text: $viewModel.searchText,
+                isSearching: viewModel.matchedText != viewModel.searchText,
+                currentMatchIndex: viewModel.currentMatchIndex,
+                matchCount: viewModel.matchIDs.count,
+                showPreviousMatch: viewModel.showPreviousMatch,
+                showNextMatch: viewModel.showNextMatch
+            )
+
+            LogExpandButton(
+                isExpanded: viewModel.isFullyExpanded,
+                expandLabel: "Expand All",
+                collapseLabel: "Collapse All"
+            ) {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    if viewModel.isFullyExpanded {
+                        viewModel.collapseAll()
+                    } else {
+                        viewModel.expandAll()
                     }
-                    .accessibilityLabel("Clear search")
                 }
             }
-            .font(.subheadline)
-            .padding(.horizontal, LogTokens.Spacing.sm)
-            .padding(.vertical, LogTokens.Spacing.xs)
-            .background(LogTokens.Colors.backgroundSurfaceCard, in: Capsule())
-            .overlay(Capsule().strokeBorder(LogTokens.Colors.borderDefault))
-
-            if viewModel.matchIDs.count > 1 {
-                iconButton("chevron.up", label: "Previous match") { viewModel.showPreviousMatch() }
-                iconButton("chevron.down", label: "Next match") { viewModel.showNextMatch() }
-            }
-
-            Menu {
-                Button {
-                    viewModel.expandAll()
-                } label: {
-                    Label("Expand All", systemImage: "arrow.up.left.and.arrow.down.right")
-                }
-                Button {
-                    viewModel.collapseAll()
-                } label: {
-                    Label("Collapse All", systemImage: "arrow.down.right.and.arrow.up.left")
-                }
-            } label: {
-                Image(systemName: "ellipsis.circle")
-                    .font(.title3)
-                    .foregroundColor(LogTokens.Colors.accentPrimary)
-            }
-            .accessibilityLabel("JSON options")
         }
     }
+}
 
-    private var matchSummary: String {
-        guard viewModel.matchedText == viewModel.searchText else { return "…" }
-        guard let index = viewModel.currentMatchIndex else { return "No matches" }
-        return "\(index + 1) of \(viewModel.matchIDs.count)"
-    }
+@available(iOS 16.0, *)
+struct LogRawToolbar: View {
+    @ObservedObject var viewModel: LogRawTextViewModel
 
-    private func iconButton(_ systemImage: String, label: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.subheadline.weight(.semibold))
-                .frame(width: 32, height: 32)
-                .background(LogTokens.Colors.backgroundSurfaceCard, in: Circle())
-                .overlay(Circle().strokeBorder(LogTokens.Colors.borderDefault))
-                .foregroundColor(LogTokens.Colors.textPrimary)
+    var body: some View {
+        HStack(spacing: LogTokens.Spacing.xs) {
+            LogSearchField(
+                placeholder: "Search log",
+                text: $viewModel.searchText,
+                isSearching: viewModel.matchedText != viewModel.searchText,
+                currentMatchIndex: viewModel.currentMatchIndex,
+                matchCount: viewModel.matchIndices.count,
+                showPreviousMatch: viewModel.showPreviousMatch,
+                showNextMatch: viewModel.showNextMatch
+            )
+
+            if viewModel.isTruncated {
+                LogExpandButton(
+                    isExpanded: viewModel.isExpanded,
+                    expandLabel: "Expand Full Log",
+                    collapseLabel: "Collapse Log"
+                ) {
+                    viewModel.isExpanded.toggle()
+                }
+            }
         }
-        .accessibilityLabel(label)
     }
 }
 
@@ -89,6 +73,7 @@ struct LogJSONNodeRow: View {
     let isExpanded: Bool
     let searchText: String
     let isCurrentMatch: Bool
+    let isFocused: Bool
     let toggle: () -> Void
     let jsonText: () -> String
     @Environment(\.logViewerAppearance) private var appearance
@@ -110,14 +95,11 @@ struct LogJSONNodeRow: View {
         .padding(.leading, CGFloat(node.depth) * LogTokens.Spacing.md)
         .padding(.horizontal, LogTokens.Spacing.xs)
         .padding(.vertical, LogTokens.Spacing.xxs)
-        .background(
-            isCurrentMatch ? LogTokens.Colors.accentPrimary.opacity(0.12) : .clear,
-            in: RoundedRectangle(cornerRadius: LogTokens.Radius.sm)
-        )
+        .background(background, in: RoundedRectangle(cornerRadius: LogTokens.Radius.sm))
         .contentShape(Rectangle())
         .onTapGesture {
             guard node.value.isContainer else { return }
-            withAnimation(.easeInOut(duration: 0.15)) { toggle() }
+            toggle()
         }
         .contextMenu {
             Button {
@@ -136,6 +118,13 @@ struct LogJSONNodeRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(node.value.isContainer ? .isButton : [])
         .accessibilityValue(node.value.isContainer ? (isExpanded ? "Expanded" : "Collapsed") : "")
+    }
+
+    private var background: Color {
+        if isCurrentMatch {
+            return LogTokens.Colors.accentPrimary.opacity(0.12)
+        }
+        return isFocused ? LogTokens.Colors.backgroundSurfaceDefault : .clear
     }
 
     private var text: Text {

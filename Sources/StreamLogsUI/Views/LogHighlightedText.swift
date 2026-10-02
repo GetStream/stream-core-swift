@@ -45,4 +45,19 @@ struct LogHighlightedText: View {
         }
         return result
     }
+
+    static func attributedString(_ text: String, highlightingAll searchText: String, color: Color) -> AttributedString {
+        guard !searchText.isEmpty else { return AttributedString(text) }
+        var result = AttributedString()
+        var start = text.startIndex
+        while let match = text.range(of: searchText, options: .caseInsensitive, range: start..<text.endIndex) {
+            result += AttributedString(String(text[start..<match.lowerBound]))
+            var highlighted = AttributedString(String(text[match]))
+            highlighted.backgroundColor = color
+            result += highlighted
+            start = match.upperBound
+        }
+        result += AttributedString(String(text[start...]))
+        return result
+    }
 }

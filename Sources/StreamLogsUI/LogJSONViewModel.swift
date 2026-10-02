@@ -10,6 +10,8 @@ final class LogJSONViewModel: ObservableObject {
     @Published private(set) var tree = LogJSONTree()
     @Published private(set) var visibleIDs: [Int] = []
     @Published private(set) var expandedIDs: Set<Int> = []
+    // The node that was last expanded or collapsed.
+    @Published private(set) var focusedID: Int?
     @Published var searchText = "" {
         didSet {
             if searchText != oldValue {
@@ -34,9 +36,14 @@ final class LogJSONViewModel: ObservableObject {
         currentMatchIndex.map { matchIDs[$0] }
     }
 
+    var isFullyExpanded: Bool {
+        !tree.containerIDs.isEmpty && expandedIDs.isSuperset(of: tree.containerIDs)
+    }
+
     func load(_ tree: LogJSONTree) {
         self.tree = tree
         expandedIDs = []
+        focusedID = nil
         matchIDs = []
         currentMatchIndex = nil
         matchedText = ""
@@ -52,6 +59,7 @@ final class LogJSONViewModel: ObservableObject {
         } else {
             expandedIDs.insert(id)
         }
+        focusedID = id
         updateVisibleIDs()
     }
 

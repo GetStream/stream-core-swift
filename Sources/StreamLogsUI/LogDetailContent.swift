@@ -6,7 +6,10 @@ import Foundation
 
 struct LogDetailContent: Sendable {
     let rawText: String
-    let rawPreview: String?
+    // The lines of the raw text, with long lines cut into several chunks.
+    let rawChunks: [String]
+    // The number of chunks shown before the raw text is expanded, or `nil` when the whole text fits.
+    let rawPreviewChunkCount: Int?
     let curlCommand: String?
     let jsonTree: LogJSONTree
     // The last JSON document, which is the response body of HTTP requests that have one.
@@ -14,7 +17,8 @@ struct LogDetailContent: Sendable {
 
     init(entry: LogEntry) {
         rawText = entry.rawText
-        rawPreview = LogMessageParser.preview(of: rawText)
+        rawChunks = LogMessageParser.chunks(of: rawText)
+        rawPreviewChunkCount = LogMessageParser.preview(of: rawText).map { LogMessageParser.chunks(of: $0).count }
 
         let httpRequest = entry.httpRequest
         curlCommand = httpRequest?.curlCommand.flatMap(LogMessageParser.curlCommand(in:))

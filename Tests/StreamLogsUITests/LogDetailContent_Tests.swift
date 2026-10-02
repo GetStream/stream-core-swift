@@ -26,7 +26,8 @@ struct LogDetailContent_Tests {
         #expect(subject.json == "{\n  \"id\" : 1\n}")
         #expect(subject.curlCommand == "curl -v \"https://example.com/channels\"")
         #expect(subject.rawText == entry.rawText)
-        #expect(subject.rawPreview == nil)
+        #expect(subject.rawChunks == entry.rawText.components(separatedBy: "\n"))
+        #expect(subject.rawPreviewChunkCount == nil)
         #expect(subject.copyOptions == [
             LogCopyOption(title: "Raw", text: entry.rawText),
             LogCopyOption(title: "cURL", text: "curl -v \"https://example.com/channels\""),
@@ -62,5 +63,15 @@ struct LogDetailContent_Tests {
         #expect(subject.jsonTree.roots.map { subject.jsonTree.nodes[$0].key } == [.title("JSON")])
         #expect(subject.json == "{\n  \"type\" : \"health.check\"\n}")
         #expect(subject.curlCommand == "curl https://example.com")
+    }
+
+    @Test func longRawTextsHaveAPreview() throws {
+        let line = String(repeating: "a", count: 99)
+        let entry = LogEntry(level: .debug, message: Array(repeating: line, count: 100).joined(separator: "\n"))
+
+        let subject = LogDetailContent(entry: entry)
+
+        let previewChunkCount = try #require(subject.rawPreviewChunkCount)
+        #expect(previewChunkCount < subject.rawChunks.count)
     }
 }

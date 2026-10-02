@@ -30,6 +30,17 @@ struct LogJSONViewModel_Tests {
         #expect(subject.visibleIDs == [root])
     }
 
+    @Test func togglingFocusesTheNodeUntilANewTreeIsLoaded() {
+        subject.load(tree)
+        let root = tree.roots[0]
+
+        subject.toggle(root)
+        #expect(subject.focusedID == root)
+
+        subject.load(tree)
+        #expect(subject.focusedID == nil)
+    }
+
     @Test func expandAllAndCollapseAll() {
         subject.load(tree)
 
@@ -38,6 +49,17 @@ struct LogJSONViewModel_Tests {
 
         subject.collapseAll()
         #expect(subject.visibleIDs == tree.roots)
+    }
+
+    @Test func isFullyExpandedOnlyWhenEveryContainerIsExpanded() {
+        subject.load(tree)
+        #expect(!subject.isFullyExpanded)
+
+        subject.toggle(tree.roots[0])
+        #expect(!subject.isFullyExpanded)
+
+        subject.expandAll()
+        #expect(subject.isFullyExpanded)
     }
 
     @Test func searchExpandsTheAncestorsOfMatchesAndSelectsTheFirstMatch() async {
