@@ -36,11 +36,10 @@ enum LogMessageParser {
     }
 
     static func curlCommand(in message: String) -> String? {
-        let text = requestSection(in: message) ?? Substring(message)
-        guard let range = text.range(of: #"(?m)^\$?[ \t]*curl "#, options: .regularExpression) else {
+        guard let range = message.range(of: #"(?m)^\$?[ \t]*curl "#, options: .regularExpression) else {
             return nil
         }
-        var command = text[range.lowerBound...].trimmingCharacters(in: .whitespacesAndNewlines)
+        var command = message[range.lowerBound...].trimmingCharacters(in: .whitespacesAndNewlines)
         if command.hasPrefix("$") {
             command = command.dropFirst().trimmingCharacters(in: .whitespaces)
         }
@@ -48,13 +47,6 @@ enum LogMessageParser {
     }
 
     static func json(in message: String) -> String? {
-        if let response = responseSection(in: message) {
-            return prettyPrintedJSON(String(response))
-        }
-        // Without a response, any JSON in a request log belongs to the request body.
-        if requestSection(in: message) != nil {
-            return nil
-        }
         var searchStart = message.startIndex
         while let start = message[searchStart...].firstIndex(of: "{") {
             guard let end = closingBraceIndex(in: message, from: start) else { return nil }
@@ -64,22 +56,6 @@ enum LogMessageParser {
             searchStart = message.index(after: end)
         }
         return nil
-    }
-
-    // HTTP request logs end with a `Request:` section and may contain a `Response:` section before it.
-    private static let responseHeader = "\n\nResponse:\n"
-    private static let requestHeader = "\n\nRequest:\n"
-
-    private static func requestSection(in message: String) -> Substring? {
-        guard let header = message.range(of: requestHeader) else { return nil }
-        return message[header.upperBound...]
-    }
-
-    private static func responseSection(in message: String) -> Substring? {
-        guard let header = message.range(of: responseHeader) else { return nil }
-        let rest = message[header.upperBound...]
-        let end = rest.range(of: requestHeader)?.lowerBound ?? rest.endIndex
-        return rest[..<end]
     }
 
     private static func closingBraceIndex(in text: String, from start: String.Index) -> String.Index? {

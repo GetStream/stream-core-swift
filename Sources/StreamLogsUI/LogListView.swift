@@ -69,7 +69,7 @@ public struct LogListView: View {
                         viewModel.isRecording.toggle()
                     } label: {
                         Image(systemName: viewModel.isRecording ? "record.circle.fill" : "record.circle")
-                            .foregroundColor(viewModel.isRecording ? .red : .gray)
+                            .foregroundColor(viewModel.isRecording ? LogTokens.Colors.accentError : LogTokens.Colors.textTertiary)
                     }
                     .accessibilityLabel(viewModel.isRecording ? "Stop recording" : "Start recording")
 
@@ -107,7 +107,7 @@ public struct LogListView: View {
     private var filterBar: some View {
         VStack(spacing: 0) {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
+                HStack(spacing: LogTokens.Spacing.xs) {
                     Button {
                         isShowingLevelPicker = true
                     } label: {
@@ -140,18 +140,18 @@ public struct LogListView: View {
                         .accessibilityLabel("Remove \(subsystem) filter")
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, LogTokens.Spacing.md)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, LogTokens.Spacing.xs)
 
             if viewModel.isFiltering {
                 let count = viewModel.filteredEntries.count
                 Text("\(count) result\(count == 1 ? "" : "s")")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(LogTokens.Colors.textTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-                    .padding(.bottom, 4)
+                    .padding(.horizontal, LogTokens.Spacing.md)
+                    .padding(.bottom, LogTokens.Spacing.xxs)
             }
         }
     }
@@ -171,11 +171,11 @@ public struct LogListView: View {
         return Button(action: action) {
             Label(title, systemImage: "arrow.up")
                 .font(.subheadline.weight(.semibold))
-                .foregroundColor(.white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Capsule().fill(Color.accentColor))
-                .shadow(radius: 4)
+                .foregroundColor(LogTokens.Colors.textOnAccent)
+                .padding(.horizontal, LogTokens.Spacing.md)
+                .padding(.vertical, LogTokens.Spacing.xs)
+                .background(Capsule().fill(LogTokens.Colors.accentPrimary))
+                .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
         }
         .padding(.bottom)
         .accessibilityLabel("Show \(title)")
@@ -195,28 +195,29 @@ public struct LogListView: View {
     private var content: some View {
         let entries = viewModel.filteredEntries
         if entries.isEmpty {
-            VStack(spacing: 16) {
+            VStack(spacing: LogTokens.Spacing.sm) {
                 Image(systemName: "doc.text.magnifyingglass")
                     .font(.largeTitle)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(LogTokens.Colors.textTertiary)
                     .accessibilityHidden(true)
 
                 Text(viewModel.isFiltering ? "No matching logs found" : "No logs available")
                     .font(.headline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(LogTokens.Colors.textPrimary)
 
                 if settings.enabledDestinations.isEmpty {
                     Text("All destinations are disabled in the log settings")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(LogTokens.Colors.textSecondary)
                         .multilineTextAlignment(.center)
                 } else if viewModel.isFiltering {
                     Text("Try adjusting your search terms or filters")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(LogTokens.Colors.textSecondary)
                         .multilineTextAlignment(.center)
                 }
             }
+            .padding(.horizontal, LogTokens.Spacing.md)
             .frame(maxWidth: .infinity, minHeight: 300)
         } else {
             ForEach(entries) { entry in
@@ -229,19 +230,28 @@ public struct LogListView: View {
         NavigationLink(value: entry) {
             VStack(spacing: 0) {
                 LogRowView(entry: entry, searchText: viewModel.searchText)
-                    .padding(.horizontal)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, LogTokens.Spacing.md)
+                    .padding(.vertical, LogTokens.Spacing.sm)
                 Divider()
-                    .padding(.leading)
+                    .overlay(LogTokens.Colors.borderDefault.opacity(0.6))
+                    .padding(.leading, LogTokens.Spacing.md)
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .contextMenu {
             Button {
-                UIPasteboard.general.string = entry.message
+                UIPasteboard.general.string = entry.rawText
             } label: {
-                Label("Copy Message", systemImage: "doc.on.doc")
+                Label("Copy Log", systemImage: "doc.on.doc")
+            }
+
+            if let curlCommand = entry.httpRequest?.curlCommand.flatMap(LogMessageParser.curlCommand(in:)) {
+                Button {
+                    UIPasteboard.general.string = curlCommand
+                } label: {
+                    Label("Copy as cURL", systemImage: "terminal")
+                }
             }
 
             Button(role: .destructive) {

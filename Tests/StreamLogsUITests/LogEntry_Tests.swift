@@ -79,4 +79,86 @@ struct LogEntry_Tests {
     @Test func levelsWithTheSameSeverityAreEqual() {
         #expect(LogEntry.Level(severity: 40, name: "WARN") == .warning)
     }
+
+    @Test func rawTextListsHTTPMetadataFirstAndMultilineValuesOnTheirOwnLine() {
+        let entry = LogEntry(
+            level: .debug,
+            message: "201 POST /channels",
+            metadata: [
+                "Custom": "value",
+                .httpResponseBody: "{\n  \"id\" : 1\n}",
+                .httpStatusCode: "201",
+                .httpMethod: "POST"
+            ]
+        )
+
+        #expect(entry.rawText == "201 POST /channels\nMethod: POST\nStatus Code: 201\nResponse Body:\n{\n  \"id\" : 1\n}\nCustom: value")
+    }
+
+    @Test func rawTextWithoutMetadataIsTheMessage() {
+        #expect(LogEntry(level: .info, message: "Hello").rawText == "Hello")
+    }
+
+    @Test func httpRequestIsReadFromMetadata() throws {
+        let entry = LogEntry(
+            level: .debug,
+            message: "201 POST /channels",
+            metadata: [
+                .httpMethod: "post",
+                .httpURL: "https://chat.stream-io-api.com/channels?api_key=key",
+                .httpStatusCode: "201",
+                .httpRequestBody: "{}",
+                .httpResponseBody: "{\"id\":1}",
+                .httpCURL: "$ curl -v \"https://chat.stream-io-api.com/channels\""
+            ]
+        )
+
+        let request = try #require(entry.httpRequest)
+
+        #expect(request.method == "POST")
+        #expect(request.path == "/channels")
+        #expect(request.host == "chat.stream-io-api.com")
+        #expect(request.status == .success(201))
+        #expect(request.requestBody == "{}")
+        #expect(request.responseBody == "{\"id\":1}")
+        #expect(request.curlCommand == "$ curl -v \"https://chat.stream-io-api.com/channels\"")
+    }
+
+    @Test func httpRequestWithErrorAndWithoutStatusFailed() throws {
+        let entry = LogEntry(
+            level: .error,
+            message: "FAILED GET /channels",
+            metadata: [.httpMethod: "GET", .httpURL: "https://example.com/channels", .httpError: "Offline"]
+        )
+
+        let request = try #require(entry.httpRequest)
+
+        #expect(request.status == .failed)
+        #expect(request.error == "Offline")
+    }
+
+    @Test func httpRequestRequiresMethodAndURL() {
+        #expect(LogEntry(level: .info, message: "", metadata: [.httpMethod: "GET"]).httpRequest == nil)
+        #expect(LogEntry(level: .info, message: "", metadata: [.httpURL: "https://example.com"]).httpRequest == nil)
+        #expect(LogEntry(level: .info, message: "", metadata: [:]).httpRequest == nil)
+    }
+
+    @Test(arguments: [
+        (100, LogHTTPRequest.Status.informational(100), "Continue"),
+        (200, .success(200), "OK"),
+        (204, .success(204), "No Content"),
+        (299, .success(299), "Success"),
+        (304, .redirection(304), "Not Modified"),
+        (404, .clientError(404), "Not Found"),
+        (429, .clientError(429), "Too Many Requests"),
+        (500, .serverError(500), "Internal Server Error"),
+        (599, .serverError(599), "Server Error")
+    ])
+    func httpStatusIsGroupedByClass(code: Int, status: LogHTTPRequest.Status, reasonPhrase: String) {
+        let subject = LogHTTPRequest.Status(statusCode: code)
+
+        #expect(subject == status)
+        #expect(subject.code == code)
+        #expect(subject.reasonPhrase == reasonPhrase)
+    }
 }

@@ -11,20 +11,31 @@ struct LogFilterButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.caption.weight(.medium))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(background)
-            .foregroundColor(tint ?? (isSelected ? .white : .primary))
-            .clipShape(Capsule())
-            .scaleEffect(configuration.isPressed ? 0.95 : 1)
+            .font(.footnote.weight(.semibold))
+            .padding(.horizontal, LogTokens.Spacing.sm)
+            .padding(.vertical, LogTokens.Spacing.xs - 2)
+            .background(background, in: Capsule())
+            .overlay {
+                if !isSelected {
+                    Capsule().strokeBorder(LogTokens.Colors.borderDefault)
+                }
+            }
+            .foregroundColor(foreground)
+            .opacity(configuration.isPressed ? 0.7 : 1)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+    }
+
+    private var foreground: Color {
+        if let tint {
+            return tint
+        }
+        return isSelected ? LogTokens.Colors.textOnAccent : LogTokens.Colors.textPrimary
     }
 
     private var background: Color {
         if let tint {
-            return tint.opacity(0.2)
+            return tint.opacity(0.15)
         }
-        return isSelected ? .accentColor : Color(.systemGray5)
+        return isSelected ? LogTokens.Colors.accentPrimary : LogTokens.Colors.backgroundSurfaceCard
     }
 }

@@ -107,7 +107,7 @@ private struct LogPickerRow: View {
             Spacer()
             if isSelected {
                 Image(systemName: "checkmark")
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(LogTokens.Colors.accentPrimary)
             }
         }
         .accessibilityAddTraits(isSelected ? .isSelected : [])

@@ -29,8 +29,8 @@ public struct LogViewerAppearance: Sendable {
 
     public init(
         levelStyle: @escaping @Sendable (LogEntry.Level) -> LevelStyle = Self.defaultLevelStyle(for:),
-        subsystemColor: Color = .blue,
-        highlightColor: Color = .yellow.opacity(0.3)
+        subsystemColor: Color = LogTokens.Colors.accentNeutral,
+        highlightColor: Color = LogTokens.Colors.highlight
     ) {
         self.levelStyle = levelStyle
         self.subsystemColor = subsystemColor
@@ -40,13 +40,13 @@ public struct LogViewerAppearance: Sendable {
     /// The default style of a level, based on the predefined level with the closest lower or equal severity.
     public static func defaultLevelStyle(for level: LogEntry.Level) -> LevelStyle {
         switch level {
-        case ..<LogEntry.Level.debug: LevelStyle(color: .gray, iconName: "text.alignleft")
-        case ..<LogEntry.Level.info: LevelStyle(color: .purple, iconName: "ant.circle")
-        case ..<LogEntry.Level.notice: LevelStyle(color: .blue, iconName: "info.circle")
-        case ..<LogEntry.Level.warning: LevelStyle(color: .teal, iconName: "bell.circle")
-        case ..<LogEntry.Level.error: LevelStyle(color: .orange, iconName: "exclamationmark.triangle")
-        case ..<LogEntry.Level.critical: LevelStyle(color: .red, iconName: "xmark.circle")
-        default: LevelStyle(color: .pink, iconName: "exclamationmark.octagon")
+        case ..<LogEntry.Level.debug: LevelStyle(color: LogTokens.Colors.accentTrace, iconName: "text.alignleft")
+        case ..<LogEntry.Level.info: LevelStyle(color: LogTokens.Colors.accentNeutral, iconName: "ant")
+        case ..<LogEntry.Level.notice: LevelStyle(color: LogTokens.Colors.accentPrimary, iconName: "info.circle")
+        case ..<LogEntry.Level.warning: LevelStyle(color: LogTokens.Colors.accentInfo, iconName: "bell")
+        case ..<LogEntry.Level.error: LevelStyle(color: LogTokens.Colors.accentWarning, iconName: "exclamationmark.triangle")
+        case ..<LogEntry.Level.critical: LevelStyle(color: LogTokens.Colors.accentError, iconName: "xmark.octagon")
+        default: LevelStyle(color: LogTokens.Colors.accentCritical, iconName: "flame")
         }
     }
 }

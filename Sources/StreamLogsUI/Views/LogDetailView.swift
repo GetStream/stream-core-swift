@@ -8,124 +8,178 @@ import UIKit
 @available(iOS 16.0, *)
 struct LogDetailView: View {
     let entry: LogEntry
-    @State private var curlCommand: String?
-    @State private var json: String?
-    @Environment(\.logViewerAppearance) private var appearance
+    @State private var content: LogDetailContent?
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                header
-                message
+            LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                VStack(alignment: .leading, spacing: LogTokens.Spacing.md) {
+                    LogDetailSummary(entry: entry)
+                    actions
+                }
+                .padding(.horizontal, LogTokens.Spacing.md)
+                .padding(.top, LogTokens.Spacing.md)
+                .padding(.bottom, LogTokens.Spacing.xs)
+
+                if let content {
+                    Section {
+                        rawLog(content)
+                    } header: {
+                        contentHeader
+                    }
+                } else {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(LogTokens.Spacing.md)
+                }
             }
-            .padding()
         }
         .navigationTitle("Log Details")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: entry.id) {
-            let message = entry.message
-            let parsed = await Task.detached(priority: .userInitiated) {
-                (LogMessageParser.curlCommand(in: message), LogMessageParser.json(in: message))
+            let entry = entry
+            content = await Task.detached(priority: .userInitiated) {
+                LogDetailContent(entry: entry)
             }.value
-            curlCommand = parsed.0
-            json = parsed.1
         }
     }
 
-    private var header: some View {
-        let levelStyle = appearance.levelStyle(entry.level)
-        return VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Label(entry.level.name, systemImage: levelStyle.iconName)
-                    .font(.title2.weight(.semibold))
-                    .foregroundColor(levelStyle.color)
+    private var actions: some View {
+        HStack(spacing: LogTokens.Spacing.xs) {
+            LogCopyButton(title: "Copy", systemImage: "doc.on.doc", text: content?.rawText ?? entry.rawText)
+            if let curlCommand = content?.curlCommand {
+                LogCopyButton(title: "cURL", systemImage: "terminal", text: curlCommand)
+            }
+            if let json = content?.json {
+                LogCopyButton(title: "JSON", systemImage: "curlybraces", text: json)
+            }
+        }
+    }
 
-                Spacer()
+    private var contentHeader: some View {
+        Text("Raw Log")
+            .font(.headline)
+            .foregroundColor(LogTokens.Colors.textPrimary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, LogTokens.Spacing.md)
+            .padding(.vertical, LogTokens.Spacing.xs)
+            .background(.bar)
+    }
 
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(entry.date, format: .dateTime.day().month().year())
-                        .font(.subheadline)
-                    Text(entry.date, format: .dateTime.hour().minute().second().secondFraction(.fractional(3)))
-                        .font(.caption.monospacedDigit())
+    private func rawLog(_ content: LogDetailContent) -> some View {
+        VStack(alignment: .leading, spacing: LogTokens.Spacing.sm) {
+            LogSelectableTextView(text: content.rawPreview.map { "\($0)…" } ?? content.rawText)
+                .padding(LogTokens.Spacing.sm)
+                .background(
+                    LogTokens.Colors.backgroundSurfaceCard,
+                    in: RoundedRectangle(cornerRadius: LogTokens.Radius.lg)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: LogTokens.Radius.lg)
+                        .strokeBorder(LogTokens.Colors.borderDefault)
+                )
+
+            if content.rawPreview != nil {
+                NavigationLink {
+                    LogFullMessageView(message: content.rawText)
+                } label: {
+                    Label("View Full Log", systemImage: "text.alignleft")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(LogTokens.Colors.accentPrimary)
                 }
-                .foregroundColor(.secondary)
+            }
+        }
+        .padding(.horizontal, LogTokens.Spacing.md)
+        .padding(.vertical, LogTokens.Spacing.xs)
+    }
+}
+
+@available(iOS 16.0, *)
+private struct LogDetailSummary: View {
+    let entry: LogEntry
+
+    var body: some View {
+        let httpRequest = entry.httpRequest
+        VStack(alignment: .leading, spacing: LogTokens.Spacing.sm) {
+            HStack(spacing: LogTokens.Spacing.xs) {
+                if let httpRequest {
+                    LogHTTPMethodBadge(method: httpRequest.method)
+                    if let status = httpRequest.status {
+                        LogHTTPStatusBadge(status: status, isError: entry.level >= .error)
+                    }
+                }
+                LogLevelBadge(level: entry.level)
+                Spacer(minLength: 0)
+            }
+
+            if let httpRequest {
+                Text(httpRequest.url)
+                    .font(.system(.footnote, design: .monospaced).weight(.medium))
+                    .foregroundColor(LogTokens.Colors.textPrimary)
+                    .textSelection(.enabled)
+                if let error = httpRequest.error {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundColor(LogTokens.Colors.textSecondary)
+                        .textSelection(.enabled)
+                }
+            } else {
+                Text(entry.message)
+                    .font(.subheadline)
+                    .foregroundColor(LogTokens.Colors.textPrimary)
+                    .lineLimit(4)
             }
 
             Divider()
+                .overlay(LogTokens.Colors.borderDefault)
 
-            VStack(alignment: .leading, spacing: 12) {
-                if !entry.subsystems.isEmpty {
-                    InfoRow(title: "Subsystems") {
-                        HStack(spacing: 6) {
-                            ForEach(entry.subsystems, id: \.self) { subsystem in
-                                Text(subsystem)
-                                    .font(.caption)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(appearance.subsystemColor.opacity(0.1))
-                                    .foregroundColor(appearance.subsystemColor)
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                            }
-                        }
-                    }
-                }
-                if let fileName = entry.fileName {
-                    InfoRow(title: "File") {
-                        Text(entry.lineNumber.map { "\(fileName):\($0)" } ?? fileName)
-                    }
-                }
-                if let functionName = entry.functionName {
-                    InfoRow(title: "Function") {
-                        Text(functionName)
-                    }
-                }
-                if let threadName = entry.threadName {
-                    InfoRow(title: "Thread") {
-                        Text(threadName)
-                    }
-                }
-                ForEach(entry.metadata.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
-                    InfoRow(title: key) {
-                        Text(value)
-                            .textSelection(.enabled)
-                    }
-                }
-            }
+            infoRows(hidingHTTPKeys: httpRequest != nil)
         }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(LogTokens.Spacing.md)
+        .background(LogTokens.Colors.backgroundSurfaceCard, in: RoundedRectangle(cornerRadius: LogTokens.Radius.xl))
+        .overlay(
+            RoundedRectangle(cornerRadius: LogTokens.Radius.xl)
+                .strokeBorder(LogTokens.Colors.borderDefault)
+        )
     }
 
-    private var message: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 12) {
-                Text("Raw Log")
-                    .font(.headline)
-
-                Spacer()
-
-                CopyButton(title: "Copy", systemImage: "doc.on.doc", tint: .blue, text: entry.message)
-                if let curlCommand {
-                    CopyButton(title: "cURL", systemImage: "terminal", tint: .orange, text: curlCommand)
-                }
-                if let json {
-                    CopyButton(title: "JSON", systemImage: "curlybraces", tint: .purple, text: json)
+    private func infoRows(hidingHTTPKeys: Bool) -> some View {
+        let hiddenKeys = hidingHTTPKeys ? Set(LogEntry.MetadataKey.httpKeys) : []
+        let metadata = entry.metadata
+            .filter { !hiddenKeys.contains($0.key) }
+            .sorted { $0.key.rawValue < $1.key.rawValue }
+        return VStack(alignment: .leading, spacing: LogTokens.Spacing.sm) {
+            LogInfoRow(title: "Date") {
+                Text(entry.date, format: .dateTime.day().month().year().hour().minute().second().secondFraction(.fractional(3)))
+                    .monospacedDigit()
+            }
+            if !entry.subsystems.isEmpty {
+                LogInfoRow(title: "Subsystems") {
+                    HStack(spacing: LogTokens.Spacing.xxs) {
+                        ForEach(entry.subsystems, id: \.self) { LogSubsystemTag(subsystem: $0) }
+                    }
                 }
             }
-
-            let preview = LogMessageParser.preview(of: entry.message)
-            LogSelectableTextView(text: preview.map { "\($0)…" } ?? entry.message)
-                .padding()
-                .background(Color(.systemBackground))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.systemGray4), lineWidth: 1))
-
-            if preview != nil {
-                NavigationLink {
-                    LogFullMessageView(message: entry.message)
-                } label: {
-                    Label("View Full Message", systemImage: "text.alignleft")
-                        .font(.subheadline.weight(.medium))
+            if let fileName = entry.fileName {
+                LogInfoRow(title: "File") {
+                    Text(entry.lineNumber.map { "\(fileName):\($0)" } ?? fileName)
+                }
+            }
+            if let functionName = entry.functionName {
+                LogInfoRow(title: "Function") {
+                    Text(functionName)
+                }
+            }
+            if let threadName = entry.threadName {
+                LogInfoRow(title: "Thread") {
+                    Text(threadName)
+                }
+            }
+            ForEach(metadata, id: \.key) { key, value in
+                LogInfoRow(title: key.rawValue) {
+                    Text(value)
+                        .lineLimit(8)
+                        .textSelection(.enabled)
                 }
             }
         }
@@ -147,11 +201,12 @@ private struct LogFullMessageView: View {
                         ForEach(chunks.indices, id: \.self) { index in
                             Text(chunks[index].isEmpty ? " " : chunks[index])
                                 .font(.system(.footnote, design: .monospaced))
+                                .foregroundColor(LogTokens.Colors.textPrimary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                     .textSelection(.enabled)
-                    .padding()
+                    .padding(LogTokens.Spacing.md)
                 }
             } else {
                 ProgressView()
@@ -163,40 +218,39 @@ private struct LogFullMessageView: View {
                 LogMessageParser.chunks(of: message)
             }.value
         }
-        .navigationTitle("Log Message")
+        .navigationTitle("Raw Log")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                CopyButton(title: "Copy", systemImage: "doc.on.doc", tint: .blue, text: message)
+                LogCopyButton(title: "Copy", systemImage: "doc.on.doc", text: message)
             }
         }
     }
 }
 
 @available(iOS 16.0, *)
-private struct InfoRow<Content: View>: View {
+private struct LogInfoRow<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: LogTokens.Spacing.xxxs) {
             Text(title)
-                .font(.caption.weight(.medium))
-                .foregroundColor(.secondary)
+                .font(.caption2.weight(.semibold))
+                .foregroundColor(LogTokens.Colors.textTertiary)
                 .textCase(.uppercase)
             content
-                .font(.subheadline)
-                .foregroundColor(.primary)
+                .font(.footnote)
+                .foregroundColor(LogTokens.Colors.textPrimary)
         }
         .accessibilityElement(children: .combine)
     }
 }
 
 @available(iOS 16.0, *)
-private struct CopyButton: View {
+private struct LogCopyButton: View {
     let title: String
     let systemImage: String
-    let tint: Color
     let text: String
     @State private var isCopied = false
 
@@ -209,10 +263,14 @@ private struct CopyButton: View {
                 isCopied = false
             }
         } label: {
-            Label(isCopied ? "Copied!" : title, systemImage: isCopied ? "checkmark" : systemImage)
-                .font(.caption)
-                .foregroundColor(isCopied ? .green : tint)
+            Label(isCopied ? "Copied" : title, systemImage: isCopied ? "checkmark" : systemImage)
+                .font(.footnote.weight(.semibold))
+                .foregroundColor(isCopied ? LogTokens.Colors.accentSuccess : LogTokens.Colors.textPrimary)
+                .padding(.horizontal, LogTokens.Spacing.sm)
+                .padding(.vertical, LogTokens.Spacing.xs)
+                .background(LogTokens.Colors.backgroundSurfaceDefault, in: Capsule())
         }
+        .buttonStyle(.plain)
         .accessibilityLabel(isCopied ? "Copied" : "Copy \(title)")
     }
 }

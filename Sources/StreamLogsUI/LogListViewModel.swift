@@ -159,7 +159,7 @@ private extension LogFilter {
             || entry.functionName.map(contains) == true
             || entry.fileName.map(contains) == true
             || entry.subsystems.contains(where: contains)
-            || entry.metadata.contains { contains($0.key) || contains($0.value) }
+            || entry.metadata.contains { contains($0.key.rawValue) || contains($0.value) }
     }
 
     private func contains(_ text: String) -> Bool {

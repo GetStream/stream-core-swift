@@ -55,6 +55,23 @@ NavigationStack {
 
 `LogEntry` only requires a level and a message. The other fields are optional, and `metadata` holds any extra key-value pairs, which are displayed and searchable. Besides the predefined levels, apps can define their own, e.g. `LogEntry.Level(severity: 45, name: "SECURITY")`.
 
+Entries with the predefined HTTP metadata keys are shown as requests, with their method and status. Their request and response bodies are shown in the details, and their cURL command can be copied:
+
+```swift
+InMemoryLogStore.shared.append(LogEntry(
+    level: .debug,
+    message: "200 GET /users",
+    metadata: [
+        .httpMethod: "GET",
+        .httpURL: "https://example.com/users",
+        .httpStatusCode: "200",
+        .httpResponseBody: #"{"users":[]}"#
+    ]
+))
+```
+
+StreamCore's `Logger` accepts the same keys as `LogMetadataKey`, and its console output lists them after the message.
+
 <details>
 <summary>StreamCore</summary>
 
@@ -73,7 +90,10 @@ final class InMemoryLogDestination: BaseLogDestination, @unchecked Sendable {
             fileName: logDetails.fileName,
             lineNumber: logDetails.lineNumber,
             message: logDetails.message,
-            error: logDetails.error
+            error: logDetails.error,
+            metadata: Dictionary(uniqueKeysWithValues: logDetails.metadata.map { key, value in
+                (LogEntry.MetadataKey(rawValue: key.rawValue), value)
+            })
         ))
     }
 }
@@ -127,7 +147,9 @@ struct InMemoryLogHandler: LogHandler {
             functionName: function,
             fileName: (file as NSString).lastPathComponent,
             lineNumber: line,
-            metadata: self.metadata.merging(metadata ?? [:]) { $1 }.mapValues(\.description)
+            metadata: Dictionary(uniqueKeysWithValues: self.metadata.merging(metadata ?? [:]) { $1 }.map { key, value in
+                (LogEntry.MetadataKey(rawValue: key), value.description)
+            })
         ))
     }
 }
