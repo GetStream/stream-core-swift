@@ -4,10 +4,12 @@
 
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 /// A debugging view that lists the log entries of a ``LogRecorder``.
 ///
-/// Entries can be searched, filtered by level and subsystem, and copied.
+/// Entries can be searched, filtered by level and subsystem, copied, and exported as a ``LogSession`` file.
+/// Exported files can be imported back, and are displayed apart from the recorded entries.
 ///
 /// Place the view inside a `NavigationStack`, which it uses to show the log settings.
 @available(iOS 16.0, *)
@@ -17,8 +19,14 @@ public struct LogListView: View {
     @State private var isShowingLevelPicker = false
     @State private var isShowingSubsystemPicker = false
     @State private var isConfirmingClear = false
+    @State private var isImporting = false
+    @State private var importedSession: ImportedLogSession?
+    @State private var importErrorMessage: String?
     @Environment(\.logViewerAppearance) private var appearance
+    @Environment(\.dismiss) private var dismiss
 
+    private let recorder: (any LogRecorder)?
+    private let session: LogSession?
     private let topID = "top"
 
     /// Creates a view that lists the entries of the given recorder, with access to the given logger settings.
@@ -31,6 +39,16 @@ public struct LogListView: View {
     ) {
         _viewModel = StateObject(wrappedValue: LogListViewModel(recorder: recorder, filter: filter))
         self.settings = settings
+        self.recorder = recorder
+        session = nil
+    }
+
+    // Lists the entries of an imported session, which can't be recorded to or changed.
+    init(session: LogSession) {
+        _viewModel = StateObject(wrappedValue: LogListViewModel(recorder: InMemoryLogRecorder(session: session)))
+        settings = .shared
+        recorder = nil
+        self.session = session
     }
 
     public var body: some View {
@@ -58,7 +76,7 @@ public struct LogListView: View {
                 }
             }
             .onAppear { viewModel.refreshRecordingState() }
-            .navigationTitle("Logs")
+            .navigationTitle(session == nil ? "Logs" : "Imported Logs")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(
                 text: $viewModel.searchText,
@@ -66,55 +84,137 @@ public struct LogListView: View {
                 prompt: "Search logs"
             )
             .toolbar {
-                ToolbarItemGroup(placement: .primaryAction) {
-                    Button {
-                        viewModel.isRecording.toggle()
-                    } label: {
-                        Image(systemName: viewModel.isRecording ? "record.circle.fill" : "record.circle")
-                            .foregroundColor(viewModel.isRecording ? LogTokens.Colors.accentError : LogTokens.Colors.textTertiary)
+                if session != nil {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { dismiss() }
                     }
-                    .accessibilityLabel(viewModel.isRecording ? "Stop recording" : "Start recording")
-
-                    Button {
-                        isConfirmingClear = true
-                    } label: {
-                        Image(systemName: "trash")
-                    }
-                    .accessibilityLabel("Clear logs")
-                    .confirmationDialog("Delete All Logs?", isPresented: $isConfirmingClear, titleVisibility: .visible) {
-                        Button("Delete All Logs", role: .destructive) {
-                            viewModel.removeAll()
+                } else {
+                    ToolbarItemGroup(placement: .primaryAction) {
+                        Button {
+                            viewModel.isRecording.toggle()
+                        } label: {
+                            Image(systemName: viewModel.isRecording ? "record.circle.fill" : "record.circle")
+                                .foregroundColor(viewModel.isRecording ? LogTokens.Colors.accentError : LogTokens.Colors.textTertiary)
                         }
-                    } message: {
-                        Text("All recorded logs will be deleted. This can't be undone.")
-                    }
+                        .accessibilityLabel(viewModel.isRecording ? "Stop recording" : "Start recording")
 
-                    NavigationLink {
-                        LogSettingsView(settings: settings)
-                    } label: {
-                        Image(systemName: "gearshape")
+                        Button {
+                            isConfirmingClear = true
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .accessibilityLabel("Clear logs")
+                        .confirmationDialog("Delete All Logs?", isPresented: $isConfirmingClear, titleVisibility: .visible) {
+                            Button("Delete All Logs", role: .destructive) {
+                                viewModel.removeAll()
+                            }
+                        } message: {
+                            Text("All recorded logs will be deleted. This can't be undone.")
+                        }
+
+                        sessionMenu
+
+                        NavigationLink {
+                            LogSettingsView(settings: settings)
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
+                        .accessibilityLabel("Log settings")
                     }
-                    .accessibilityLabel("Log settings")
                 }
             }
             .sheet(isPresented: $isShowingLevelPicker) {
                 LogLevelPickerView(
-                    levels: Set(settings.availableLevels).union(viewModel.availableLevels).sorted(),
+                    levels: session == nil
+                        ? Set(settings.availableLevels).union(viewModel.availableLevels).sorted()
+                        : viewModel.availableLevels,
                     selectedLevels: $viewModel.selectedLevels
                 )
                 .logViewerAppearance(appearance)
             }
             .sheet(isPresented: $isShowingSubsystemPicker) {
                 LogSubsystemPickerView(
-                    subsystems: Set(settings.availableSubsystems).union(viewModel.availableSubsystems).sorted(),
+                    subsystems: session == nil
+                        ? Set(settings.availableSubsystems).union(viewModel.availableSubsystems).sorted()
+                        : viewModel.availableSubsystems,
                     selectedSubsystems: $viewModel.selectedSubsystems
                 )
+            }
+            .fileImporter(isPresented: $isImporting, allowedContentTypes: [.json]) { result in
+                importSession(from: result)
+            }
+            .sheet(item: $importedSession) { imported in
+                NavigationStack {
+                    LogListView(session: imported.session)
+                }
+                .logViewerAppearance(appearance)
+            }
+            .alert(
+                "Unable to Import Logs",
+                isPresented: Binding(
+                    get: { importErrorMessage != nil },
+                    set: { if !$0 { importErrorMessage = nil } }
+                ),
+                actions: {},
+                message: { Text(importErrorMessage ?? "") }
+            )
+        }
+    }
+
+    private var sessionMenu: some View {
+        Menu {
+            if let recorder {
+                ShareLink(
+                    item: LogSessionFile { recorder.entries },
+                    preview: SharePreview("Logs")
+                ) {
+                    Label("Export All Logs", systemImage: "square.and.arrow.up")
+                }
+            }
+
+            if viewModel.isFiltering {
+                let entries = viewModel.filteredEntries
+                ShareLink(
+                    item: LogSessionFile { entries.reversed() },
+                    preview: SharePreview("Filtered Logs")
+                ) {
+                    Label("Export Filtered Logs", systemImage: "line.3.horizontal.decrease.circle")
+                }
+            }
+
+            Divider()
+
+            Button {
+                isImporting = true
+            } label: {
+                Label("Import Logs…", systemImage: "square.and.arrow.down")
+            }
+        } label: {
+            Image(systemName: "square.and.arrow.up")
+        }
+        .accessibilityLabel("Export or import logs")
+    }
+
+    private func importSession(from result: Result<URL, Error>) {
+        Task {
+            do {
+                let url = try result.get()
+                let session = try await Task.detached(priority: .userInitiated) {
+                    try LogSession.read(from: url)
+                }.value
+                importedSession = ImportedLogSession(session: session)
+            } catch {
+                importErrorMessage = "The file is not a valid logs file.\n\(error.localizedDescription)"
             }
         }
     }
 
     private var filterBar: some View {
         VStack(spacing: 0) {
+            if let session {
+                sessionInfo(session)
+            }
+
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: LogTokens.Spacing.xs) {
                     Button {
@@ -163,6 +263,24 @@ public struct LogListView: View {
                     .padding(.bottom, LogTokens.Spacing.xxs)
             }
         }
+    }
+
+    private func sessionInfo(_ session: LogSession) -> some View {
+        VStack(alignment: .leading, spacing: LogTokens.Spacing.xxxs) {
+            if !session.sourceDescription.isEmpty {
+                Text(session.sourceDescription)
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(LogTokens.Colors.textSecondary)
+            }
+            Text("Exported \(session.exportDate.formatted(date: .abbreviated, time: .standard))")
+                .font(.caption)
+                .foregroundColor(LogTokens.Colors.textTertiary)
+        }
+        .lineLimit(1)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, LogTokens.Spacing.md)
+        .padding(.top, LogTokens.Spacing.xs)
+        .accessibilityElement(children: .combine)
     }
 
     private var levelsTitle: String {
@@ -214,7 +332,7 @@ public struct LogListView: View {
                     .font(.headline)
                     .foregroundColor(LogTokens.Colors.textPrimary)
 
-                if settings.enabledDestinations.isEmpty {
+                if session == nil, settings.enabledDestinations.isEmpty {
                     Text("All destinations are disabled in the log settings")
                         .font(.subheadline)
                         .foregroundColor(LogTokens.Colors.textSecondary)
@@ -252,11 +370,18 @@ public struct LogListView: View {
                 Label("Copy Log", systemImage: "doc.on.doc")
             }
 
-            Button(role: .destructive) {
-                viewModel.removeEntry(entry)
-            } label: {
-                Label("Delete", systemImage: "trash")
+            if session == nil {
+                Button(role: .destructive) {
+                    viewModel.removeEntry(entry)
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
             }
         }
     }
+}
+
+private struct ImportedLogSession: Identifiable {
+    let id = UUID()
+    let session: LogSession
 }

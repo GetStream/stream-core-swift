@@ -35,8 +35,12 @@ Since this SDK is internal, we do not recommend adding it directly to your proje
 ```swift
 import StreamLogsUI
 
-// Presents the viewer as a sheet above the app.
+// Presents the viewer as a resizable sheet above the app.
+// At the small and medium heights, the app behind it stays interactive.
 LogViewer.present()
+
+// Or show a floating button that opens it. Drag the button past a screen edge to tuck it away.
+LogViewer.showsFloatingButton = true
 
 // Or present it when the device is shaken. Only enable this in debug builds.
 LogViewer.presentsOnShake = true
@@ -193,6 +197,19 @@ DDLog.add(LogViewerLogger())
 ```
 
 </details>
+
+### Sharing logs
+
+The share button in the log list exports all logs, or only the filtered ones, as a JSON file that can be sent from the share sheet, for example by a customer reporting an issue. The same menu imports a file, which opens in a separate, read-only list with the app version, OS and device that recorded it, so it never mixes with the live logs.
+
+The file is a `LogSession`, which can also be read and written in code, for example to attach logs to a bug report:
+
+```swift
+let data = try LogSession(entries: InMemoryLogRecorder.shared.entries).encoded()
+let session = try LogSession(data: data)
+```
+
+`LogEntry` is `Codable`, and dates are written as ISO 8601 strings with milliseconds.
 
 ### Customization
 
