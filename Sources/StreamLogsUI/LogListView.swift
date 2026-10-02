@@ -18,6 +18,7 @@ public struct LogListView: View {
     @ObservedObject private var settings: LogSettings
     @State private var isShowingLevelPicker = false
     @State private var isShowingSubsystemPicker = false
+    @State private var isConfirmingClear = false
     @State private var isImporting = false
     @State private var importedSession: ImportedLogSession?
     @State private var importErrorMessage: String?
@@ -97,11 +98,18 @@ public struct LogListView: View {
                         .accessibilityLabel(viewModel.isRecording ? "Stop recording" : "Start recording")
 
                         Button {
-                            viewModel.removeAll()
+                            isConfirmingClear = true
                         } label: {
                             Image(systemName: "trash")
                         }
                         .accessibilityLabel("Clear logs")
+                        .confirmationDialog("Delete All Logs?", isPresented: $isConfirmingClear, titleVisibility: .visible) {
+                            Button("Delete All Logs", role: .destructive) {
+                                viewModel.removeAll()
+                            }
+                        } message: {
+                            Text("All recorded logs will be deleted. This can't be undone.")
+                        }
 
                         sessionMenu
 

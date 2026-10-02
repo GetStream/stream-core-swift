@@ -19,12 +19,20 @@ final class LogViewerFloatingButton: UIView {
 
     private let usesGlass: Bool = if #available(iOS 26.0, *) { true } else { false }
     private let backgroundView = UIVisualEffectView(effect: LogViewerFloatingButton.backgroundEffect)
+    private let gradientLayer = CAGradientLayer()
+    private let glossLayer = CAGradientLayer()
     private let iconView = UIImageView(image: UIImage(systemName: "ladybug.fill"))
     private let chevronView = UIImageView()
+
+    // The Stream brand ramp, around the `accentPrimary` token.
+    private static let accentLight = UIColor(rgb: 0x4586ff)
+    private static let accent = UIColor(rgb: 0x005fff)
+    private static let accentDark = UIColor(rgb: 0x0042b4)
 
     private static var backgroundEffect: UIVisualEffect {
         if #available(iOS 26.0, *) {
             let effect = UIGlassEffect(style: .regular)
+            effect.tintColor = accent.withAlphaComponent(0.7)
             effect.isInteractive = true
             return effect
         }
@@ -43,22 +51,41 @@ final class LogViewerFloatingButton: UIView {
         }
         addSubview(backgroundView)
 
+        // On glass, a translucent gradient keeps the refraction visible through the accent color.
+        gradientLayer.colors = [Self.accentLight, Self.accent, Self.accentDark].map(\.cgColor)
+        gradientLayer.startPoint = CGPoint(x: 0.2, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 0.8, y: 1)
+        gradientLayer.opacity = usesGlass ? 0.6 : 1
+        gradientLayer.masksToBounds = true
+        gradientLayer.borderWidth = 1
+        gradientLayer.borderColor = UIColor.white.withAlphaComponent(0.35).cgColor
+        backgroundView.contentView.layer.addSublayer(gradientLayer)
+
+        glossLayer.colors = [UIColor.white.withAlphaComponent(0.45), UIColor.white.withAlphaComponent(0)].map(\.cgColor)
+        glossLayer.startPoint = CGPoint(x: 0.5, y: 0)
+        glossLayer.endPoint = CGPoint(x: 0.5, y: 1)
+        glossLayer.locations = [0, 0.55]
+        glossLayer.masksToBounds = true
+        backgroundView.contentView.layer.addSublayer(glossLayer)
+
         iconView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 22, weight: .semibold)
-        iconView.tintColor = .label
+        iconView.tintColor = .white
         iconView.contentMode = .center
+        iconView.layer.shadowColor = Self.accentDark.cgColor
+        iconView.layer.shadowOpacity = 0.5
+        iconView.layer.shadowRadius = 2
+        iconView.layer.shadowOffset = CGSize(width: 0, height: 1)
         backgroundView.contentView.addSubview(iconView)
 
         chevronView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 14, weight: .bold)
-        chevronView.tintColor = .secondaryLabel
+        chevronView.tintColor = .white
         chevronView.contentMode = .center
         backgroundView.contentView.addSubview(chevronView)
 
-        if !usesGlass {
-            layer.shadowColor = UIColor.black.cgColor
-            layer.shadowOpacity = 0.25
-            layer.shadowRadius = 8
-            layer.shadowOffset = CGSize(width: 0, height: 4)
-        }
+        layer.shadowColor = Self.accent.cgColor
+        layer.shadowOpacity = usesGlass ? 0.3 : 0.45
+        layer.shadowRadius = 10
+        layer.shadowOffset = CGSize(width: 0, height: 4)
 
         isAccessibilityElement = true
         accessibilityIdentifier = "LogViewerFloatingButton"
@@ -78,10 +105,20 @@ final class LogViewerFloatingButton: UIView {
         let visibleWidth = LogViewerFloatingButtonLayout.stashedVisibleWidth
         let chevronX = side == .left ? bounds.width - visibleWidth : 0
         chevronView.frame = CGRect(x: chevronX, y: 0, width: visibleWidth, height: bounds.height)
+        let radius = bounds.height / 2
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        gradientLayer.frame = bounds
+        gradientLayer.cornerRadius = radius
+        glossLayer.frame = bounds
+        glossLayer.cornerRadius = radius
+        CATransaction.commit()
+
         if !usesGlass {
-            backgroundView.layer.cornerRadius = bounds.width / 2
-            layer.shadowPath = UIBezierPath(ovalIn: bounds).cgPath
+            backgroundView.layer.cornerRadius = radius
         }
+        layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: radius).cgPath
     }
 
     override func accessibilityActivate() -> Bool {

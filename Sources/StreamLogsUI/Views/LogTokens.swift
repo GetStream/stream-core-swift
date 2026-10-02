@@ -60,7 +60,7 @@ private extension Color {
     }
 }
 
-private extension UIColor {
+extension UIColor {
     convenience init(rgb: UInt32) {
         self.init(
             red: CGFloat((rgb >> 16) & 0xff) / 255,
