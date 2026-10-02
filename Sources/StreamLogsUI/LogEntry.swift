@@ -10,22 +10,49 @@ import Foundation
 /// Extra information that has no dedicated field, like a logger category or the details of an HTTP request,
 /// can be added to ``metadata``.
 public struct LogEntry: Identifiable, Hashable, Sendable {
+    /// The unique identifier of the entry.
+    ///
+    /// Two entries are equal when they have the same identifier, regardless of their other values.
+    /// Entries imported from a log session keep the identifiers they were exported with.
     public let id: UUID
+    /// The date the entry was logged.
+    ///
+    /// The list displays it with millisecond precision, and exported sessions encode it in ISO 8601.
     public let date: Date
+    /// The severity of the entry, displayed as a badge and used to filter the list.
     public let level: Level
-    /// The names of the subsystems the entry belongs to.
+    /// The names of the subsystems the entry belongs to, like `httpRequests` or `webSocket`.
+    ///
+    /// They're displayed as tags on the entry, can be selected in the subsystem filter,
+    /// and are matched when searching. An entry matches the subsystem filter when any of its subsystems is selected.
     public let subsystems: [String]
+    /// The text of the entry.
+    ///
+    /// The list shows the beginning of it, and the detail screen shows all of it. It's matched when searching,
+    /// and when it contains JSON, the detail screen can display it as a collapsible tree.
     public let message: String
+    /// The name of the thread the entry was logged on, like `main`, or `nil` when it's unknown.
     public let threadName: String?
+    /// The name of the function the entry was logged from, like `send(_:)`, or `nil` when it's unknown.
+    ///
+    /// It's displayed with the source location and matched when searching.
     public let functionName: String?
+    /// The name of the file the entry was logged from, like `ChatClient.swift`, or `nil` when it's unknown.
+    ///
+    /// It's displayed with the source location and matched when searching.
     public let fileName: String?
+    /// The line the entry was logged from, or `nil` when it's unknown.
+    ///
+    /// It's displayed after ``fileName``, so it's ignored when the file name is `nil`.
     public let lineNumber: UInt?
     /// Additional values displayed with the entry and matched when searching.
     ///
+    /// Both keys and values are matched when searching, and they're included when copying the entry.
     /// Entries with the HTTP keys, like ``MetadataKey/httpMethod`` and ``MetadataKey/httpURL``,
     /// are displayed as HTTP requests, with their status and bodies.
     public let metadata: [MetadataKey: String]
 
+    /// Creates an entry. Only the level and the message are required.
     public init(
         id: UUID = UUID(),
         date: Date = Date(),
