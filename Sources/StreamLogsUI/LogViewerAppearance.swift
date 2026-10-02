@@ -6,7 +6,7 @@ import SwiftUI
 
 /// The colors and icons used by the log viewer.
 ///
-/// Apply it with the `logViewerAppearance(_:)` view modifier or pass it to ``LogViewer/present(store:settings:appearance:)``.
+/// Apply it with the `logViewerAppearance(_:)` view modifier or pass it to ``LogViewer/present(recorder:settings:appearance:filter:)``.
 public struct LogViewerAppearance: Sendable {
     /// How a log level is displayed.
     public struct LevelStyle: Sendable {

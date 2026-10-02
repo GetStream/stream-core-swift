@@ -8,21 +8,21 @@ import XCTest
 
 @MainActor
 final class LogListViewModel_Tests: XCTestCase {
-    private var store: InMemoryLogStore!
+    private var recorder: InMemoryLogRecorder!
     private var subject: LogListViewModel!
 
     override func setUp() async throws {
         try await super.setUp()
-        store = InMemoryLogStore()
-        store.append(makeEntry(level: .debug, subsystems: ["HTTP"], message: "GET channels"))
-        store.append(makeEntry(level: .error, subsystems: ["WebSocket"], message: "Socket disconnected"))
-        store.append(makeEntry(level: .error, subsystems: ["Database", "Offline"], message: "Failed to save"))
-        subject = makeViewModel(store: store)
+        recorder = InMemoryLogRecorder()
+        recorder.record(makeEntry(level: .debug, subsystems: ["HTTP"], message: "GET channels"))
+        recorder.record(makeEntry(level: .error, subsystems: ["WebSocket"], message: "Socket disconnected"))
+        recorder.record(makeEntry(level: .error, subsystems: ["Database", "Offline"], message: "Failed to save"))
+        subject = makeViewModel(recorder: recorder)
     }
 
     override func tearDown() async throws {
         subject = nil
-        store = nil
+        recorder = nil
         try await super.tearDown()
     }
 
@@ -32,7 +32,7 @@ final class LogListViewModel_Tests: XCTestCase {
     }
 
     func test_initialFilter_isApplied() {
-        subject = LogListViewModel(store: store, filter: LogFilter(levels: [.error], subsystems: ["Offline"]))
+        subject = LogListViewModel(recorder: recorder, filter: LogFilter(levels: [.error], subsystems: ["Offline"]))
 
         XCTAssertEqual(subject.filteredEntries.map(\.message), ["Failed to save"])
         XCTAssertEqual(subject.selectedLevels, [.error])
@@ -41,7 +41,7 @@ final class LogListViewModel_Tests: XCTestCase {
     }
 
     func test_initialFilter_canBeCleared() async {
-        subject = LogListViewModel(store: store, filter: LogFilter(levels: [.error]), searchDebounceInterval: .zero)
+        subject = LogListViewModel(recorder: recorder, filter: LogFilter(levels: [.error]), searchDebounceInterval: .zero)
 
         subject.selectedLevels = []
 
@@ -68,15 +68,15 @@ final class LogListViewModel_Tests: XCTestCase {
     }
 
     func test_availableLevels_includesSelectedLevelsWithoutEntries() {
-        subject = LogListViewModel(store: store, filter: LogFilter(levels: [.warning]))
+        subject = LogListViewModel(recorder: recorder, filter: LogFilter(levels: [.warning]))
 
         XCTAssertEqual(subject.availableLevels, [.debug, .warning, .error])
     }
 
     func test_availableLevels_includesRecordedLevelsSortedBySeverity() {
         let security = LogEntry.Level(severity: 45, name: "SECURITY")
-        store.append(LogEntry(level: security, message: "Token refreshed"))
-        subject = makeViewModel(store: store)
+        recorder.record(LogEntry(level: security, message: "Token refreshed"))
+        subject = makeViewModel(recorder: recorder)
 
         XCTAssertEqual(subject.availableLevels, [.debug, security, .error])
     }
@@ -100,16 +100,16 @@ final class LogListViewModel_Tests: XCTestCase {
     }
 
     func test_filteredEntries_searchMatchesMetadata() async {
-        store.append(LogEntry(level: .info, message: "Tapped", metadata: ["category": "Navigation"]))
-        subject = makeViewModel(store: store)
+        recorder.record(LogEntry(level: .info, message: "Tapped", metadata: ["category": "Navigation"]))
+        subject = makeViewModel(recorder: recorder)
 
         subject.searchText = "navigation"
 
         await waitForFilteredMessages(["Tapped"])
     }
 
-    func test_filteredEntries_updatesWhenStoreChanges() async {
-        store.append(makeEntry(level: .info, subsystems: ["HTTP"], message: "POST message"))
+    func test_filteredEntries_updatesWhenRecorderChanges() async {
+        recorder.record(makeEntry(level: .info, subsystems: ["HTTP"], message: "POST message"))
 
         await waitForFilteredMessages(["POST message", "Failed to save", "Socket disconnected", "GET channels"])
     }
@@ -123,7 +123,7 @@ final class LogListViewModel_Tests: XCTestCase {
     func test_newEntries_whileNotFollowing_areHeldUntilShown() async {
         subject.isFollowingNewEntries = false
 
-        store.append(makeEntry(level: .info, subsystems: ["HTTP"], message: "POST message"))
+        recorder.record(makeEntry(level: .info, subsystems: ["HTTP"], message: "POST message"))
 
         await waitForNewEntriesCount(1)
         XCTAssertEqual(subject.filteredEntries.map(\.message), ["Failed to save", "Socket disconnected", "GET channels"])
@@ -139,7 +139,7 @@ final class LogListViewModel_Tests: XCTestCase {
 
     func test_newEntries_whenFollowingResumes_areShown() async {
         subject.isFollowingNewEntries = false
-        store.append(makeEntry(level: .info, subsystems: ["HTTP"], message: "POST message"))
+        recorder.record(makeEntry(level: .info, subsystems: ["HTTP"], message: "POST message"))
         await waitForNewEntriesCount(1)
 
         subject.isFollowingNewEntries = true
@@ -166,36 +166,36 @@ final class LogListViewModel_Tests: XCTestCase {
         await waitForFilteredMessages(["Failed to save", "Socket disconnected"])
     }
 
-    func test_isRecording_updatesStore() {
+    func test_isRecording_updatesRecorder() {
         subject.isRecording = false
 
-        XCTAssertFalse(store.isRecording)
+        XCTAssertFalse(recorder.isRecording)
     }
 
-    func test_refreshRecordingState_readsStore() {
-        store.isRecording = false
+    func test_refreshRecordingState_readsRecorder() {
+        recorder.isRecording = false
 
         subject.refreshRecordingState()
 
         XCTAssertFalse(subject.isRecording)
     }
 
-    func test_customStore_providesEntriesAndReceivesRemovals() {
-        let customStore = SpyLogStore(entries: [makeEntry(level: .info, subsystems: ["HTTP"], message: "Custom")])
-        let subject = makeViewModel(store: customStore)
+    func test_customRecorder_providesEntriesAndReceivesRemovals() {
+        let customRecorder = SpyLogRecorder(entries: [makeEntry(level: .info, subsystems: ["HTTP"], message: "Custom")])
+        let subject = makeViewModel(recorder: customRecorder)
 
-        subject.removeEntry(customStore.entries[0])
+        subject.removeEntry(customRecorder.entries[0])
         subject.removeAll()
 
         XCTAssertEqual(subject.filteredEntries.map(\.message), ["Custom"])
-        XCTAssertEqual(customStore.removedEntryIDs, [customStore.entries[0].id])
-        XCTAssertEqual(customStore.removeAllCallCount, 1)
+        XCTAssertEqual(customRecorder.removedEntryIDs, [customRecorder.entries[0].id])
+        XCTAssertEqual(customRecorder.removeAllCallCount, 1)
     }
 
     // MARK: - Private Helpers
 
-    private func makeViewModel(store: any LogStore) -> LogListViewModel {
-        LogListViewModel(store: store, searchDebounceInterval: .zero)
+    private func makeViewModel(recorder: any LogRecorder) -> LogListViewModel {
+        LogListViewModel(recorder: recorder, searchDebounceInterval: .zero)
     }
 
     private func waitForFilteredMessages(
@@ -241,7 +241,7 @@ final class LogListViewModel_Tests: XCTestCase {
     }
 }
 
-private final class SpyLogStore: LogStore, @unchecked Sendable {
+private final class SpyLogRecorder: LogRecorder, @unchecked Sendable {
     var isRecording = true
     let entries: [LogEntry]
     private(set) var removedEntryIDs: [LogEntry.ID] = []
@@ -254,8 +254,6 @@ private final class SpyLogStore: LogStore, @unchecked Sendable {
     var entriesPublisher: AnyPublisher<[LogEntry], Never> {
         Just(entries).eraseToAnyPublisher()
     }
-
-    func append(_ entry: LogEntry) {}
 
     func removeEntry(id: LogEntry.ID) {
         removedEntryIDs.append(id)

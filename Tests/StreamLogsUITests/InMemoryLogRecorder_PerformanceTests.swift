@@ -6,8 +6,8 @@ import Combine
 import StreamLogsUI
 import XCTest
 
-final class InMemoryLogStore_PerformanceTests: XCTestCase {
-    func test_append_beyondCapacityWithSubscriber() {
+final class InMemoryLogRecorder_PerformanceTests: XCTestCase {
+    func test_record_beyondCapacityWithSubscriber() {
         let entries = (0..<50000).map { index in
             LogEntry(
                 level: .debug,
@@ -20,10 +20,10 @@ final class InMemoryLogStore_PerformanceTests: XCTestCase {
         }
 
         measure {
-            let store = InMemoryLogStore(capacity: 5000)
-            let cancellable = store.entriesPublisher.sink { _ in }
-            entries.forEach(store.append)
-            XCTAssertLessThanOrEqual(store.entries.count, 5000)
+            let recorder = InMemoryLogRecorder(capacity: 5000)
+            let cancellable = recorder.entriesPublisher.sink { _ in }
+            entries.forEach(recorder.record)
+            XCTAssertLessThanOrEqual(recorder.entries.count, 5000)
             cancellable.cancel()
         }
     }

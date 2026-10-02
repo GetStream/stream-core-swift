@@ -20,7 +20,7 @@ final class LogListViewModel: ObservableObject {
     @Published var selectedLevels: Set<LogEntry.Level> = []
     @Published var selectedSubsystems: Set<String> = []
     @Published var isRecording: Bool {
-        didSet { store.isRecording = isRecording }
+        didSet { recorder.isRecording = isRecording }
     }
 
     // While the list is scrolled away from the newest entries, new entries are held back
@@ -33,21 +33,21 @@ final class LogListViewModel: ObservableObject {
         }
     }
 
-    private let store: any LogStore
+    private let recorder: any LogRecorder
     private var heldContent: Content?
     private var cancellable: AnyCancellable?
 
     init(
-        store: any LogStore,
+        recorder: any LogRecorder,
         filter initialFilter: LogFilter = LogFilter(),
         searchDebounceInterval: DispatchQueue.SchedulerTimeType.Stride = .milliseconds(200)
     ) {
-        self.store = store
-        isRecording = store.isRecording
+        self.recorder = recorder
+        isRecording = recorder.isRecording
         searchText = initialFilter.searchText
         selectedLevels = initialFilter.levels
         selectedSubsystems = initialFilter.subsystems
-        content = Self.makeContent(entries: store.entries, filter: initialFilter)
+        content = Self.makeContent(entries: recorder.entries, filter: initialFilter)
 
         let searchText = $searchText
             .dropFirst()
@@ -57,7 +57,7 @@ final class LogListViewModel: ObservableObject {
             .map { LogFilter(searchText: $0, levels: $1, subsystems: $2) }
             .removeDuplicates()
             .eraseToAnyPublisher()
-        cancellable = Self.contentPublisher(entries: store.entriesPublisher, filter: filter)
+        cancellable = Self.contentPublisher(entries: recorder.entriesPublisher, filter: filter)
             .sink { [weak self] in self?.receive($0) }
     }
 
@@ -72,11 +72,11 @@ final class LogListViewModel: ObservableObject {
     }
 
     func removeEntry(_ entry: LogEntry) {
-        store.removeEntry(id: entry.id)
+        recorder.removeEntry(id: entry.id)
     }
 
     func removeAll() {
-        store.removeAll()
+        recorder.removeAll()
     }
 
     func showNewEntries() {
@@ -87,8 +87,8 @@ final class LogListViewModel: ObservableObject {
     }
 
     func refreshRecordingState() {
-        if isRecording != store.isRecording {
-            isRecording = store.isRecording
+        if isRecording != recorder.isRecording {
+            isRecording = recorder.isRecording
         }
     }
 

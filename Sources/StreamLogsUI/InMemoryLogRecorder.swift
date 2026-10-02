@@ -5,20 +5,22 @@
 import Combine
 import Foundation
 
-/// A thread-safe ``LogStore`` that keeps the most recent log entries in memory.
+/// A thread-safe ``LogRecorder`` that keeps the most recent log entries in memory.
 ///
-/// Appended entries are published in batches, at most once per ``publishInterval``.
+/// Feed it from the app, for example from a custom log destination that maps each logged message
+/// to a ``LogEntry`` and calls ``record(_:)``.
+/// Recorded entries are published in batches, at most once per ``publishInterval``.
 /// Removals are published immediately.
-public final class InMemoryLogStore: LogStore, @unchecked Sendable {
-    /// The store displayed by ``LogListView`` by default.
-    public static let shared = InMemoryLogStore()
+public final class InMemoryLogRecorder: LogRecorder, @unchecked Sendable {
+    /// The recorder displayed by ``LogListView`` by default.
+    public static let shared = InMemoryLogRecorder()
 
     /// The maximum number of entries kept in memory. The oldest entries are dropped first.
     public let capacity: Int
-    /// The minimum time between two publications of appended entries.
+    /// The minimum time between two publications of recorded entries.
     public let publishInterval: TimeInterval
 
-    private let queue = DispatchQueue(label: "io.getstream.logs-ui.in-memory-log-store")
+    private let queue = DispatchQueue(label: "io.getstream.logs-ui.in-memory-log-recorder")
     private let entriesSubject = CurrentValueSubject<[LogEntry], Never>([])
     private let recordingLock = NSLock()
     private var _isRecording = true
@@ -32,7 +34,7 @@ public final class InMemoryLogStore: LogStore, @unchecked Sendable {
         self.publishInterval = publishInterval
     }
 
-    // A store with the entries of the session that doesn't record new entries.
+    // A recorder with the entries of the session that doesn't record new entries.
     convenience init(session: LogSession) {
         self.init(capacity: max(session.entries.count, 1))
         _isRecording = false
@@ -58,11 +60,12 @@ public final class InMemoryLogStore: LogStore, @unchecked Sendable {
         entriesSubject.eraseToAnyPublisher()
     }
 
-    public func append(_ entry: LogEntry) {
+    /// Keeps the entry if ``isRecording`` is `true`.
+    public func record(_ entry: LogEntry) {
         guard isRecording else { return }
         queue.async { [self] in
             buffer.append(entry)
-            // Trimming in batches avoids shifting the whole buffer on every append.
+            // Trimming in batches avoids shifting the whole buffer on every recorded entry.
             if buffer.count >= capacity + max(capacity / 10, 1) {
                 buffer.removeFirst(buffer.count - capacity)
             }

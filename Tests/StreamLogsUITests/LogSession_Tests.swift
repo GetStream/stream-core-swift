@@ -103,14 +103,14 @@ struct LogSession_Tests {
         #expect(makeSession(entries: []).sourceDescription == "DemoApp 5.0 (123) · iOS 26.0.1 · iPhone17,1")
     }
 
-    @Test func storeFromSessionHasItsEntriesAndDoesNotRecord() {
+    @Test func recorderFromSessionHasItsEntriesAndDoesNotRecord() {
         let session = makeSession(entries: [LogEntry(date: date, level: .info, message: "Hello")])
 
-        let store = InMemoryLogStore(session: session)
-        store.append(LogEntry(level: .info, message: "New"))
+        let recorder = InMemoryLogRecorder(session: session)
+        recorder.record(LogEntry(level: .info, message: "New"))
 
-        #expect(store.isRecording == false)
-        #expect(store.entries.map(\.message) == ["Hello"])
+        #expect(recorder.isRecording == false)
+        #expect(recorder.entries.map(\.message) == ["Hello"])
     }
 
     @Test func exportedFileContainsTheSession() throws {

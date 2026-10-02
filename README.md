@@ -30,7 +30,7 @@ Since this SDK is internal, we do not recommend adding it directly to your proje
 
 ## 🪵 StreamLogsUI
 
-`StreamLogsUI` is an in-app log viewer for debug builds and demo apps (iOS 16+). It has no dependencies, so it can be used with any logging library: forward log messages to `InMemoryLogStore.shared` and present the viewer.
+`StreamLogsUI` is an in-app log viewer for debug builds and demo apps (iOS 16+). It has no dependencies, so it can be used with any logging library: record log messages in `InMemoryLogRecorder.shared` and present the viewer.
 
 ```swift
 import StreamLogsUI
@@ -58,7 +58,7 @@ NavigationStack {
 Entries with the predefined HTTP metadata keys are shown as requests, with their method and status. Their request and response bodies can be browsed and searched in a JSON viewer, and their cURL command can be copied. The `.http` helper creates these keys from a request and its response:
 
 ```swift
-InMemoryLogStore.shared.append(LogEntry(
+InMemoryLogRecorder.shared.record(LogEntry(
     level: .debug,
     message: "200 GET /users",
     metadata: .http(request: request, response: response, responseBody: data, error: error)
@@ -76,9 +76,9 @@ StreamCore's `Logger` accepts the same keys as `LogMetadataKey`, including the `
 import StreamCore
 import StreamLogsUI
 
-final class InMemoryLogDestination: BaseLogDestination, @unchecked Sendable {
+final class LogViewerDestination: BaseLogDestination, @unchecked Sendable {
     override func process(logDetails: LogDetails) {
-        InMemoryLogStore.shared.append(LogEntry(
+        InMemoryLogRecorder.shared.record(LogEntry(
             date: logDetails.date,
             level: LogEntry.Level(logDetails.level),
             subsystems: LogSubsystem.allCases.filter { logDetails.subsystem.contains($0) }.map(\.description),
@@ -106,7 +106,7 @@ private extension LogEntry.Level {
     }
 }
 
-LogConfig.destinationTypes = [ConsoleLogDestination.self, InMemoryLogDestination.self]
+LogConfig.destinationTypes = [ConsoleLogDestination.self, LogViewerDestination.self]
 ```
 
 </details>
@@ -118,7 +118,7 @@ LogConfig.destinationTypes = [ConsoleLogDestination.self, InMemoryLogDestination
 import Logging
 import StreamLogsUI
 
-struct InMemoryLogHandler: LogHandler {
+struct LogViewerHandler: LogHandler {
     let label: String
     var logLevel: Logger.Level = .trace
     var metadata: Logger.Metadata = [:]
@@ -137,7 +137,7 @@ struct InMemoryLogHandler: LogHandler {
         function: String,
         line: UInt
     ) {
-        InMemoryLogStore.shared.append(LogEntry(
+        InMemoryLogRecorder.shared.record(LogEntry(
             level: LogEntry.Level(level),
             subsystems: [label],
             message: message.description,
@@ -166,7 +166,7 @@ private extension LogEntry.Level {
 }
 
 LoggingSystem.bootstrap { label in
-    MultiplexLogHandler([StreamLogHandler.standardOutput(label: label), InMemoryLogHandler(label: label)])
+    MultiplexLogHandler([StreamLogHandler.standardOutput(label: label), LogViewerHandler(label: label)])
 }
 ```
 
@@ -179,9 +179,9 @@ LoggingSystem.bootstrap { label in
 import CocoaLumberjackSwift
 import StreamLogsUI
 
-final class InMemoryLogger: DDAbstractLogger {
+final class LogViewerLogger: DDAbstractLogger {
     override func log(message logMessage: DDLogMessage) {
-        InMemoryLogStore.shared.append(LogEntry(
+        InMemoryLogRecorder.shared.record(LogEntry(
             date: logMessage.timestamp,
             level: LogEntry.Level(logMessage.flag),
             message: logMessage.message,
@@ -205,7 +205,7 @@ private extension LogEntry.Level {
     }
 }
 
-DDLog.add(InMemoryLogger())
+DDLog.add(LogViewerLogger())
 ```
 
 </details>
@@ -217,7 +217,7 @@ The share button in the log list exports all logs, or only the filtered ones, as
 The file is a `LogSession`, which can also be read and written in code, for example to attach logs to a bug report:
 
 ```swift
-let data = try LogSession(entries: InMemoryLogStore.shared.entries).encoded()
+let data = try LogSession(entries: InMemoryLogRecorder.shared.entries).encoded()
 let session = try LogSession(data: data)
 ```
 
@@ -228,4 +228,4 @@ let session = try LogSession(data: data)
 - **Settings:** `LogSettings` holds the destinations shown in the settings screen, each with its own switch, level and subsystems. Use `apply(_:)` to rebuild your logger's destinations when they change.
 - **Initial filter:** set `LogViewer.defaultFilter`, or pass a `LogFilter` to `LogViewer.present(filter:)` or `LogListView(filter:)`, to open the viewer with levels, subsystems or search text already applied.
 - **Appearance:** `LogViewerAppearance` sets the color and icon of each level, and the subsystem and search highlight colors. Pass it to `LogViewer.present(appearance:)` or apply it with the `logViewerAppearance(_:)` modifier.
-- **Storage:** `InMemoryLogStore` keeps the latest 5,000 entries by default. To keep entries elsewhere, implement `LogStore` and pass it to `LogViewer.present(store:)` or `LogListView(store:)`.
+- **Storage:** `InMemoryLogRecorder` keeps the latest 5,000 entries by default. To display entries kept elsewhere, for example in a file that survives app launches, implement `LogRecorder` and pass it to `LogViewer.present(recorder:)` or `LogListView(recorder:)`.

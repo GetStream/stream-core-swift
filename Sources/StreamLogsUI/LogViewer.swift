@@ -22,7 +22,7 @@ public enum LogViewer {
         }
     }
 
-    /// The filter applied when the viewer is presented, unless another one is passed to ``present(store:settings:appearance:filter:)``.
+    /// The filter applied when the viewer is presented, unless another one is passed to ``present(recorder:settings:appearance:filter:)``.
     ///
     /// Also used when the viewer is presented by shaking the device. Defaults to showing every entry.
     public static var defaultFilter = LogFilter()
@@ -46,14 +46,14 @@ public enum LogViewer {
         return false
     }
 
-    /// Presents the entries of the given store in a sheet above the app.
+    /// Presents the entries of the given recorder in a sheet above the app.
     ///
     /// The sheet can be resized to small, medium and large heights. At the small and medium heights,
     /// the app behind it stays interactive. Does nothing if the viewer is already presented.
     ///
     /// - Parameter filter: The filter applied when the viewer appears. Defaults to ``defaultFilter``.
     public static func present(
-        store: any LogStore = InMemoryLogStore.shared,
+        recorder: any LogRecorder = InMemoryLogRecorder.shared,
         settings: LogSettings = .shared,
         appearance: LogViewerAppearance = LogViewerAppearance(),
         filter: LogFilter = defaultFilter
@@ -61,7 +61,7 @@ public enum LogViewer {
         guard #available(iOS 16.0, *), !isPresented else { return }
         let viewController = LogViewerHostingController(rootView: AnyView(
             NavigationStack {
-                LogListView(store: store, settings: settings, filter: filter)
+                LogListView(recorder: recorder, settings: settings, filter: filter)
             }
             .logViewerAppearance(appearance)
         ))

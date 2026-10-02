@@ -6,7 +6,7 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
-/// A debugging view that lists the log entries recorded in a ``LogStore``.
+/// A debugging view that lists the log entries of a ``LogRecorder``.
 ///
 /// Entries can be searched, filtered by level and subsystem, inspected, copied, and exported as a ``LogSession`` file.
 /// Exported files can be imported back, and are displayed apart from the recorded entries.
@@ -25,25 +25,29 @@ public struct LogListView: View {
     @Environment(\.logViewerAppearance) private var appearance
     @Environment(\.dismiss) private var dismiss
 
-    private let store: (any LogStore)?
+    private let recorder: (any LogRecorder)?
     private let session: LogSession?
     private let topID = "top"
 
-    /// Creates a view that lists the entries of the given store, with access to the given logger settings.
+    /// Creates a view that lists the entries of the given recorder, with access to the given logger settings.
     ///
     /// - Parameter filter: The filter applied when the view appears. It can then be changed from the view.
-    public init(store: any LogStore = InMemoryLogStore.shared, settings: LogSettings = .shared, filter: LogFilter = LogFilter()) {
-        _viewModel = StateObject(wrappedValue: LogListViewModel(store: store, filter: filter))
+    public init(
+        recorder: any LogRecorder = InMemoryLogRecorder.shared,
+        settings: LogSettings = .shared,
+        filter: LogFilter = LogFilter()
+    ) {
+        _viewModel = StateObject(wrappedValue: LogListViewModel(recorder: recorder, filter: filter))
         self.settings = settings
-        self.store = store
+        self.recorder = recorder
         session = nil
     }
 
     // Lists the entries of an imported session, which can't be recorded to or changed.
     init(session: LogSession) {
-        _viewModel = StateObject(wrappedValue: LogListViewModel(store: InMemoryLogStore(session: session)))
+        _viewModel = StateObject(wrappedValue: LogListViewModel(recorder: InMemoryLogRecorder(session: session)))
         settings = .shared
-        store = nil
+        recorder = nil
         self.session = session
     }
 
@@ -162,9 +166,9 @@ public struct LogListView: View {
 
     private var sessionMenu: some View {
         Menu {
-            if let store {
+            if let recorder {
                 ShareLink(
-                    item: LogSessionFile { store.entries },
+                    item: LogSessionFile { recorder.entries },
                     preview: SharePreview("Logs")
                 ) {
                     Label("Export All Logs", systemImage: "square.and.arrow.up")
