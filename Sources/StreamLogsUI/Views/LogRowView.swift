@@ -61,10 +61,16 @@ struct LogRowView: View {
         .accessibilityElement(children: .combine)
     }
 
+    private static let maxVisibleSubsystems = 2
+
     private func footer(http: LogHTTPRequest?) -> some View {
         HStack(spacing: LogTokens.Spacing.xxs) {
-            ForEach(entry.subsystems, id: \.self) { subsystem in
+            ForEach(entry.subsystems.prefix(Self.maxVisibleSubsystems), id: \.self) { subsystem in
                 LogSubsystemTag(subsystem: subsystem, searchText: searchText)
+            }
+            if entry.subsystems.count > Self.maxVisibleSubsystems {
+                LogSubsystemTag(subsystem: "+\(entry.subsystems.count - Self.maxVisibleSubsystems)")
+                    .accessibilityLabel("\(entry.subsystems.count - Self.maxVisibleSubsystems) more subsystems")
             }
             if let detail = http.map({ $0.host ?? $0.url }) ?? entry.sourceDescription {
                 LogHighlightedText(text: detail, searchText: searchText)

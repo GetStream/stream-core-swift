@@ -10,6 +10,7 @@ struct LogDetailView: View {
     let entry: LogEntry
     @State private var content: LogDetailContent?
     @State private var mode = Mode.raw
+    @State private var isSummaryExpanded = false
     @StateObject private var json = LogJSONViewModel()
 
     enum Mode: Hashable {
@@ -21,13 +22,10 @@ struct LogDetailView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
-                    VStack(alignment: .leading, spacing: LogTokens.Spacing.md) {
-                        LogDetailSummary(entry: entry)
-                        actions
-                    }
-                    .padding(.horizontal, LogTokens.Spacing.md)
-                    .padding(.top, LogTokens.Spacing.md)
-                    .padding(.bottom, LogTokens.Spacing.xs)
+                    LogDetailSummary(entry: entry, isExpanded: $isSummaryExpanded)
+                        .padding(.horizontal, LogTokens.Spacing.md)
+                        .padding(.top, LogTokens.Spacing.md)
+                        .padding(.bottom, LogTokens.Spacing.xs)
 
                     if let content {
                         Section {
@@ -54,6 +52,11 @@ struct LogDetailView: View {
         }
         .navigationTitle("Log Details")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                LogCopyButton(options: content?.copyOptions ?? [])
+            }
+        }
         .task(id: entry.id) {
             let entry = entry
             let content = await Task.detached(priority: .userInitiated) {
@@ -61,18 +64,6 @@ struct LogDetailView: View {
             }.value
             self.content = content
             json.load(content.jsonTree)
-        }
-    }
-
-    private var actions: some View {
-        HStack(spacing: LogTokens.Spacing.xs) {
-            LogCopyButton(title: "Copy", systemImage: "doc.on.doc", text: content?.rawText ?? entry.rawText)
-            if let curlCommand = content?.curlCommand {
-                LogCopyButton(title: "cURL", systemImage: "terminal", text: curlCommand)
-            }
-            if let json = content?.json {
-                LogCopyButton(title: "JSON", systemImage: "curlybraces", text: json)
-            }
         }
     }
 
@@ -149,27 +140,41 @@ struct LogDetailView: View {
 @available(iOS 16.0, *)
 private struct LogDetailSummary: View {
     let entry: LogEntry
+    @Binding var isExpanded: Bool
 
     var body: some View {
         let httpRequest = entry.httpRequest
         VStack(alignment: .leading, spacing: LogTokens.Spacing.sm) {
-            HStack(spacing: LogTokens.Spacing.xs) {
-                if let httpRequest {
-                    LogHTTPMethodBadge(method: httpRequest.method)
-                    if let status = httpRequest.status {
-                        LogHTTPStatusBadge(status: status, isError: entry.level >= .error)
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
+            } label: {
+                HStack(spacing: LogTokens.Spacing.xs) {
+                    if let httpRequest {
+                        LogHTTPMethodBadge(method: httpRequest.method)
+                        if let status = httpRequest.status {
+                            LogHTTPStatusBadge(status: status, isError: entry.level >= .error)
+                        }
                     }
+                    LogLevelBadge(level: entry.level)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.down")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundColor(LogTokens.Colors.textTertiary)
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 }
-                LogLevelBadge(level: entry.level)
-                Spacer(minLength: 0)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
+            .accessibilityHint(isExpanded ? "Hides the log details" : "Shows the log details")
 
             if let httpRequest {
                 Text(httpRequest.url)
                     .font(.system(.footnote, design: .monospaced).weight(.medium))
                     .foregroundColor(LogTokens.Colors.textPrimary)
+                    .lineLimit(isExpanded ? nil : 2)
                     .textSelection(.enabled)
-                if let error = httpRequest.error {
+                if isExpanded, let error = httpRequest.error {
                     Text(error)
                         .font(.footnote)
                         .foregroundColor(LogTokens.Colors.textSecondary)
@@ -179,13 +184,15 @@ private struct LogDetailSummary: View {
                 Text(entry.message)
                     .font(.subheadline)
                     .foregroundColor(LogTokens.Colors.textPrimary)
-                    .lineLimit(4)
+                    .lineLimit(isExpanded ? 8 : 2)
             }
 
-            Divider()
-                .overlay(LogTokens.Colors.borderDefault)
+            if isExpanded {
+                Divider()
+                    .overlay(LogTokens.Colors.borderDefault)
 
-            infoRows(hidingHTTPKeys: httpRequest != nil)
+                infoRows(hidingHTTPKeys: httpRequest != nil)
+            }
         }
         .padding(LogTokens.Spacing.md)
         .background(LogTokens.Colors.backgroundSurfaceCard, in: RoundedRectangle(cornerRadius: LogTokens.Radius.xl))
@@ -207,7 +214,7 @@ private struct LogDetailSummary: View {
             }
             if !entry.subsystems.isEmpty {
                 LogInfoRow(title: "Subsystems") {
-                    HStack(spacing: LogTokens.Spacing.xxs) {
+                    LogFlowLayout(spacing: LogTokens.Spacing.xxs) {
                         ForEach(entry.subsystems, id: \.self) { LogSubsystemTag(subsystem: $0) }
                     }
                 }
@@ -274,7 +281,7 @@ private struct LogFullMessageView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                LogCopyButton(title: "Copy", systemImage: "doc.on.doc", text: message)
+                LogCopyButton(options: [LogCopyOption(title: "Raw", text: message)])
             }
         }
     }
@@ -299,30 +306,39 @@ private struct LogInfoRow<Content: View>: View {
     }
 }
 
+// Asks which format to copy when there are several, and copies the only one directly otherwise.
 @available(iOS 16.0, *)
 private struct LogCopyButton: View {
-    let title: String
-    let systemImage: String
-    let text: String
+    let options: [LogCopyOption]
+    @State private var isShowingOptions = false
     @State private var isCopied = false
 
     var body: some View {
         Button {
-            UIPasteboard.general.string = text
-            isCopied = true
-            Task {
-                try? await Task.sleep(nanoseconds: 1_500_000_000)
-                isCopied = false
+            if options.count == 1 {
+                copy(options[0])
+            } else {
+                isShowingOptions = true
             }
         } label: {
-            Label(isCopied ? "Copied" : title, systemImage: isCopied ? "checkmark" : systemImage)
-                .font(.footnote.weight(.semibold))
-                .foregroundColor(isCopied ? LogTokens.Colors.accentSuccess : LogTokens.Colors.textPrimary)
-                .padding(.horizontal, LogTokens.Spacing.sm)
-                .padding(.vertical, LogTokens.Spacing.xs)
-                .background(LogTokens.Colors.backgroundSurfaceDefault, in: Capsule())
+            Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
+                .foregroundColor(isCopied ? LogTokens.Colors.accentSuccess : LogTokens.Colors.accentPrimary)
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(isCopied ? "Copied" : "Copy \(title)")
+        .disabled(options.isEmpty)
+        .accessibilityLabel(isCopied ? "Copied" : "Copy")
+        .confirmationDialog("Copy as", isPresented: $isShowingOptions, titleVisibility: .visible) {
+            ForEach(options) { option in
+                Button(option.title) { copy(option) }
+            }
+        }
+    }
+
+    private func copy(_ option: LogCopyOption) {
+        UIPasteboard.general.string = option.text
+        isCopied = true
+        Task {
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            isCopied = false
+        }
     }
 }

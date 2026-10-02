@@ -27,6 +27,11 @@ struct LogDetailContent_Tests {
         #expect(subject.curlCommand == "curl -v \"https://example.com/channels\"")
         #expect(subject.rawText == entry.rawText)
         #expect(subject.rawPreview == nil)
+        #expect(subject.copyOptions == [
+            LogCopyOption(title: "Raw", text: entry.rawText),
+            LogCopyOption(title: "cURL", text: "curl -v \"https://example.com/channels\""),
+            LogCopyOption(title: "JSON", text: "{\n  \"id\" : 1\n}")
+        ])
     }
 
     @Test func nonJSONBodiesAreSkipped() {
@@ -46,6 +51,7 @@ struct LogDetailContent_Tests {
         #expect(subject.jsonTree.isEmpty)
         #expect(subject.json == nil)
         #expect(subject.curlCommand == nil)
+        #expect(subject.copyOptions.map(\.title) == ["Raw"])
     }
 
     @Test func otherEntriesUseTheJSONAndCurlCommandInTheirMessage() {

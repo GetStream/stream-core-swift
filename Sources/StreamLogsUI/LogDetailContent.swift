@@ -34,4 +34,18 @@ struct LogDetailContent: Sendable {
         jsonTree = LogJSONTree(documents: documents)
         json = jsonTree.roots.last.map(jsonTree.jsonText(for:))
     }
+
+    var copyOptions: [LogCopyOption] {
+        let options: [(title: String, text: String?)] = [("Raw", rawText), ("cURL", curlCommand), ("JSON", json)]
+        return options.compactMap { option in
+            option.text.map { LogCopyOption(title: option.title, text: $0) }
+        }
+    }
+}
+
+struct LogCopyOption: Identifiable, Equatable, Sendable {
+    let title: String
+    let text: String
+
+    var id: String { title }
 }

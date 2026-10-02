@@ -86,9 +86,11 @@ struct LogSubsystemTag: View {
         LogHighlightedText(text: subsystem, searchText: searchText)
             .font(.caption2.weight(.medium))
             .foregroundColor(appearance.subsystemColor)
+            .lineLimit(1)
             .padding(.horizontal, LogTokens.Spacing.xs - 2)
             .padding(.vertical, LogTokens.Spacing.xxxs)
             .background(appearance.subsystemColor.opacity(0.1), in: RoundedRectangle(cornerRadius: LogTokens.Radius.sm))
+            .fixedSize()
     }
 }
 
