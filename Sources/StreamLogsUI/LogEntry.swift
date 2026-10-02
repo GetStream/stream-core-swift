@@ -28,7 +28,8 @@ public struct LogEntry: Identifiable, Hashable, Sendable {
     public let subsystems: [String]
     /// The text of the entry.
     ///
-    /// The list shows the beginning of it. It's matched when searching.
+    /// The list shows the beginning of it, and the detail screen shows all of it. It's matched when searching,
+    /// and when it contains JSON, the detail screen can display it as a collapsible tree.
     public let message: String
     /// The name of the thread the entry was logged on, like `main`, or `nil` when it's unknown.
     public let threadName: String?
@@ -47,6 +48,10 @@ public struct LogEntry: Identifiable, Hashable, Sendable {
     /// Additional values displayed with the entry and matched when searching.
     ///
     /// Both keys and values are matched when searching, and they're included when copying the entry.
+    /// Entries with the HTTP keys, like ``MetadataKey/httpMethod`` and ``MetadataKey/httpURL``,
+    /// are displayed as HTTP requests, with their status and bodies.
+    /// Entries with ``MetadataKey/webSocketReceivedPayload`` or ``MetadataKey/webSocketSentPayload``
+    /// are displayed as WebSocket messages, with their event type and payload.
     public let metadata: [MetadataKey: String]
 
     /// Creates an entry. Only the level and the message are required.

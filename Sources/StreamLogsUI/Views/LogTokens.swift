@@ -24,6 +24,7 @@ enum LogTokens {
         @usableFromInline static let accentNeutral = Color(light: 0x687385, dark: 0xababab)
         static let accentInfo = Color(light: 0x1e9ea9, dark: 0x45bcc7)
         static let accentTrace = Color(light: 0x87909f, dark: 0x8f8f8f)
+        static let webSocket = accentPrimary
 
         static let textPrimary = Color(light: 0x1a1b25, dark: 0xf8f8f8)
         static let textSecondary = Color(light: 0x414552, dark: 0xd8d8d8)
@@ -34,6 +35,11 @@ enum LogTokens {
         static let backgroundSurfaceDefault = Color(light: 0xebeef1, dark: 0x323232)
         static let borderDefault = Color(light: 0xd5dbe1, dark: 0x464646)
         @usableFromInline static let highlight = Color(light: 0xfcd579, dark: 0xc84801).opacity(0.45)
+
+        static let jsonKey = accentPrimary
+        static let jsonString = Color(light: 0x277e59, dark: 0x59dea3)
+        static let jsonNumber = Color(light: 0x644af9, dark: 0xa1a3ff)
+        static let jsonLiteral = Color(light: 0xc84801, dark: 0xfa922b)
     }
 
     enum Spacing {

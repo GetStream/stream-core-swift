@@ -55,7 +55,19 @@ NavigationStack {
 
 `LogEntry` only requires a level and a message. The other fields are optional, and `metadata` holds any extra key-value pairs, which are displayed and searchable. Besides the predefined levels, apps can define their own, e.g. `LogEntry.Level(severity: 45, name: "SECURITY")`.
 
-StreamCore's `Logger` accepts metadata as `LogMetadataKey` values, including an `.http` helper that creates the HTTP keys from a request and its response, and its console output lists them after the message. `LogEntry.MetadataKey` predefines the same keys, so they can be converted by raw value.
+Entries with the predefined HTTP metadata keys are shown as requests, with their method and status. Their request and response bodies can be browsed and searched in a JSON viewer, and their cURL command can be copied. The `.http` helper creates these keys from a request and its response:
+
+```swift
+InMemoryLogRecorder.shared.record(LogEntry(
+    level: .debug,
+    message: "200 GET /users",
+    metadata: .http(request: request, response: response, responseBody: data, error: error)
+))
+```
+
+The keys can also be set one by one, e.g. `[.httpMethod: "GET", .httpURL: "https://example.com/users"]`. Entries with `.webSocketReceivedPayload` or `.webSocketSentPayload` are shown as WebSocket messages, with their `.webSocketEventType`.
+
+StreamCore's `Logger` accepts the same keys as `LogMetadataKey`, including the `.http` helper, and its console output lists them after the message.
 
 <details>
 <summary>StreamCore</summary>

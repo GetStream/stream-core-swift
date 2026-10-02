@@ -8,10 +8,10 @@ import UniformTypeIdentifiers
 
 /// A debugging view that lists the log entries of a ``LogRecorder``.
 ///
-/// Entries can be searched, filtered by level and subsystem, copied, and exported as a ``LogSession`` file.
+/// Entries can be searched, filtered by level and subsystem, inspected, copied, and exported as a ``LogSession`` file.
 /// Exported files can be imported back, and are displayed apart from the recorded entries.
 ///
-/// Place the view inside a `NavigationStack`, which it uses to show the log settings.
+/// Place the view inside a `NavigationStack`, which it uses to show entry details and the log settings.
 @available(iOS 16.0, *)
 public struct LogListView: View {
     @StateObject private var viewModel: LogListViewModel
@@ -78,6 +78,9 @@ public struct LogListView: View {
             .onAppear { viewModel.refreshRecordingState() }
             .navigationTitle(session == nil ? "Logs" : "Imported Logs")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: LogEntry.self) { entry in
+                LogDetailView(entry: entry)
+            }
             .searchable(
                 text: $viewModel.searchText,
                 placement: .navigationBarDrawer(displayMode: .always),
@@ -354,20 +357,31 @@ public struct LogListView: View {
     }
 
     private func row(for entry: LogEntry) -> some View {
-        VStack(spacing: 0) {
-            LogRowView(entry: entry, searchText: viewModel.searchText)
-                .padding(.horizontal, LogTokens.Spacing.md)
-                .padding(.vertical, LogTokens.Spacing.sm)
-            Divider()
-                .overlay(LogTokens.Colors.borderDefault.opacity(0.6))
-                .padding(.leading, LogTokens.Spacing.md)
+        NavigationLink(value: entry) {
+            VStack(spacing: 0) {
+                LogRowView(entry: entry, searchText: viewModel.searchText)
+                    .padding(.horizontal, LogTokens.Spacing.md)
+                    .padding(.vertical, LogTokens.Spacing.sm)
+                Divider()
+                    .overlay(LogTokens.Colors.borderDefault.opacity(0.6))
+                    .padding(.leading, LogTokens.Spacing.md)
+            }
+            .contentShape(Rectangle())
         }
-        .contentShape(Rectangle())
+        .buttonStyle(.plain)
         .contextMenu {
             Button {
                 UIPasteboard.general.string = entry.rawText
             } label: {
                 Label("Copy Log", systemImage: "doc.on.doc")
+            }
+
+            if let curlCommand = entry.httpRequest?.curlCommand.flatMap(LogMessageParser.curlCommand(in:)) {
+                Button {
+                    UIPasteboard.general.string = curlCommand
+                } label: {
+                    Label("Copy as cURL", systemImage: "terminal")
+                }
             }
 
             if session == nil {
