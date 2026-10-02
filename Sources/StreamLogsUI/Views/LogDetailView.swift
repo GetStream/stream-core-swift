@@ -100,7 +100,7 @@ struct LogDetailView: View {
     private var message: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
-                Text("Log Message")
+                Text("Raw Log")
                     .font(.headline)
 
                 Spacer()
