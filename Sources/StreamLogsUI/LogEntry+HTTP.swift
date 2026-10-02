@@ -76,6 +76,70 @@ struct LogHTTPRequest: Equatable, Sendable {
     }
 }
 
+public extension Dictionary where Key == LogEntry.MetadataKey, Value == String {
+    /// Creates the metadata of an HTTP request, so the entry is displayed as a request with its status and bodies.
+    ///
+    /// JSON bodies are pretty-printed, and bodies that are neither JSON nor text, like uploaded files, are left out.
+    ///
+    /// - Parameters:
+    ///   - request: The request that was sent.
+    ///   - response: The response that was received, if any. Its status code is added when it's an HTTP response.
+    ///   - responseBody: The body of the response, if any.
+    ///   - error: The error the request failed with, if any.
+    ///   - session: The session that sent the request, whose additional headers are added to the cURL command.
+    static func http(
+        request: URLRequest,
+        response: URLResponse? = nil,
+        responseBody: Data? = nil,
+        error: Error? = nil,
+        session: URLSession? = nil
+    ) -> Self {
+        var metadata: Self = [
+            .httpMethod: request.httpMethod ?? "GET",
+            .httpURL: request.url?.absoluteString ?? "",
+            .httpCURL: request.curlCommand(session: session)
+        ]
+        metadata[.httpStatusCode] = (response as? HTTPURLResponse).map { String($0.statusCode) }
+        metadata[.httpError] = error.map { "\($0)" }
+        metadata[.httpRequestBody] = request.httpBody.flatMap(Self.bodyDescription(of:))
+        metadata[.httpResponseBody] = responseBody.flatMap(Self.bodyDescription(of:))
+        return metadata
+    }
+
+    private static func bodyDescription(of body: Data) -> String? {
+        guard !body.isEmpty else { return nil }
+        guard let object = try? JSONSerialization.jsonObject(with: body, options: .fragmentsAllowed),
+              let json = try? JSONSerialization.data(
+                  withJSONObject: object,
+                  options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes, .fragmentsAllowed]
+              ) else {
+            return String(data: body, encoding: .utf8)
+        }
+        return String(decoding: json, as: UTF8.self)
+    }
+}
+
+private extension URLRequest {
+    // Matches the cURL commands logged by StreamCore.
+    func curlCommand(session: URLSession?) -> String {
+        guard let url, let httpMethod else { return "$ curl failed to create" }
+        var headers = session?.configuration.httpAdditionalHeaders as? [String: String] ?? [:]
+        headers.merge(allHTTPHeaderFields ?? [:]) { _, new in new }
+        var parts = ["$ curl -v", "-X \(httpMethod)"]
+        parts += headers
+            .sorted { $0.key < $1.key }
+            .map { "-H \"\($0.key): \($0.value.replacingOccurrences(of: "\"", with: "\\\""))\"" }
+        if let httpBody {
+            let body = String(decoding: httpBody, as: UTF8.self)
+                .replacingOccurrences(of: "\\\"", with: "\\\\\"")
+                .replacingOccurrences(of: "\"", with: "\\\"")
+            parts.append("-d \"\(body)\"")
+        }
+        parts.append("\"\(url.absoluteString.replacingOccurrences(of: "$", with: "%24"))\"")
+        return parts.joined(separator: " \\\n\t")
+    }
+}
+
 extension LogEntry {
     var httpRequest: LogHTTPRequest? {
         guard let method = metadata[.httpMethod], let url = metadata[.httpURL] else { return nil }

@@ -223,14 +223,9 @@ final class URLSessionDelegateHandler: NSObject, URLSessionDataDelegate, URLSess
 
 extension Data {
     func webSocketLogMetadata(payloadKey: LogMetadataKey) -> [LogMetadataKey: String] {
-        guard let object = try? JSONSerialization.jsonObject(with: self),
-              let prettyData = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys]),
-              let payload = String(data: prettyData, encoding: .utf8)
-        else {
-            return [payloadKey: String(data: self, encoding: .utf8) ?? "<\(count) bytes>"]
-        }
-        var metadata = [payloadKey: payload]
-        if let eventType = (object as? [String: Any])?["type"] as? String {
+        var metadata = [payloadKey: logDescription ?? "<\(count) bytes>"]
+        if let object = try? JSONSerialization.jsonObject(with: self) as? [String: Any],
+           let eventType = object["type"] as? String {
             metadata[.webSocketEventType] = eventType
         }
         return metadata

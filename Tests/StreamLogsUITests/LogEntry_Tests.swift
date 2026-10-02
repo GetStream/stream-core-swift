@@ -159,6 +159,46 @@ struct LogEntry_Tests {
         #expect(request.error == "Offline")
     }
 
+    @Test func httpMetadataIsCreatedFromARequestAndResponse() throws {
+        let url = try #require(URL(string: "https://example.com/channels"))
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = Data(#"{"limit":10}"#.utf8)
+        let response = try #require(HTTPURLResponse(url: url, statusCode: 201, httpVersion: nil, headerFields: nil))
+
+        let entry = LogEntry(
+            level: .debug,
+            message: "201 POST /channels",
+            metadata: .http(request: request, response: response, responseBody: Data([0xff, 0xd8]))
+        )
+
+        let httpRequest = try #require(entry.httpRequest)
+        #expect(httpRequest.method == "POST")
+        #expect(httpRequest.url == "https://example.com/channels")
+        #expect(httpRequest.status == .success(201))
+        #expect(httpRequest.requestBody == "{\n  \"limit\" : 10\n}")
+        #expect(httpRequest.responseBody == nil)
+        #expect(httpRequest.curlCommand == """
+        $ curl -v \\
+        \t-X POST \\
+        \t-H "Content-Type: application/json" \\
+        \t-d "{\\"limit\\":10}" \\
+        \t"https://example.com/channels"
+        """)
+    }
+
+    @Test func httpMetadataOfAFailedRequestHasTheError() throws {
+        let request = URLRequest(url: try #require(URL(string: "https://example.com/channels")))
+
+        let entry = LogEntry(level: .error, message: "FAILED GET /channels", metadata: .http(request: request, error: URLError(.timedOut)))
+
+        let httpRequest = try #require(entry.httpRequest)
+        #expect(httpRequest.method == "GET")
+        #expect(httpRequest.status == .failed)
+        #expect(httpRequest.error != nil)
+    }
+
     @Test func httpRequestRequiresMethodAndURL() {
         #expect(LogEntry(level: .info, message: "", metadata: [.httpMethod: "GET"]).httpRequest == nil)
         #expect(LogEntry(level: .info, message: "", metadata: [.httpURL: "https://example.com"]).httpRequest == nil)
