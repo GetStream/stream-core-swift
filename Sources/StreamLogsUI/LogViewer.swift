@@ -63,6 +63,9 @@ public enum LogViewer {
             NavigationStack {
                 LogListView(recorder: recorder, settings: settings, filter: filter)
             }
+            // Sheets are translucent below the large detent, which looks washed out in dark mode.
+            // The system also lightens their content there, so black ends up close to the large detent's background.
+            .background(Color(UIColor { $0.userInterfaceStyle == .dark ? .black : .systemBackground }).ignoresSafeArea())
             .logViewerAppearance(appearance)
         ))
         viewController.modalPresentationStyle = .pageSheet
