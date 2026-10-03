@@ -8,10 +8,11 @@ import SwiftUI
 struct LogHighlightedText: View {
     let text: String
     let searchText: String
+    var contextLength = 100
     @Environment(\.logViewerAppearance) private var appearance
 
     var body: some View {
-        Text(Self.attributedString(text, highlighting: searchText, color: appearance.highlightColor))
+        Text(Self.attributedString(text, highlighting: searchText, color: appearance.highlightColor, contextLength: contextLength))
     }
 
     // Long texts are shortened around the first match, or to their start when nothing matches,

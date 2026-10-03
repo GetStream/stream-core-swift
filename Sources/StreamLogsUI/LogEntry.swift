@@ -168,10 +168,23 @@ extension LogEntry.MetadataKey {
 extension LogEntry {
     // The message followed by the metadata, one `Key: value` per line, like the StreamCore console output.
     var rawText: String {
-        guard !metadata.isEmpty else { return message }
+        ([message] + metadataLines).joined(separator: "\n")
+    }
+
+    // The first of the message, metadata lines and source location that contains the search text,
+    // with its whitespace collapsed so it reads on a single line,
+    // or `nil` when nothing contains it or one of the displayed texts already does.
+    func searchMatch(_ searchText: String, displayedTexts: [String]) -> String? {
+        let contains = { (text: String) in text.range(of: searchText, options: .caseInsensitive) != nil }
+        guard !searchText.isEmpty, !displayedTexts.contains(where: contains) else { return nil }
+        let texts = [message] + metadataLines + [sourceDescription].compactMap { $0 }
+        return texts.first(where: contains).map { $0.split(whereSeparator: \.isWhitespace).joined(separator: " ") }
+    }
+
+    private var metadataLines: [String] {
         let order = MetadataKey.httpKeys + MetadataKey.webSocketKeys
         let rank = { (key: MetadataKey) in order.firstIndex(of: key) ?? order.count }
-        let lines = metadata
+        return metadata
             .sorted { lhs, rhs in
                 let lhsRank = rank(lhs.key)
                 let rhsRank = rank(rhs.key)
@@ -180,7 +193,6 @@ extension LogEntry {
             .map { key, value in
                 value.contains("\n") ? "\(key.rawValue):\n\(value)" : "\(key.rawValue): \(value)"
             }
-        return ([message] + lines).joined(separator: "\n")
     }
 
     /// The source location, e.g. `[File.swift:42] function()`, or `nil` when the entry has none.

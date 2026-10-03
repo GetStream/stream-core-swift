@@ -121,6 +121,40 @@ struct LogEntry_Tests {
         #expect(LogEntry(level: .info, message: "Hello").rawText == "Hello")
     }
 
+    @Test func searchMatchIsTheFirstMetadataLineContainingTheSearchTextOnASingleLine() {
+        let entry = LogEntry(
+            level: .debug,
+            message: "201 POST /channels",
+            metadata: [
+                .httpResponseBody: "{\n  \"text\" : \"Hello there\"\n}",
+                .httpRequestBody: "{\n  \"limit\" : 10\n}",
+                .httpMethod: "POST"
+            ]
+        )
+
+        #expect(entry.searchMatch("hello", displayedTexts: ["/channels"]) == "Response Body: { \"text\" : \"Hello there\" }")
+        #expect(entry.searchMatch("LIMIT", displayedTexts: ["/channels"]) == "Request Body: { \"limit\" : 10 }")
+    }
+
+    @Test func searchMatchIsNilWhenADisplayedTextContainsTheSearchText() {
+        let entry = LogEntry(level: .debug, message: "201 POST /channels", metadata: [.httpResponseBody: "{\"channels\":[]}"])
+
+        #expect(entry.searchMatch("channels", displayedTexts: ["POST", "/channels"]) == nil)
+    }
+
+    @Test func searchMatchIsNilWithoutSearchTextOrMatch() {
+        let entry = LogEntry(level: .debug, message: "Hello", metadata: ["Custom": "value"])
+
+        #expect(entry.searchMatch("", displayedTexts: []) == nil)
+        #expect(entry.searchMatch("missing", displayedTexts: []) == nil)
+    }
+
+    @Test func searchMatchFallsBackToTheSourceLocation() {
+        let entry = LogEntry(level: .debug, message: "Hello", functionName: "connect()", fileName: "WebSocketClient.swift", lineNumber: 7)
+
+        #expect(entry.searchMatch("connect", displayedTexts: ["Hello"]) == "[WebSocketClient.swift:7] connect()")
+    }
+
     @Test func httpRequestIsReadFromMetadata() throws {
         let entry = LogEntry(
             level: .debug,

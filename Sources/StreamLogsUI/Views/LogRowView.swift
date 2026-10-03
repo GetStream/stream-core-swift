@@ -13,6 +13,7 @@ struct LogRowView: View {
     var body: some View {
         let http = entry.httpRequest
         let webSocket = http == nil ? entry.webSocketMessage : nil
+        let eventType = webSocket?.eventType
         VStack(alignment: .leading, spacing: LogTokens.Spacing.xs) {
             HStack(spacing: LogTokens.Spacing.xs) {
                 if let http {
@@ -47,7 +48,7 @@ struct LogRowView: View {
                         .foregroundColor(LogTokens.Colors.textSecondary)
                         .lineLimit(2)
                 }
-            } else if let eventType = webSocket?.eventType {
+            } else if let eventType {
                 LogHighlightedText(text: eventType, searchText: searchText)
                     .font(.subheadline.weight(.medium).monospaced())
                     .foregroundColor(LogTokens.Colors.textPrimary)
@@ -57,6 +58,13 @@ struct LogRowView: View {
                     .font(.subheadline)
                     .foregroundColor(LogTokens.Colors.textPrimary)
                     .lineLimit(3)
+            }
+
+            if let match = entry.searchMatch(searchText, displayedTexts: displayedTexts(http: http, eventType: eventType)) {
+                LogHighlightedText(text: match, searchText: searchText, contextLength: Self.searchMatchContextLength)
+                    .font(.footnote.monospaced())
+                    .foregroundColor(LogTokens.Colors.textSecondary)
+                    .lineLimit(2)
             }
 
             footer(http: http)
@@ -75,6 +83,19 @@ struct LogRowView: View {
     private static let maxVisibleSubsystems = 2
     // WebSocket messages logged less than this long ago pulse when their row appears.
     private static let livePulseDuration: TimeInterval = 3
+    // Short enough for the match to fit within the two lines of a search match.
+    private static let searchMatchContextLength = 40
+
+    private func displayedTexts(http: LogHTTPRequest?, eventType: String?) -> [String] {
+        var texts = Array(entry.subsystems.prefix(Self.maxVisibleSubsystems))
+        if let http {
+            texts += [http.method, http.path, http.host ?? http.url]
+            texts += [http.status?.code.map(String.init), http.status?.reasonPhrase, http.error].compactMap { $0 }
+        } else {
+            texts += [eventType ?? entry.message] + [entry.sourceDescription].compactMap { $0 }
+        }
+        return texts
+    }
 
     private func footer(http: LogHTTPRequest?) -> some View {
         HStack(spacing: LogTokens.Spacing.xxs) {
