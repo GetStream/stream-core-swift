@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4F10600F2F7E01AA00C0FFEE"
-               BuildableName = "StreamLogsUI.framework"
-               BlueprintName = "StreamLogsUI"
+               BuildableName = "StreamCoreLogsUI.framework"
+               BlueprintName = "StreamCoreLogsUI"
                ReferencedContainer = "container:StreamCore.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -30,7 +30,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:Tests/StreamLogsUITests/StreamLogsUI.xctestplan"
+            reference = "container:Tests/StreamCoreLogsUITests/StreamCoreLogsUI.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>
@@ -41,8 +41,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4F1060102F7E01AA00C0FFEE"
-               BuildableName = "StreamLogsUITests.xctest"
-               BlueprintName = "StreamLogsUITests"
+               BuildableName = "StreamCoreLogsUITests.xctest"
+               BlueprintName = "StreamCoreLogsUITests"
                ReferencedContainer = "container:StreamCore.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -69,8 +69,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4F10600F2F7E01AA00C0FFEE"
-            BuildableName = "StreamLogsUI.framework"
-            BlueprintName = "StreamLogsUI"
+            BuildableName = "StreamCoreLogsUI.framework"
+            BlueprintName = "StreamCoreLogsUI"
             ReferencedContainer = "container:StreamCore.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

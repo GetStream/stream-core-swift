@@ -8,7 +8,7 @@ import 'Sonarfile'
 
 xcode_version = ENV['XCODE_VERSION'] || '26.2'
 xcode_project = 'StreamCore.xcodeproj'
-sdk_names = ['StreamCore', 'StreamCoreUI', 'StreamAttachments', 'StreamLogsUI']
+sdk_names = ['StreamCore', 'StreamCoreUI', 'StreamAttachments', 'StreamCoreLogsUI']
 github_repo = ENV['GITHUB_REPOSITORY'] || 'GetStream/stream-core-swift'
 derived_data_path = 'derived_data'
 source_packages_path = 'spm_cache'
@@ -105,9 +105,9 @@ lane :test_attachments do |options|
   run_library_tests(options)
 end
 
-desc 'Runs StreamLogsUI tests'
+desc 'Runs StreamCoreLogsUI tests'
 lane :test_logs_ui do |options|
-  options[:scheme] = 'StreamLogsUI'
+  options[:scheme] = 'StreamCoreLogsUI'
   options[:sources] = sources_matrix[:logs_ui]
   run_library_tests(options)
 end
@@ -165,7 +165,7 @@ lane :sources_matrix do
     core: ['Sources/StreamCore/', 'Tests/StreamCoreTests', '.github/workflows/smoke-checks.yml'],
     ui: ['Sources/StreamCoreUI/', 'Tests/StreamCoreUITests', '.github/workflows/smoke-checks.yml'],
     attachments: ['Sources/StreamAttachments/', 'Tests/StreamAttachmentsTests', '.github/workflows/smoke-checks.yml'],
-    logs_ui: ['Sources/StreamLogsUI/', 'Tests/StreamLogsUITests', '.github/workflows/smoke-checks.yml'],
+    logs_ui: ['Sources/StreamCoreLogsUI/', 'Tests/StreamCoreLogsUITests', '.github/workflows/smoke-checks.yml'],
     ruby: ['fastlane', 'Gemfile', 'Gemfile.lock', '.github/workflows/smoke-checks.yml']
   }
 end

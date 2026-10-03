@@ -23,9 +23,12 @@ let package = Package(
         ),
         // Debugging tools, meant for demo apps and debug builds only
         .library(
-            name: "StreamLogsUI",
-            targets: ["StreamLogsUI"]
+            name: "StreamCoreLogsUI",
+            targets: ["StreamCoreLogsUI"]
         )
+    ],
+    dependencies: [
+        .package(url: "https://github.com/GetStream/stream-logs-ui-swift.git", revision: "dae2f9085042b7c668f718e2ffc6136b74ec177c")
     ],
     targets: [
         .target(
@@ -52,13 +55,17 @@ let package = Package(
             name: "StreamAttachmentsTests",
             dependencies: ["StreamAttachments"]
         ),
-        // Debugging tools. No dependencies, so that apps embedding StreamCore in a framework don't duplicate it.
+        // Debugging tools
         .target(
-            name: "StreamLogsUI"
+            name: "StreamCoreLogsUI",
+            dependencies: [
+                "StreamCore",
+                .product(name: "StreamLogsUI", package: "stream-logs-ui-swift")
+            ]
         ),
         .testTarget(
-            name: "StreamLogsUITests",
-            dependencies: ["StreamLogsUI", "StreamCore"]
+            name: "StreamCoreLogsUITests",
+            dependencies: ["StreamCoreLogsUI"]
         )
     ]
 )
