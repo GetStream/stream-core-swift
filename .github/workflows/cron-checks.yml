@@ -72,9 +72,6 @@ jobs:
     - name: Run Attachments Tests
       run: bundle exec fastlane test_attachments device:"${{ env.IOS_SIMULATOR_DEVICE }}" cron:true ${{ env.VERBOSE }}
       timeout-minutes: 30
-    - name: Run Logs UI Tests
-      run: bundle exec fastlane test_logs_ui device:"${{ env.IOS_SIMULATOR_DEVICE }}" cron:true ${{ env.VERBOSE }}
-      timeout-minutes: 30
 
   automated-code-review:
     name: Automated Code Review

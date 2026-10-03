@@ -27,15 +27,3 @@ This library does **not** follow semantic versioning. Breaking changes may be in
 ## 📦 Installation
 
 Since this SDK is internal, we do not recommend adding it directly to your project. It is primarily consumed as a dependency within other Stream SDKs via Swift Package Manager.
-
-## 🪵 StreamCoreLogsUI
-
-`StreamCoreLogsUI` sends the logs of `Logger` to [StreamLogsUI](https://github.com/GetStream/stream-logs-ui-swift), an in-app log viewer for debug builds and demo apps. Product SDKs expose it through their own product, e.g. `StreamChatLogsUI`, which passes their subsystems:
-
-```swift
-import StreamCoreLogsUI
-
-LogViewer.install(subsystems: [.other, .httpRequests, .webSocket])
-```
-
-The logger then sends its logs to the console and to the log viewer, and both can be configured at runtime in the log viewer settings. The console starts with the configuration of `LogConfig`, so set it up before installing the viewer. To manage the logger's destinations yourself instead, add a `LogViewerDestination` to `LogConfig.destinationTypes` or `LogConfig.destinations`.
