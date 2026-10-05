@@ -35,64 +35,50 @@ struct Logger_Tests {
         )
     }
 
-    @Test func metadataIsPassedToDestinations() async throws {
+    @Test func attachmentIsPassedToDestinations() async throws {
         let destination = CapturingDestination()
         let logger = Logger(identifier: "test", destinations: [destination])
+        let payload = Data(#"{"type":"health.check"}"#.utf8)
 
-        logger.debug("GET /channels", metadata: [.httpMethod: "GET", .httpStatusCode: "200"])
+        logger.debug("Received webSocket message", attachment: WebSocketLogAttachment(direction: .received, payload: payload))
 
         let details = try await destination.waitForDetails()
-        #expect(details.metadata == [.httpMethod: "GET", .httpStatusCode: "200"])
+        let attachment = try #require(details.attachment as? WebSocketLogAttachment)
+        #expect(attachment.direction == .received)
+        #expect(attachment.payload == payload)
     }
 
-    @Test func metadataIsNotEvaluatedWithoutEnabledDestinations() {
+    @Test func attachmentIsNotEvaluatedWithoutEnabledDestinations() {
         let destination = CapturingDestination(level: .error)
         let logger = Logger(identifier: "test", destinations: [destination])
         let isEvaluated = AllocatedUnfairLock(false)
 
-        logger.debug("GET /channels", metadata: {
+        logger.debug("GET /channels", attachment: {
             isEvaluated.withLock { $0 = true }
-            return [:]
+            return nil
         }())
 
         #expect(isEvaluated.value == false)
     }
 
-    @Test func messageWithMetadataListsPredefinedKeysFirstAndMultilineValuesOnTheirOwnLine() async throws {
+    @Test func messageWithAttachmentIsFollowedByItsDescription() async throws {
         let destination = CapturingDestination()
         let logger = Logger(identifier: "test", destinations: [destination])
 
-        logger.debug(
-            "201 POST /channels",
-            metadata: [
-                "Custom": "value",
-                .httpResponseBody: "{\n  \"id\" : 1\n}",
-                .httpStatusCode: "201",
-                .httpMethod: "POST"
-            ]
-        )
+        logger.debug("Sent webSocket message", attachment: WebSocketLogAttachment(direction: .sent, payload: Data("ping".utf8)))
 
         let details = try await destination.waitForDetails()
-        #expect(details.messageWithMetadata == """
-        201 POST /channels
-        Method: POST
-        Status Code: 201
-        Response Body:
-        {
-          "id" : 1
-        }
-        Custom: value
-        """)
+        #expect(details.messageWithAttachment == "Sent webSocket message\nping")
     }
 
-    @Test func messageWithoutMetadataIsUnchanged() async throws {
+    @Test func messageWithoutAttachmentIsUnchanged() async throws {
         let destination = CapturingDestination()
         let logger = Logger(identifier: "test", destinations: [destination])
 
         logger.info("Connected")
 
         let details = try await destination.waitForDetails()
-        #expect(details.messageWithMetadata == "Connected")
+        #expect(details.messageWithAttachment == "Connected")
     }
 
     @Test func levelPublisherEmitsCurrentLevelAndChanges() {

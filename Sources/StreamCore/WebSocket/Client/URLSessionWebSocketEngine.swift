@@ -100,7 +100,7 @@ final class URLSessionWebSocketEngine: NSObject, WebSocketEngine, @unchecked Sen
                 log.debug(
                     "Sent webSocket message",
                     subsystems: .webSocket,
-                    metadata: data.webSocketLogMetadata(payloadKey: .webSocketSentPayload)
+                    attachment: WebSocketLogAttachment(direction: .sent, payload: data)
                 )
                 self?.doRead()
             }
@@ -119,7 +119,7 @@ final class URLSessionWebSocketEngine: NSObject, WebSocketEngine, @unchecked Sen
                     log.debug(
                         "Received webSocket message",
                         subsystems: .webSocket,
-                        metadata: data.webSocketLogMetadata(payloadKey: .webSocketReceivedPayload)
+                        attachment: WebSocketLogAttachment(direction: .received, payload: data)
                     )
                     callbackQueue.async { [weak self] in
                         guard self?.task != nil else { return }
@@ -130,7 +130,7 @@ final class URLSessionWebSocketEngine: NSObject, WebSocketEngine, @unchecked Sen
                     log.debug(
                         "Received webSocket message",
                         subsystems: .webSocket,
-                        metadata: messageData.webSocketLogMetadata(payloadKey: .webSocketReceivedPayload)
+                        attachment: WebSocketLogAttachment(direction: .received, payload: messageData)
                     )
                     callbackQueue.async { [weak self] in
                         guard self?.task != nil else { return }
@@ -218,16 +218,5 @@ final class URLSessionDelegateHandler: NSObject, URLSessionDataDelegate, URLSess
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         onCompletion?(error)
-    }
-}
-
-extension Data {
-    func webSocketLogMetadata(payloadKey: LogMetadataKey) -> [LogMetadataKey: String] {
-        var metadata = [payloadKey: logDescription ?? "<\(count) bytes>"]
-        if let object = try? JSONSerialization.jsonObject(with: self) as? [String: Any],
-           let eventType = object["type"] as? String {
-            metadata[.webSocketEventType] = eventType
-        }
-        return metadata
     }
 }

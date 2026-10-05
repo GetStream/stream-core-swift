@@ -31,8 +31,8 @@ public struct LogDetails: Sendable {
     public let fileName: StaticString
     public let lineNumber: UInt
     public let error: Error?
-    /// Additional values attached to the message, like the URL of an HTTP request.
-    public let metadata: [LogMetadataKey: String]
+    /// A value attached to the message, like an HTTP request.
+    public let attachment: (any LogAttachment)?
 }
 
 public protocol LogDestination: Sendable {
