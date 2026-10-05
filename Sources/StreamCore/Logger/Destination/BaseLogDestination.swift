@@ -110,7 +110,7 @@ open class BaseLogDestination: LogDestination, @unchecked Sendable {
             extendedDetails += "[\(logDetails.functionName)] "
         }
         
-        let extendedMessage = "\(extendedDetails)> \(logDetails.message)"
+        let extendedMessage = "\(extendedDetails)> \(logDetails.messageWithMetadata)"
         let formattedMessage = applyFormatters(logDetails: logDetails, message: extendedMessage)
         write(message: formattedMessage)
     }
