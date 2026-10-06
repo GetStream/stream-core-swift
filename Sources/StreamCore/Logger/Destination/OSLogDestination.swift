@@ -43,7 +43,7 @@ public final class OSLogDestination: BaseLogDestination, @unchecked Sendable {
             extendedDetails += logDetails.threadName
         }
 
-        var extendedMessage = "\(extendedDetails)> \(logDetails.message)"
+        var extendedMessage = "\(extendedDetails)> \(logDetails.messageWithAttachment)"
         if let error = logDetails.error {
             extendedMessage += "\n\(error)"
         }

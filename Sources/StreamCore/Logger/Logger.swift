@@ -471,6 +471,7 @@ open class Logger: @unchecked Sendable {
     ///   - fileName: File of the caller
     ///   - lineNumber: Line number of the caller
     ///   - message: Message to be logged
+    ///   - attachment: A value attached to the message, like an HTTP request, only evaluated when a destination is enabled
     public func callAsFunction(
         _ level: LogLevel,
         functionName: StaticString = #function,
@@ -478,7 +479,8 @@ open class Logger: @unchecked Sendable {
         lineNumber: UInt = #line,
         message: @autoclosure () -> Any,
         subsystems: LogSubsystem = .other,
-        error: Error?
+        error: Error?,
+        attachment: @autoclosure () -> (any LogAttachment)? = nil
     ) {
         log(
             level,
@@ -487,7 +489,8 @@ open class Logger: @unchecked Sendable {
             lineNumber: lineNumber,
             message: message(),
             subsystems: subsystems,
-            error: error
+            error: error,
+            attachment: attachment()
         )
     }
     
@@ -500,6 +503,7 @@ open class Logger: @unchecked Sendable {
     ///   - fileName: File of the caller
     ///   - lineNumber: Line number of the caller
     ///   - message: Message to be logged
+    ///   - attachment: A value attached to the message, like an HTTP request, only evaluated when a destination is enabled
     public func log(
         _ level: LogLevel,
         functionName: StaticString = #function,
@@ -507,7 +511,8 @@ open class Logger: @unchecked Sendable {
         lineNumber: UInt = #line,
         message: @autoclosure () -> Any,
         subsystems: LogSubsystem = .other,
-        error: Error?
+        error: Error?,
+        attachment: @autoclosure () -> (any LogAttachment)? = nil
     ) {
         let enabledDestinations = destinations.filter { $0.isEnabled(level: level, subsystems: subsystems) }
         guard !enabledDestinations.isEmpty else { return }
@@ -522,7 +527,8 @@ open class Logger: @unchecked Sendable {
             functionName: functionName,
             fileName: fileName,
             lineNumber: lineNumber,
-            error: error
+            error: error,
+            attachment: attachment()
         )
         for destination in enabledDestinations {
             loggerQueue.async {
@@ -535,12 +541,14 @@ open class Logger: @unchecked Sendable {
     ///
     /// - Parameters:
     ///   - message: Message to be logged
+    ///   - attachment: A value attached to the message, like an HTTP request, only evaluated when a destination is enabled
     ///   - functionName: Function of the caller
     ///   - fileName: File of the caller
     ///   - lineNumber: Line number of the caller
     public func info(
         _ message: @autoclosure () -> Any,
         subsystems: LogSubsystem = .other,
+        attachment: @autoclosure () -> (any LogAttachment)? = nil,
         functionName: StaticString = #function,
         fileName: StaticString = #fileID,
         lineNumber: UInt = #line
@@ -552,7 +560,8 @@ open class Logger: @unchecked Sendable {
             lineNumber: lineNumber,
             message: message(),
             subsystems: subsystems,
-            error: nil
+            error: nil,
+            attachment: attachment()
         )
     }
     
@@ -560,12 +569,14 @@ open class Logger: @unchecked Sendable {
     ///
     /// - Parameters:
     ///   - message: Message to be logged
+    ///   - attachment: A value attached to the message, like an HTTP request, only evaluated when a destination is enabled
     ///   - functionName: Function of the caller
     ///   - fileName: File of the caller
     ///   - lineNumber: Line number of the caller
     public func debug(
         _ message: @autoclosure () -> Any,
         subsystems: LogSubsystem = .other,
+        attachment: @autoclosure () -> (any LogAttachment)? = nil,
         functionName: StaticString = #function,
         fileName: StaticString = #fileID,
         lineNumber: UInt = #line
@@ -577,7 +588,8 @@ open class Logger: @unchecked Sendable {
             lineNumber: lineNumber,
             message: message(),
             subsystems: subsystems,
-            error: nil
+            error: nil,
+            attachment: attachment()
         )
     }
     
@@ -585,12 +597,14 @@ open class Logger: @unchecked Sendable {
     ///
     /// - Parameters:
     ///   - message: Message to be logged
+    ///   - attachment: A value attached to the message, like an HTTP request, only evaluated when a destination is enabled
     ///   - functionName: Function of the caller
     ///   - fileName: File of the caller
     ///   - lineNumber: Line number of the caller
     public func warning(
         _ message: @autoclosure () -> Any,
         subsystems: LogSubsystem = .other,
+        attachment: @autoclosure () -> (any LogAttachment)? = nil,
         functionName: StaticString = #function,
         fileName: StaticString = #fileID,
         lineNumber: UInt = #line
@@ -602,7 +616,8 @@ open class Logger: @unchecked Sendable {
             lineNumber: lineNumber,
             message: message(),
             subsystems: subsystems,
-            error: nil
+            error: nil,
+            attachment: attachment()
         )
     }
     
@@ -610,6 +625,7 @@ open class Logger: @unchecked Sendable {
     ///
     /// - Parameters:
     ///   - message: Message to be logged
+    ///   - attachment: A value attached to the message, like an HTTP request, only evaluated when a destination is enabled
     ///   - functionName: Function of the caller
     ///   - fileName: File of the caller
     ///   - lineNumber: Line number of the caller
@@ -617,6 +633,7 @@ open class Logger: @unchecked Sendable {
         _ message: @autoclosure () -> Any,
         subsystems: LogSubsystem = .other,
         error: Error? = nil,
+        attachment: @autoclosure () -> (any LogAttachment)? = nil,
         functionName: StaticString = #function,
         fileName: StaticString = #fileID,
         lineNumber: UInt = #line
@@ -637,7 +654,8 @@ open class Logger: @unchecked Sendable {
             lineNumber: lineNumber,
             message: message(),
             subsystems: subsystems,
-            error: error
+            error: error,
+            attachment: attachment()
         )
     }
     

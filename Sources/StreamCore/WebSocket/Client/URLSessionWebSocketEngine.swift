@@ -98,10 +98,9 @@ final class URLSessionWebSocketEngine: NSObject, WebSocketEngine, @unchecked Sen
         task?.send(message) { [weak self] error in
             if error == nil {
                 log.debug(
-                    """
-                    Event message sent
-                    \(String(data: data, encoding: .utf8) ?? "")
-                    """, subsystems: .webSocket
+                    "Sent webSocket message",
+                    subsystems: .webSocket,
+                    attachment: WebSocketLogAttachment(direction: .sent, payload: data)
                 )
                 self?.doRead()
             }
@@ -117,14 +116,22 @@ final class URLSessionWebSocketEngine: NSObject, WebSocketEngine, @unchecked Sen
             switch result {
             case let .success(message):
                 if case let .data(data) = message {
-                    log.debug("Received webSocket message: \(data.debugPrettyPrintedJSON)", subsystems: .webSocket)
+                    log.debug(
+                        "Received webSocket message",
+                        subsystems: .webSocket,
+                        attachment: WebSocketLogAttachment(direction: .received, payload: data)
+                    )
                     callbackQueue.async { [weak self] in
                         guard self?.task != nil else { return }
                         self?.delegate?.webSocketDidReceiveMessage(data)
                     }
                 } else if case let .string(string) = message {
                     let messageData = Data(string.utf8)
-                    log.debug("Received webSocket message:\(messageData.debugPrettyPrintedJSON)", subsystems: .webSocket)
+                    log.debug(
+                        "Received webSocket message",
+                        subsystems: .webSocket,
+                        attachment: WebSocketLogAttachment(direction: .received, payload: messageData)
+                    )
                     callbackQueue.async { [weak self] in
                         guard self?.task != nil else { return }
                         self?.delegate?.webSocketDidReceiveMessage(messageData)

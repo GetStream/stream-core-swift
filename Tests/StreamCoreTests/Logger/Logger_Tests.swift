@@ -35,6 +35,52 @@ struct Logger_Tests {
         )
     }
 
+    @Test func attachmentIsPassedToDestinations() async throws {
+        let destination = CapturingDestination()
+        let logger = Logger(identifier: "test", destinations: [destination])
+        let payload = Data(#"{"type":"health.check"}"#.utf8)
+
+        logger.debug("Received webSocket message", attachment: WebSocketLogAttachment(direction: .received, payload: payload))
+
+        let details = try await destination.waitForDetails()
+        let attachment = try #require(details.attachment as? WebSocketLogAttachment)
+        #expect(attachment.direction == .received)
+        #expect(attachment.payload == payload)
+    }
+
+    @Test func attachmentIsNotEvaluatedWithoutEnabledDestinations() {
+        let destination = CapturingDestination(level: .error)
+        let logger = Logger(identifier: "test", destinations: [destination])
+        let isEvaluated = AllocatedUnfairLock(false)
+
+        logger.debug("GET /channels", attachment: {
+            isEvaluated.withLock { $0 = true }
+            return nil
+        }())
+
+        #expect(isEvaluated.value == false)
+    }
+
+    @Test func messageWithAttachmentIsFollowedByItsDescription() async throws {
+        let destination = CapturingDestination()
+        let logger = Logger(identifier: "test", destinations: [destination])
+
+        logger.debug("Sent webSocket message", attachment: WebSocketLogAttachment(direction: .sent, payload: Data("ping".utf8)))
+
+        let details = try await destination.waitForDetails()
+        #expect(details.messageWithAttachment == "Sent webSocket message\nping")
+    }
+
+    @Test func messageWithoutAttachmentIsUnchanged() async throws {
+        let destination = CapturingDestination()
+        let logger = Logger(identifier: "test", destinations: [destination])
+
+        logger.info("Connected")
+
+        let details = try await destination.waitForDetails()
+        #expect(details.messageWithAttachment == "Connected")
+    }
+
     @Test func levelPublisherEmitsCurrentLevelAndChanges() {
         resetLogConfig()
         defer { resetLogConfig() }
@@ -191,12 +237,12 @@ private final class CapturingDestination: BaseLogDestination, @unchecked Sendabl
     private var logDetails: [LogDetails] = []
     private let lock = NSLock()
 
-    init() {
+    init(level: LogLevel = .debug) {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
         super.init(
             identifier: UUID().uuidString,
-            level: .debug,
+            level: level,
             subsystems: .all,
             showDate: false,
             dateFormatter: formatter,
@@ -260,5 +306,20 @@ private final class CapturingDestination: BaseLogDestination, @unchecked Sendabl
         lock.lock()
         defer { lock.unlock() }
         return logDetails.map(\.threadName)
+    }
+
+    private var firstDetails: LogDetails? {
+        lock.lock()
+        defer { lock.unlock() }
+        return logDetails.first
+    }
+
+    func waitForDetails() async throws -> LogDetails {
+        let deadline = Date().addingTimeInterval(5)
+        while Date() < deadline {
+            if let details = firstDetails { return details }
+            try await Task.sleep(nanoseconds: 10_000_000)
+        }
+        throw CancellationError()
     }
 }
