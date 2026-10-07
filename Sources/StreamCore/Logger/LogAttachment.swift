@@ -41,7 +41,7 @@ public struct HTTPLogAttachment: LogAttachment {
     }
 
     public var logDescription: String {
-        var lines = ["URL: \(request.url?.absoluteString ?? "")"]
+        var lines = ["cURL:\n\(request.cURLRepresentation(in: session))"]
         if let error {
             lines.append("Error: \(error)")
         }
