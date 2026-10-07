@@ -90,6 +90,14 @@ extension ClientError: Equatable {
     }
 }
 
+extension ClientError: CustomNSError {
+    /// Bridges ``localizedDescription``, including subclass overrides, into `NSError` and `Error.localizedDescription`.
+    public var errorUserInfo: [String: Any] {
+        let description = localizedDescription
+        return description.isEmpty ? [:] : [NSLocalizedDescriptionKey: description]
+    }
+}
+
 extension ClientError {
     /// Returns `true` the stream code determines that the token is expired.
     public var isTokenExpiredError: Bool {
@@ -185,7 +193,10 @@ struct APIErrorContainer: Codable {
     let error: APIError
 }
 
-extension APIError: Error {}
+extension APIError: LocalizedError {
+    /// The error message returned by the API.
+    public var errorDescription: String? { message }
+}
 
 /// https://getstream.io/chat/docs/ios-swift/api_errors_response/
 public enum StreamErrorCode {
