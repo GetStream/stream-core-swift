@@ -173,8 +173,9 @@ public extension ReflectiveStringConvertible {
         var output: [String] = ["Type: \(type(of: self))"]
 
         let excludedProperties = excludedProperties
-        mirror
-            .children
+        sequence(first: mirror, next: \.superclassMirror)
+            .reversed()
+            .flatMap(\.children)
             .filter { !skipRuleSet.shouldBeSkipped($0) }
             .compactMap {
                 if let label = $0.label, !excludedProperties.contains(label) {

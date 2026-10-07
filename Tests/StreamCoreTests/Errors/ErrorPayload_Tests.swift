@@ -81,4 +81,22 @@ final class APIError_Tests: XCTestCase, @unchecked Sendable {
             XCTAssertFalse(error.isClientError)
         }
     }
+
+    // MARK: - Localized description
+
+    func test_localizedDescription_returnsMessage() {
+        let subject = APIError(code: 4, message: "Server message", statusCode: 400)
+
+        XCTAssertEqual((subject as Error).localizedDescription, "Server message")
+
+        XCTAssertEqual(
+            "\(subject as Error)",
+            """
+            Type: APIError
+             - code: 4
+             - message: Server message
+             - statusCode: 400
+            """
+        )
+    }
 }
