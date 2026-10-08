@@ -133,17 +133,17 @@ public class StreamCDNClient: CDNClient, @unchecked Sendable {
                 return
             }
             
-            let task = session.dataTask(with: urlRequest) { [decoder = self.decoder] (data, response, error) in
+            let task = session.dataTask(with: urlRequest) { [decoder = self.decoder, session] (data, response, error) in
                 do {
-                    let response: FileUploadPayload = try decoder.decodeRequestResponse(
+                    let payload: FileUploadPayload = try decoder.decodeRequestResponse(
                         data: data,
                         response: response,
                         error: error
                     )
-                    let file = UploadedFile(fileURL: response.fileURL, thumbnailURL: response.thumbURL)
-
-                    completion(.success(file))
+                    Self.logUpload(request: urlRequest, response: response, responseBody: data, error: nil, session: session)
+                    completion(.success(UploadedFile(fileURL: payload.fileURL, thumbnailURL: payload.thumbURL)))
                 } catch {
+                    Self.logUpload(request: urlRequest, response: response, responseBody: data, error: error, session: session)
                     completion(.failure(error))
                 }
             }
@@ -169,6 +169,44 @@ public class StreamCDNClient: CDNClient, @unchecked Sendable {
 
             task.resume()
         }
+    }
+
+    private static func logUpload(
+        request: URLRequest,
+        response: URLResponse?,
+        responseBody: Data?,
+        error: Error?,
+        session: URLSession
+    ) {
+        // The body is the uploaded file, which is too large to be logged.
+        var loggedRequest = request
+        loggedRequest.httpBody = nil
+        let status = (response as? HTTPURLResponse).map { "\($0.statusCode)" } ?? "FAILED"
+        log.log(
+            logLevel(for: error),
+            message: "\(status) \(request.httpMethod ?? "POST") \(request.url?.path ?? "")",
+            subsystems: .httpRequests,
+            error: nil,
+            attachment: HTTPLogAttachment(
+                request: loggedRequest,
+                response: response,
+                responseBody: responseBody,
+                error: error,
+                session: session
+            )
+        )
+    }
+
+    private static func logLevel(for error: Error?) -> LogLevel {
+        guard let error else { return .debug }
+        if error is ClientError.ExpiredToken {
+            return .info
+        }
+        let nsError = error as NSError
+        if nsError.domain == NSURLErrorDomain, [NSURLErrorCancelled, NSURLErrorNetworkConnectionLost].contains(nsError.code) {
+            return .info
+        }
+        return .error
     }
 }
 
