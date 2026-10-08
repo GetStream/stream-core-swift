@@ -45,8 +45,7 @@ extension Logger_Tests {
         }
 
         @Test func expiredTokenIsLoggedAtInfoLevel() async throws {
-            let body = Data(#"{"code":40,"message":"Token expired","StatusCode":401,"duration":"","more_info":"","details":[]}"#.utf8)
-            let (transport, destination) = makeTransport(statusCode: 401, body: body)
+            let (transport, destination) = makeTransport(statusCode: 401, body: expiredTokenBody)
             defer { LogConfig.reset() }
 
             await #expect(throws: APIError.self) {
@@ -58,17 +57,149 @@ extension Logger_Tests {
             #expect(details.message == "401 GET /api/v2/feeds")
         }
 
+        @Test func expiredTokenIsRefreshedAndBothAttemptsAreLogged() async throws {
+            let (transport, destination) = makeTransport(
+                responses: [
+                    .http(statusCode: 401, body: expiredTokenBody),
+                    .http(statusCode: 200, body: Data(#"{"ok":true}"#.utf8))
+                ],
+                tokenProvider: { $0(.success(UserToken(rawValue: "refreshed-token"))) }
+            )
+            defer { LogConfig.reset() }
+            let updatedToken = TokenBox()
+            transport.setTokenUpdater { updatedToken.value = $0.rawValue }
+            let ready = Date().addingTimeInterval(2)
+            while transport.onTokenUpdate == nil, Date() < ready {
+                try await Task.sleep(nanoseconds: 10_000_000)
+            }
+
+            _ = try await transport.execute(request: makeRequest(path: "/api/v2/feeds"))
+
+            let details = try await destination.waitForDetails(count: 3)
+            #expect(details.map(\.level) == [.info, .debug, .debug])
+            #expect(details.map(\.message) == [
+                "401 GET /api/v2/feeds",
+                "Refreshing user token",
+                "200 GET /api/v2/feeds"
+            ])
+            #expect(StubURLProtocol.requests.count == 2)
+            #expect(StubURLProtocol.requests[1].value(forHTTPHeaderField: "authorization") == "refreshed-token")
+            #expect(updatedToken.value == "refreshed-token")
+        }
+
+        @Test func failedTokenRefreshIsLoggedAndThrown() async throws {
+            let (transport, destination) = makeTransport(
+                responses: [.http(statusCode: 401, body: expiredTokenBody)],
+                tokenProvider: { completion in
+                    completion(.failure(APIError(code: 4, message: "Refresh failed", statusCode: 400)))
+                }
+            )
+            defer { LogConfig.reset() }
+
+            await #expect(throws: APIError.self) {
+                try await transport.execute(request: makeRequest(path: "/api/v2/feeds"))
+            }
+
+            let details = try await destination.waitForDetails(count: 2)
+            #expect(details.map(\.level) == [.info, .debug])
+            #expect(details.map(\.message) == ["401 GET /api/v2/feeds", "Refreshing user token"])
+            #expect(StubURLProtocol.requests.count == 1)
+        }
+
+        @Test func cancelledRequestIsLoggedAtInfoLevelForEveryAttempt() async throws {
+            try await assertRetriedTransportFailure(.cancelled, level: .info)
+        }
+
+        @Test func timedOutRequestIsLoggedAtErrorLevelForEveryAttempt() async throws {
+            try await assertRetriedTransportFailure(.timedOut, level: .error)
+        }
+
+        @Test func unreadableErrorResponseIsLoggedAtErrorLevel() async throws {
+            let (transport, destination) = makeTransport(
+                responses: [.http(statusCode: 400, body: Data("not-json".utf8))]
+            )
+            defer { LogConfig.reset() }
+
+            await #expect(throws: ClientError.NetworkError.self) {
+                try await transport.execute(request: makeRequest(path: "/api/v2/feeds"))
+            }
+
+            // A response that cannot be decoded is not an API error, so the request is retried.
+            let details = try await destination.waitForDetails(count: 4)
+            #expect(details.allSatisfy { $0.level == .error && $0.message == "400 GET /api/v2/feeds" })
+            let attachment = try #require(details[0].attachment as? HTTPLogAttachment)
+            #expect(attachment.error is ClientError.NetworkError)
+        }
+
+        @Test func responseWithoutStatusCodeIsLoggedAsFailed() async throws {
+            let (transport, destination) = makeTransport(responses: [.nonHTTP(Data("ok".utf8))])
+            defer { LogConfig.reset() }
+
+            _ = try await transport.execute(request: makeRequest(path: "/api/v2/feeds"))
+
+            let details = try await destination.waitForSingleDetails()
+            #expect(details.level == .debug)
+            #expect(details.message == "FAILED GET /api/v2/feeds")
+        }
+
+        @Test func openAPIRequestSendsClientHeadersAndIsLoggedOnce() async throws {
+            let (transport, destination) = makeTransport(statusCode: 200, body: Data("{}".utf8))
+            defer { LogConfig.reset() }
+            let request = Request(
+                url: try #require(URL(string: "https://stream.test/api/v2/feeds")),
+                method: .post,
+                queryParams: [],
+                headers: [:]
+            )
+
+            _ = try await transport.execute(request: request)
+
+            let details = try await destination.waitForSingleDetails()
+            #expect(details.level == .debug)
+            #expect(details.message == "200 POST /api/v2/feeds")
+            let sent = try #require(StubURLProtocol.requests.first)
+            #expect(sent.value(forHTTPHeaderField: "Content-Type") == "application/json")
+            #expect(sent.value(forHTTPHeaderField: "X-Stream-Client") == "stream-test")
+            #expect(sent.httpMethod == "POST")
+        }
+
         // MARK: -
 
+        private var expiredTokenBody: Data {
+            Data(#"{"code":40,"message":"Token expired","StatusCode":401,"duration":"","more_info":"","details":[]}"#.utf8)
+        }
+
+        private func assertRetriedTransportFailure(_ code: URLError.Code, level: LogLevel) async throws {
+            let (transport, destination) = makeTransport(responses: [.failure(URLError(code))])
+            defer { LogConfig.reset() }
+
+            await #expect(throws: URLError.self) {
+                try await transport.execute(request: makeRequest(path: "/api/v2/feeds"))
+            }
+
+            // Transport failures are retried, and each attempt is logged.
+            let details = try await destination.waitForDetails(count: 4)
+            #expect(details.allSatisfy { $0.level == level && $0.message == "FAILED GET /api/v2/feeds" })
+        }
+
         private func makeTransport(statusCode: Int, body: Data) -> (URLSessionTransport, HTTPCapturingDestination) {
-            StubURLProtocol.response = (statusCode, body)
+            makeTransport(responses: [.http(statusCode: statusCode, body: body)])
+        }
+
+        private func makeTransport(
+            responses: [StubURLProtocol.Response],
+            tokenProvider: UserTokenProvider? = nil
+        ) -> (URLSessionTransport, HTTPCapturingDestination) {
+            StubURLProtocol.responses = responses
+            StubURLProtocol.requests = []
             let configuration = URLSessionConfiguration.ephemeral
             configuration.protocolClasses = [StubURLProtocol.self]
             let destination = HTTPCapturingDestination()
             LogConfig.logger = Logger(identifier: "test", destinations: [destination])
             let transport = URLSessionTransport(
                 urlSession: URLSession(configuration: configuration),
-                xStreamClientHeader: "stream-test"
+                xStreamClientHeader: "stream-test",
+                tokenProvider: tokenProvider
             )
             return (transport, destination)
         }
@@ -79,21 +210,48 @@ extension Logger_Tests {
     }
 }
 
+private final class TokenBox: @unchecked Sendable {
+    var value = ""
+}
+
 private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
-    nonisolated(unsafe) static var response: (statusCode: Int, body: Data) = (200, Data())
+    enum Response: @unchecked Sendable {
+        case http(statusCode: Int, body: Data)
+        case failure(URLError)
+        case nonHTTP(Data)
+    }
+
+    nonisolated(unsafe) static var responses: [Response] = [.http(statusCode: 200, body: Data())]
+    nonisolated(unsafe) static var requests: [URLRequest] = []
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
-        guard let url = request.url,
-              let response = HTTPURLResponse(url: url, statusCode: Self.response.statusCode, httpVersion: nil, headerFields: nil) else {
-            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
-            return
+        Self.requests.append(request)
+        let response = Self.responses.count > 1 ? Self.responses.removeFirst() : Self.responses[0]
+        switch response {
+        case let .http(statusCode, body):
+            guard let url = request.url,
+                  let httpResponse = HTTPURLResponse(url: url, statusCode: statusCode, httpVersion: nil, headerFields: nil) else {
+                client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+                return
+            }
+            client?.urlProtocol(self, didReceive: httpResponse, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: body)
+            client?.urlProtocolDidFinishLoading(self)
+        case let .failure(error):
+            client?.urlProtocol(self, didFailWithError: error)
+        case let .nonHTTP(body):
+            guard let url = request.url else {
+                client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+                return
+            }
+            let urlResponse = URLResponse(url: url, mimeType: nil, expectedContentLength: body.count, textEncodingName: nil)
+            client?.urlProtocol(self, didReceive: urlResponse, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: body)
+            client?.urlProtocolDidFinishLoading(self)
         }
-        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: Self.response.body)
-        client?.urlProtocolDidFinishLoading(self)
     }
 
     override func stopLoading() {}
@@ -153,13 +311,18 @@ private final class HTTPCapturingDestination: BaseLogDestination, @unchecked Sen
     }
 
     func waitForSingleDetails() async throws -> LogDetails {
+        let details = try await waitForDetails(count: 1)
+        return try #require(details.first)
+    }
+
+    func waitForDetails(count: Int) async throws -> [LogDetails] {
         let deadline = Date().addingTimeInterval(5)
-        while capturedDetails.isEmpty, Date() < deadline {
+        while capturedDetails.count < count, Date() < deadline {
             try await Task.sleep(nanoseconds: 10_000_000)
         }
         try await Task.sleep(nanoseconds: 100_000_000)
         let details = capturedDetails
-        #expect(details.count == 1)
-        return try #require(details.first)
+        #expect(details.count == count)
+        return details
     }
 }

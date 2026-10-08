@@ -47,6 +47,24 @@ struct StreamCDNClient_Tests {
         #expect(details.message == "401 POST /uploads/file")
     }
 
+    @Test func cancelledUploadIsLoggedAtInfoLevel() async throws {
+        defer { LogConfig.reset() }
+        let destination = try await upload(response: .failure(URLError(.cancelled)))
+
+        let details = try await destination.waitForSingleDetails()
+        #expect(details.level == .info)
+        #expect(details.message == "FAILED POST /uploads/file")
+    }
+
+    @Test func timedOutUploadIsLoggedAtErrorLevel() async throws {
+        defer { LogConfig.reset() }
+        let destination = try await upload(response: .failure(URLError(.timedOut)))
+
+        let details = try await destination.waitForSingleDetails()
+        #expect(details.level == .error)
+        #expect(details.message == "FAILED POST /uploads/file")
+    }
+
     @Test func lostConnectionIsLoggedAtInfoLevel() async throws {
         defer { LogConfig.reset() }
         let destination = try await upload(response: .failure(URLError(.networkConnectionLost)))
