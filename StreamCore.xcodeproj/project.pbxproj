@@ -81,6 +81,7 @@
 			membershipExceptions = (
 				StreamAttachmentsTests/StreamAttachments.xctestplan,
 				StreamAttachmentsTests/StreamAttachmentsTests.swift,
+				StreamAttachmentsTests/StreamCDNClient_Tests.swift,
 			);
 			target = 4F1E6A842E9FB58700BA0F44 /* StreamAttachmentsTests */;
 		};
@@ -110,6 +111,7 @@
 			membershipExceptions = (
 				StreamAttachmentsTests/StreamAttachments.xctestplan,
 				StreamAttachmentsTests/StreamAttachmentsTests.swift,
+				StreamAttachmentsTests/StreamCDNClient_Tests.swift,
 				StreamCoreUITests/CDN/StreamImageCDN_Tests.swift,
 				StreamCoreUITests/DesignSystem/DesignSystemTokens_Tests.swift,
 			);
