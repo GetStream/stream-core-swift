@@ -4,9 +4,9 @@
 
 import Foundation
 
-public final class ListDevicesResponse: @unchecked Sendable, Codable, JSONEncodable, Hashable {
-    public var devices: [Device]
-    public var duration: String
+public final class ListDevicesResponse: Sendable, Codable, JSONEncodable, Hashable {
+    public let devices: [Device]
+    public let duration: String
 
     public init(devices: [Device], duration: String) {
         self.devices = devices
