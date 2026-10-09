@@ -50,12 +50,9 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
     }
 
     func execute(request: URLRequest) async throws -> (Data, URLResponse) {
-        log.debug(request.cURLRepresentation(in: urlSession), subsystems: .httpRequests)
-        return try await executeTask(retryPolicy: .fastAndSimple) {
+        try await executeTask(retryPolicy: .fastAndSimple) {
             do {
-                let result = try await execute(request: request, isRetry: false)
-                log.debug("URL request response: \(result.1), data:\n\(result.0.debugPrettyPrintedJSON))", subsystems: .httpRequests)
-                return result
+                return try await perform(request)
             } catch {
                 if error.isTokenExpiredError && tokenProvider != nil {
                     log.debug("Refreshing user token", subsystems: .httpRequests)
@@ -64,8 +61,7 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
                         onTokenUpdate(token)
                     }
                     let updated = update(request: request, with: token.rawValue)
-                    log.debug("Retrying failed request \(updated) with new token", subsystems: .httpRequests)
-                    return try await execute(request: updated, isRetry: true)
+                    return try await perform(updated)
                 } else {
                     throw error
                 }
@@ -73,28 +69,12 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
         }
     }
 
-    private func execute(request: URLRequest, isRetry: Bool) async throws -> (Data, URLResponse) {
+    private func perform(_ request: URLRequest) async throws -> (Data, URLResponse) {
         try await withCheckedThrowingContinuation { continuation in
-            let task = urlSession.dataTask(with: request) { data, response, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-                if let response = response as? HTTPURLResponse {
-                    if response.statusCode >= 400 || data == nil {
-                        continuation.resume(throwing: Self.apiError(from: data, response: response))
-                        return
-                    }
-                }
-                guard let data, let response else {
-                    continuation.resume(
-                        throwing: ClientError.NetworkError(
-                            "HTTP request failed without response data, URL: \(request.url?.absoluteString ?? "-")"
-                        )
-                    )
-                    return
-                }
-                continuation.resume(returning: (data, response))
+            let task = urlSession.dataTask(with: request) { [urlSession] data, response, error in
+                let result = Self.result(request: request, data: data, response: response, error: error)
+                Self.logResponse(result, request: request, data: data, response: response, session: urlSession)
+                continuation.resume(with: result)
             }
             task.resume()
         }
@@ -106,6 +86,61 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
         return updated
     }
     
+    private static func result(
+        request: URLRequest,
+        data: Data?,
+        response: URLResponse?,
+        error: Error?
+    ) -> Result<(Data, URLResponse), Error> {
+        if let error {
+            return .failure(error)
+        }
+        if let response = response as? HTTPURLResponse, response.statusCode >= 400 || data == nil {
+            return .failure(apiError(from: data, response: response))
+        }
+        guard let data, let response else {
+            return .failure(
+                ClientError.NetworkError(
+                    "HTTP request failed without response data, URL: \(request.url?.absoluteString ?? "-")"
+                )
+            )
+        }
+        return .success((data, response))
+    }
+
+    private static func logResponse(
+        _ result: Result<(Data, URLResponse), Error>,
+        request: URLRequest,
+        data: Data?,
+        response: URLResponse?,
+        session: URLSession
+    ) {
+        var error: Error?
+        if case let .failure(failure) = result {
+            error = failure
+        }
+        let statusCode = (response as? HTTPURLResponse)?.statusCode
+        log.log(
+            logLevel(for: error),
+            message: request.logMessage(status: statusCode.map(String.init) ?? "FAILED"),
+            subsystems: .httpRequests,
+            error: nil,
+            attachment: HTTPLogAttachment(request: request, response: response, responseBody: data, error: error, session: session)
+        )
+    }
+
+    private static func logLevel(for error: Error?) -> LogLevel {
+        guard let error else { return .debug }
+        if error.isTokenExpiredError {
+            return .info
+        }
+        let nsError = error as NSError
+        if nsError.domain == NSURLErrorDomain, [NSURLErrorCancelled, NSURLErrorNetworkConnectionLost].contains(nsError.code) {
+            return .info
+        }
+        return .error
+    }
+
     private static func apiError(from data: Data?, response: HTTPURLResponse) -> Error {
         guard let data else {
             return ClientError.NetworkError(
@@ -124,11 +159,12 @@ public final class URLSessionTransport: DefaultAPITransport, @unchecked Sendable
         var clone = request
         clone.headers["Content-Type"] = "application/json"
         clone.headers["X-Stream-Client"] = xStreamClientHeader
-        do {
-            return try await execute(request: clone.urlRequest())
-        } catch {
-            log.error("HTTP request failed: \(request.url.absoluteString)", subsystems: .httpRequests, error: error)
-            throw error
-        }
+        return try await execute(request: clone.urlRequest())
+    }
+}
+
+extension URLRequest {
+    func logMessage(status: String) -> String {
+        "\(status) \(httpMethod ?? "GET") \(url?.path ?? "")"
     }
 }
