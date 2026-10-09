@@ -8,7 +8,7 @@ import UIKit
 
 /// Shared color tokens every Stream SDK draws from.
 extension DesignSystemTokens {
-    public final class Colors {
+    public final class Colors: @unchecked Sendable {
         /// Brand and chrome scales semantic tokens derive from.
         public var palette: Palette
 

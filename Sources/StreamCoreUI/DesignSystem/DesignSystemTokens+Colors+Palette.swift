@@ -8,7 +8,7 @@ import UIKit
 
 extension DesignSystemTokens.Colors {
     /// Brand and chrome scales semantic tokens derive from.
-    public final class Palette {
+    public final class Palette: @unchecked Sendable {
         // MARK: - Brand
 
         public lazy var brand50: UIColor = UIColor(light: .blue50, dark: .blue900)

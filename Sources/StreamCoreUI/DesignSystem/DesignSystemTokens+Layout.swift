@@ -8,7 +8,7 @@ import UIKit
 
 /// Shared layout tokens every Stream SDK draws from.
 extension DesignSystemTokens {
-    public final class Layout {
+    public final class Layout: @unchecked Sendable {
         // MARK: - Button
 
         public lazy var buttonHitTargetMinHeight: CGFloat = size48
