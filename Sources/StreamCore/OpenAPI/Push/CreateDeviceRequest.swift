@@ -23,12 +23,14 @@ public final class CreateDeviceRequest: @unchecked Sendable, Codable, JSONEncoda
         }
     }
     
+    public var hardwareId: String?
     public var id: String
     public var pushProvider: PushProvider
     public var pushProviderName: String?
     public var voipToken: Bool?
 
-    public init(id: String, pushProvider: PushProvider, pushProviderName: String? = nil, voipToken: Bool? = nil) {
+    public init(hardwareId: String? = nil, id: String, pushProvider: PushProvider, pushProviderName: String? = nil, voipToken: Bool? = nil) {
+        self.hardwareId = hardwareId
         self.id = id
         self.pushProvider = pushProvider
         self.pushProviderName = pushProviderName
@@ -36,6 +38,7 @@ public final class CreateDeviceRequest: @unchecked Sendable, Codable, JSONEncoda
     }
     
     public enum CodingKeys: String, CodingKey, CaseIterable {
+        case hardwareId = "hardware_id"
         case id
         case pushProvider = "push_provider"
         case pushProviderName = "push_provider_name"
@@ -43,13 +46,15 @@ public final class CreateDeviceRequest: @unchecked Sendable, Codable, JSONEncoda
     }
     
     public static func == (lhs: CreateDeviceRequest, rhs: CreateDeviceRequest) -> Bool {
-        lhs.id == rhs.id &&
+        lhs.hardwareId == rhs.hardwareId &&
+            lhs.id == rhs.id &&
             lhs.pushProvider == rhs.pushProvider &&
             lhs.pushProviderName == rhs.pushProviderName &&
             lhs.voipToken == rhs.voipToken
     }
 
     public func hash(into hasher: inout Hasher) {
+        hasher.combine(hardwareId)
         hasher.combine(id)
         hasher.combine(pushProvider)
         hasher.combine(pushProviderName)
