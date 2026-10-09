@@ -24,17 +24,7 @@ public struct DefaultRequestDecoder: RequestDecoder {
     
     public func decodeRequestResponse<ResponseType: Decodable>(data: Data?, response: URLResponse?, error: Error?) throws -> ResponseType {
         // Handle the error case
-        guard error == nil else {
-            let error = error!
-            switch (error as NSError).code {
-            case NSURLErrorCancelled:
-                log.info("The request was cancelled.", subsystems: .httpRequests)
-            case NSURLErrorNetworkConnectionLost:
-                log.info("The network connection was lost.", subsystems: .httpRequests)
-            default:
-                log.error(error, subsystems: .httpRequests)
-            }
-
+        if let error {
             throw error
         }
 
@@ -55,7 +45,6 @@ public struct DefaultRequestDecoder: RequestDecoder {
             }
 
             if serverError.isTokenExpiredError {
-                log.info("Request failed because of an expired token.", subsystems: .httpRequests)
                 throw ClientError.ExpiredToken()
             }
 
@@ -66,13 +55,7 @@ public struct DefaultRequestDecoder: RequestDecoder {
             return responseAsData
         }
 
-        do {
-            let decodedPayload = try JSONDecoder.streamCore.decode(ResponseType.self, from: data)
-            return decodedPayload
-        } catch {
-            log.error(error, subsystems: .httpRequests)
-            throw error
-        }
+        return try JSONDecoder.streamCore.decode(ResponseType.self, from: data)
     }
 }
 
