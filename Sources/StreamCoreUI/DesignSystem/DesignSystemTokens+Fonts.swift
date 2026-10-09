@@ -8,7 +8,7 @@ import SwiftUI
 ///
 /// Core exposes SwiftUI ``Font`` values.
 extension DesignSystemTokens {
-    public final class Fonts {
+    public final class Fonts: @unchecked Sendable {
         public var caption1: Font = .caption
         public var footnoteBold: Font = .footnote.bold()
         public var footnote: Font = .footnote

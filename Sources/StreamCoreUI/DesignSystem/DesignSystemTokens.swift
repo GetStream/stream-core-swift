@@ -22,7 +22,9 @@ import UIKit
 /// Tokens derive lazily, so override the palette before the first read.
 /// Typography uses SwiftUI ``Font``; UIKit ``UIFont`` faces stay on product
 /// UIKit SDKs.
-public final class DesignSystemTokens {
+///
+/// Change tokens before UI is presented.
+public final class DesignSystemTokens: @unchecked Sendable {
     /// Shared color tokens.
     public var colors: Colors
     /// Shared layout tokens.
