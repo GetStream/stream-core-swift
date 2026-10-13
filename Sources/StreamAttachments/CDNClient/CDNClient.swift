@@ -133,7 +133,7 @@ public class StreamCDNClient: CDNClient, @unchecked Sendable {
                 return
             }
             
-            let task = session.dataTask(with: urlRequest) { [decoder = self.decoder, session] (data, response, error) in
+            let task = session.dataTask(with: urlRequest) { [decoder = self.decoder, session, urlRequest] (data, response, error) in
                 do {
                     let payload: FileUploadPayload = try decoder.decodeRequestResponse(
                         data: data,
