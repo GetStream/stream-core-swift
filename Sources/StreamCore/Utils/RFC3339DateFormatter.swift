@@ -34,17 +34,25 @@ public struct RFC3339DateFormatter: Sendable {
 extension ISO8601DateFormatter {
     func dateWithMicroseconds(from string: String) -> Date? {
         guard let date = date(from: string) else { return nil }
-        // Manually parse microseconds and nanoseconds, because ISO8601DateFormatter is limited to ms.
-        // Note that Date's timeIntervalSince1970 rounds to 0.000_000_1
+        // ISO8601DateFormatter is limited to milliseconds, so the fraction is parsed manually. The result is
+        // built from whole nanoseconds, the same way as dates sent as integer nanoseconds, so that one instant
+        // decodes to the same `Date` in both formats.
         guard let index = string.lastIndex(of: ".") else { return date }
-        let range = string.suffix(from: index)
-            .dropFirst(4) // . and ms part
-            .dropLast() // Z
-        var fractionWithoutMilliseconds = String(range)
-        if fractionWithoutMilliseconds.count < 3 {
-            fractionWithoutMilliseconds = fractionWithoutMilliseconds.padding(toLength: 3, withPad: "0", startingAt: 0)
+        let digits = string[string.index(after: index)...].prefix(while: \.isASCIIDigit).prefix(9)
+        guard !digits.isEmpty, let fraction = Int64(digits.padding(toLength: 9, withPad: "0", startingAt: 0)) else {
+            return date
         }
-        guard let microseconds = TimeInterval("0.000".appending(fractionWithoutMilliseconds)) else { return date }
-        return Date(timeIntervalSince1970: date.timeIntervalSince1970 + microseconds)
+        let seconds = Int64(date.timeIntervalSince1970.rounded(.down))
+        return Date(unixNanoseconds: Double(seconds * 1_000_000_000 + fraction))
     }
+}
+
+extension Date {
+    init(unixNanoseconds: Double) {
+        self.init(timeIntervalSince1970: unixNanoseconds / 1_000_000_000)
+    }
+}
+
+private extension Character {
+    var isASCIIDigit: Bool { isASCII && isNumber }
 }
