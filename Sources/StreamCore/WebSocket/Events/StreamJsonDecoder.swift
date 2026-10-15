@@ -30,9 +30,7 @@ public final class StreamJSONDecoder: JSONDecoder, @unchecked Sendable {
             let container = try decoder.singleValueContainer()
             
             do {
-                let interval: Double = try container.decode(Double.self) / 1_000_000_000
-                let date = Date(timeIntervalSince1970: interval)
-                return date
+                return try Date(unixNanoseconds: container.decode(Double.self))
             } catch {
                 let dateString: String = try container.decode(String.self)
                 
