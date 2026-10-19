@@ -9,7 +9,9 @@ final class RFC3339DateFormatter_Tests: XCTestCase {
     func test_date_withoutFraction_parsesUTCAndOffsets() {
         let expected = Date(timeIntervalSince1970: 1_704_164_645)
         let timestamps = [
+            "2024-01-02T03:04:05",
             "2024-01-02T03:04:05Z",
+            "2024-01-02t03:04:05z",
             "2024-01-02T05:34:05+02:30",
             "2024-01-01T22:04:05-05:00"
         ]
@@ -48,7 +50,6 @@ final class RFC3339DateFormatter_Tests: XCTestCase {
             "invalid",
             "1704164645",
             "1704164645.123456789",
-            "2024-01-02T03:04:05",
             "2024-01-02T03:04:05.123456789"
         ]
 

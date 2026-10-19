@@ -22,18 +22,12 @@ public struct RFC3339DateFormatter: Sendable {
     }
     
     func date(from dateString: String) -> Date? {
-        formatter.dateWithMicroseconds(from: dateString) ?? formatterWithoutFractionalSeconds.date(from: dateString)
+        formatter.dateWithMicroseconds(from: dateString) ?? DateFormatter.Stream.rfc3339Date(from: dateString)
     }
 
     private nonisolated(unsafe) let formatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter
-    }()
-
-    private nonisolated(unsafe) let formatterWithoutFractionalSeconds: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
         return formatter
     }()
 }
