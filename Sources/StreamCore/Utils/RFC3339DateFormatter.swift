@@ -16,12 +16,13 @@ public struct RFC3339DateFormatter: Sendable {
         formatter.string(from: date)
     }
     
-    static func date(from dateString: String) -> Date? {
+    /// Parses an RFC3339 timestamp with optional fractional seconds.
+    public static func date(from dateString: String) -> Date? {
         shared.date(from: dateString)
     }
     
     func date(from dateString: String) -> Date? {
-        formatter.dateWithMicroseconds(from: dateString)
+        formatter.dateWithMicroseconds(from: dateString) ?? DateFormatter.Stream.rfc3339Date(from: dateString)
     }
 
     private nonisolated(unsafe) let formatter: ISO8601DateFormatter = {

@@ -107,15 +107,6 @@ final class JSONDecoder_Tests: XCTestCase {
     }
 
     func test_datesAreCached() throws {
-        final class ISO8601DateFormatter_Spy: ISO8601DateFormatter {
-            var dateFromStringCalledCounter: Int = 0
-
-            override func date(from string: String) -> Date? {
-                dateFromStringCalledCounter += 1
-                return super.date(from: string)
-            }
-        }
-
         final class NSCache_Spy: NSCache<NSString, NSDate> {
             var setObjectCalledCounter: Int = 0
             var getObjectCalledCounter: Int = 0
@@ -131,11 +122,9 @@ final class JSONDecoder_Tests: XCTestCase {
             }
         }
 
-        // Given a decoder with spy dateFormatter and cache
-        let dateFormatter = ISO8601DateFormatter_Spy()
-        dateFormatter.formatOptions = [.withFractionalSeconds, .withInternetDateTime]
+        // Given a decoder with spy cache
         let dateCache = NSCache_Spy()
-        let decoder = StreamJSONDecoder(dateFormatter: dateFormatter, dateCache: dateCache)
+        let decoder = StreamJSONDecoder(dateCache: dateCache)
 
         // When we decode a payload with repeated dates
         let repeatedDate = "2020-06-09T08:10:40.800912Z" // If you change this, make sure to change `actualDecodedDate` below
@@ -151,7 +140,6 @@ final class JSONDecoder_Tests: XCTestCase {
         let dateDict = try decoder.decode([String: Date].self, from: jsonPayload.data(using: .utf8)!)
 
         // Then we should only decode the date once and use the cache
-        XCTAssertEqual(dateFormatter.dateFromStringCalledCounter, 1)
         XCTAssertEqual(dateCache.setObjectCalledCounter, 1)
         XCTAssertEqual(dateCache.getObjectCalledCounter, 5)
 
