@@ -98,13 +98,14 @@ extension TimerPublisher {
             // Combine consumers such as `.values` trap on undemanded output.
             // The subscriber is called outside the lock because it may
             // re-enter `request` or `cancel` synchronously.
-            let subscriber: S? = queue.sync {
-                guard let subscriber, demand > .none else { return nil }
+            var target: S?
+            queue.sync {
+                guard demand > .none else { return }
                 demand -= 1
-                return subscriber
+                target = subscriber
             }
-            guard let subscriber else { return }
-            let newDemand = subscriber.receive(value)
+            guard let target else { return }
+            let newDemand = target.receive(value)
             queue.sync { demand += newDemand }
         }
     }
