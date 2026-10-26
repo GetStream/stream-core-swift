@@ -38,11 +38,15 @@ final class TimerPublisher: Publisher {
 extension TimerPublisher {
     /// A subscription wrapper that handles timer events and lifecycle.
     ///
-    /// Emits `Date` values to the subscriber while the timer is active. It
-    /// ensures the timer is only started once and safely suspended on cancel.
+    /// Emits `Date` values to the subscriber while the timer is active and the
+    /// subscriber has outstanding demand. Ticks without demand are dropped.
     private final class TimerSubscription<S: Subscriber>: Subscription where S.Input == Date, S.Failure == Never {
+        private let queue = UnfairQueue()
+
         /// The downstream subscriber receiving the date values.
         private var subscriber: S?
+
+        private var demand: Subscribers.Demand = .none
 
         /// The repeating timer control that emits values at a fixed interval.
         private var control: RepeatingTimerControl?
@@ -66,31 +70,42 @@ extension TimerPublisher {
                 timeInterval: interval,
                 queue: .global(qos: .default),
                 onFire: { [weak self] in
-                    let value = Date()
-                    guard
-                        let self,
-                        value.timeIntervalSince(registeringTime) >= interval
-                    else {
-                        return
-                    }
-                    _ = subscriber.receive(value)
+                    self?.fire(interval: interval)
                 }
             )
             control?.resume()
         }
 
-        /// Requests values from the publisher.
-        ///
-        /// This is ignored because values are pushed on a fixed schedule.
         func request(_ demand: Subscribers.Demand) {
-            // demand is ignored because we send Date events on a schedule
+            queue.sync { self.demand += demand }
         }
 
         /// Cancels the timer and cleans up the subscriber reference.
         func cancel() {
-            subscriber = nil
+            queue.sync {
+                subscriber = nil
+                demand = .none
+            }
             control?.suspend()
             control = nil
+        }
+
+        private func fire(interval: TimeInterval) {
+            let value = Date()
+            guard value.timeIntervalSince(registeringTime) >= interval else {
+                return
+            }
+            // Combine consumers such as `.values` trap on undemanded output.
+            // The subscriber is called outside the lock because it may
+            // re-enter `request` or `cancel` synchronously.
+            let subscriber: S? = queue.sync {
+                guard let subscriber, demand > .none else { return nil }
+                demand -= 1
+                return subscriber
+            }
+            guard let subscriber else { return }
+            let newDemand = subscriber.receive(value)
+            queue.sync { demand += newDemand }
         }
     }
 }
