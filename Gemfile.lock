@@ -1,3 +1,11 @@
+GIT
+  remote: https://github.com/GetStream/fastlane-plugin-stream_actions.git
+  revision: 28f65c387a7619367c240b6eecde2775658ebe6b
+  branch: optional-sdk-names
+  specs:
+    fastlane-plugin-stream_actions (0.4.17)
+      xctest_list (= 1.2.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -51,7 +59,6 @@ GEM
       cork
       nap
       open4 (~> 1.3)
-    clamp (1.3.3)
     coderay (1.1.3)
     colored (1.2)
     colored2 (3.1.2)
@@ -164,9 +171,6 @@ GEM
       bundler
       fastlane
       pry
-    fastlane-plugin-stream_actions (0.4.9)
-      xctest_list (= 1.2.1)
-    fastlane-plugin-versioning (0.7.1)
     fastlane-sirp (1.0.0)
       sysrandom (~> 1.0)
     gh_inspector (1.1.3)
@@ -231,7 +235,6 @@ GEM
     method_source (1.1.0)
     mini_magick (4.13.2)
     mini_mime (1.1.5)
-    mini_portile2 (2.8.9)
     minitest (5.25.5)
     multi_json (1.17.0)
     multipart-post (2.4.1)
@@ -240,9 +243,6 @@ GEM
     nap (1.1.0)
     naturally (2.3.0)
     nkf (0.2.0)
-    nokogiri (1.18.9)
-      mini_portile2 (~> 2.8.2)
-      racc (~> 1.4)
     octokit (10.0.0)
       faraday (>= 1, < 3)
       sawyer (~> 0.9)
@@ -307,12 +307,6 @@ GEM
     simctl (1.6.10)
       CFPropertyList
       naturally
-    slather (2.8.5)
-      CFPropertyList (>= 2.2, < 4)
-      activesupport
-      clamp (~> 1.3)
-      nokogiri (>= 1.14.3)
-      xcodeproj (~> 1.27)
     sysrandom (1.0.5)
     terminal-notifier (2.0.0)
     terminal-table (3.0.2)
@@ -349,15 +343,13 @@ DEPENDENCIES
   danger-commit_lint
   fastlane
   fastlane-plugin-lizard
-  fastlane-plugin-stream_actions (= 0.4.9)
-  fastlane-plugin-versioning
+  fastlane-plugin-stream_actions!
   json
   lefthook
   plist
   rubocop (= 1.38)
   rubocop-performance
   rubocop-require_tools
-  slather
   xctest_list
 
 BUNDLED WITH

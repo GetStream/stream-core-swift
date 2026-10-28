@@ -67,7 +67,7 @@ jobs:
       if: failure()
       run: |
         brew install chargepoint/xcparse/xcparse
-        xcparse logs fastlane/test_output/StreamCore.xcresult fastlane/test_output/logs/
+        xcparse logs fastlane/test_output/StreamCoreTests/StreamCore-Package.xcresult fastlane/test_output/logs/
     - uses: actions/upload-artifact@v4
       if: failure()
       with:

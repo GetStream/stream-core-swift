@@ -10,7 +10,7 @@ This repo hosts StreamCore, the internal Swift SDK that provides shared low-leve
 
 - Language: Swift 6.0 (strict concurrency enabled — `swift-tools-version:6.0`)
 - Primary distribution: Swift Package Manager (SPM)
-- Project file: `StreamCore.xcodeproj` (used for builds and tests)
+- Project file: `Package.swift` only (no Xcode project; CI builds and tests the package the way product SDKs consume it)
 - Xcode: 16.x or newer (Apple Silicon supported)
 - Platforms / deployment targets: iOS 13+ (see `Package.swift`; do not lower targets without approval)
 - CI: GitHub Actions + Fastlane (see `.github/workflows/smoke-checks.yml`)
@@ -36,21 +36,19 @@ Scripts/                   # Helper scripts
 
 ### New files & target membership
 
-When creating new source or resource files, add them to the correct Xcode target(s). Update the project (e.g. `project.pbxproj`) so each new file is included in the appropriate target's "Compile Sources" (or "Copy Bundle Resources" for assets). Match the target(s) used by sibling files in the same directory. Omitting target membership will cause build failures or unused files.
+SPM picks up new files from the target's directory under `Sources/` or `Tests/`. There is no project file to update. Resources must be declared in `Package.swift`.
 
 ### Local setup (SPM)
 
-1. Open the repository in Xcode (root contains `Package.swift` and `StreamCore.xcodeproj`).
-2. Resolve packages.
-3. Choose an iOS Simulator (e.g., iPhone 17 Pro) and Build.
+1. Open `Package.swift` in Xcode.
+2. Choose an iOS Simulator (e.g., iPhone 17 Pro) and Build.
 
 ### Schemes
 
-Available shared schemes (under `StreamCore.xcodeproj/xcshareddata/xcschemes/`):
+Xcode generates the schemes from `Package.swift`:
 
-- `StreamCore` — builds the core framework
-- `StreamCoreUI` — builds the shared UI framework
-- `StreamAttachments` — builds the attachments feature module
+- `StreamCore-Package` — builds all targets and runs all test targets (CI uses it with `-only-testing`)
+- `StreamCore`, `StreamCoreUI`, `StreamAttachments` — build a single library
 
 Agents must query existing schemes before invoking xcodebuild.
 
@@ -60,8 +58,7 @@ Build (Debug):
 
 ```
 xcodebuild \
-  -project StreamCore.xcodeproj \
-  -scheme StreamCoreUI \
+  -scheme StreamCore-Package \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -configuration Debug build
 ```
@@ -69,7 +66,9 @@ xcodebuild \
 Run tests:
 
 ```
-bundle exec fastlane test
+bundle exec fastlane test_core device:"iPhone 17 Pro"
+bundle exec fastlane test_ui device:"iPhone 17 Pro"
+bundle exec fastlane test_attachments device:"iPhone 17 Pro"
 ```
 
 ### Linting & formatting

@@ -7,7 +7,6 @@ require 'net/http'
 import 'Sonarfile'
 
 xcode_version = ENV['XCODE_VERSION'] || '26.2'
-xcode_project = 'StreamCore.xcodeproj'
 sdk_names = ['StreamCore', 'StreamCoreUI', 'StreamAttachments']
 github_repo = ENV['GITHUB_REPOSITORY'] || 'GetStream/stream-core-swift'
 derived_data_path = 'derived_data'
@@ -41,7 +40,6 @@ lane :release do |options|
   release_ios_sdk(
     version: options[:version],
     bump_type: options[:type],
-    sdk_names: sdk_names,
     github_repo: github_repo,
     extra_changes: extra_changes,
     create_pull_request: true,
@@ -86,21 +84,21 @@ end
 
 desc 'Runs StreamCore tests'
 lane :test_core do |options|
-  options[:scheme] = 'StreamCore'
+  options[:target] = 'StreamCore'
   options[:sources] = sources_matrix[:core]
   run_library_tests(options)
 end
 
 desc 'Runs StreamCoreUI tests'
 lane :test_ui do |options|
-  options[:scheme] = 'StreamCoreUI'
+  options[:target] = 'StreamCoreUI'
   options[:sources] = sources_matrix[:ui]
   run_library_tests(options)
 end
 
 desc 'Runs StreamAttachments tests'
 lane :test_attachments do |options|
-  options[:scheme] = 'StreamAttachments'
+  options[:target] = 'StreamAttachments'
   options[:sources] = sources_matrix[:attachments]
   run_library_tests(options)
 end
@@ -108,15 +106,20 @@ end
 private_lane :run_library_tests do |options|
   next unless is_check_required(sources: options[:sources], force_check: @force_check)
 
+  test_target = "#{options[:target]}Tests"
   scan_options = {
-    project: xcode_project,
-    scheme: options[:scheme],
-    testplan: options[:scheme],
+    package_path: '.',
+    scheme: 'StreamCore-Package',
+    only_testing: [test_target],
     clean: is_localhost,
+    code_coverage: true,
     derived_data_path: derived_data_path,
     cloned_source_packages_path: source_packages_path,
     devices: options[:device],
     number_of_retries: 3,
+    output_directory: "fastlane/test_output/#{test_target}",
+    parallel_testing: true,
+    result_bundle: true,
     skip_build: options[:skip_build],
     build_for_testing: options[:build_for_testing],
     xcodebuild_formatter: xcodebuild_formatter
@@ -124,7 +127,13 @@ private_lane :run_library_tests do |options|
 
   scan(scan_options)
 
-  slather if options[:scheme] == 'StreamCore' && !options[:build_for_testing]
+  next unless options[:target] == 'StreamCore' && !options[:build_for_testing]
+
+  xcresult_path = lane_context[SharedValues::SCAN_GENERATED_XCRESULT_PATH]
+  project_root = File.expand_path('..')
+  FileUtils.mkdir_p('../reports')
+  sh("xcresultparser --coverage --output-format xml --project-root #{project_root.shellescape} " \
+     "--coverage-targets StreamCore #{xcresult_path.shellescape} > ../reports/sonarqube-generic-coverage.xml")
 end
 
 desc 'Run fastlane linting'

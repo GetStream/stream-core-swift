@@ -4,7 +4,7 @@
 # This script will:
 #   - install SwiftLint, SwiftFormat, SwiftGen
 #   - link git hooks
-#   - install sonar-scanner if `INSTALL_SONAR` environment variable is provided
+#   - install sonar-scanner and xcresultparser if `INSTALL_SONAR` environment variable is provided
 # If you get `zsh: permission denied: ./bootstrap.sh` error, please run `chmod +x bootstrap.sh` first
 
 function puts {
@@ -68,6 +68,16 @@ if [[ ${INSTALL_SONAR-default} == true ]]; then
   cd ..
   mv "fastlane/sonar-scanner-${SONAR_VERSION}-macosx-x64/" fastlane/sonar/
   chmod +x ./fastlane/sonar/bin/sonar-scanner
+
+  puts "Install xcresultparser v${XCRESULTPARSER_VERSION}"
+  DOWNLOAD_URL="https://github.com/a7ex/xcresultparser/releases/download/${XCRESULTPARSER_VERSION}/xcresultparser.zip"
+  DOWNLOAD_PATH="/tmp/xcresultparser-${XCRESULTPARSER_VERSION}.zip"
+  BIN_PATH="/usr/local/bin/xcresultparser"
+  wget "$DOWNLOAD_URL" -O "$DOWNLOAD_PATH"
+  unzip -o "$DOWNLOAD_PATH" -d /tmp/xcresultparser-${XCRESULTPARSER_VERSION}
+  sudo mv /tmp/xcresultparser-${XCRESULTPARSER_VERSION}/product/xcresultparser "$BIN_PATH"
+  sudo chmod +x "$BIN_PATH"
+  xcresultparser --version
 fi
 
 if [[ ${INSTALL_YEETD-default} == true ]]; then
