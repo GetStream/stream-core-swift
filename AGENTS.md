@@ -69,7 +69,9 @@ xcodebuild \
 Run tests:
 
 ```
-bundle exec fastlane test
+bundle exec fastlane test_core
+bundle exec fastlane test_ui
+bundle exec fastlane test_attachments
 ```
 
 ### Linting & formatting
