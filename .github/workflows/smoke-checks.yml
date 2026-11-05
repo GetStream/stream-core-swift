@@ -30,6 +30,10 @@ env:
   GITHUB_PR_NUM: ${{ github.event.pull_request.number }}
   VERBOSE: ${{ github.event.inputs.verbose == 'true' && '--verbose' || '' }}
 
+defaults:
+  run:
+    shell: bash
+
 permissions:
   contents: read
   pull-requests: write
@@ -37,9 +41,10 @@ permissions:
 jobs:
   test_core:
     name: Test Core
-    runs-on: macos-15
+    runs-on:
+      group: stream-macos
     steps:
-    - uses: actions/checkout@v4.1.1
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
     - uses: ./.github/actions/bootstrap
@@ -54,21 +59,27 @@ jobs:
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-    - uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        text: "You shall not pass!"
-        job_name: "Test Core (Debug)"
-        fields: repo,commit,author,workflow
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    - uses: slackapi/slack-github-action@v4
       if: ${{ github.event_name == 'push' && failure() }}
+      with:
+        webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        webhook-type: incoming-webhook
+        errors: true
+        payload: |
+          text: ${{ toJSON('You shall not pass!') }}
+          attachments:
+            - color: danger
+              title: ${{ toJSON(format('{0}: {1} ({2})', github.workflow, 'Test Core (Debug)', job.status)) }}
+              text: ${{ toJSON(format('Repository: {0} | Commit: {1} | Actor: {2}', github.repository, github.sha, github.actor)) }}
+              footer: ${{ toJSON(format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id)) }}
     - name: Parse xcresult
       if: failure()
       run: |
-        brew install chargepoint/xcparse/xcparse
+        if [[ ${RUNNER_ENVIRONMENT:-} != self-hosted ]] || ! command -v xcparse >/dev/null; then
+          CI=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install chargepoint/xcparse/xcparse
+        fi
         xcparse logs fastlane/test_output/StreamCore.xcresult fastlane/test_output/logs/
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: failure()
       with:
         name: Test Data Core
@@ -76,16 +87,24 @@ jobs:
           fastlane/test_output/logs/*/Diagnostics/**/*.txt
           fastlane/test_output/logs/*/Diagnostics/simctl_diagnostics/DiagnosticReports/*
     - name: Upload Test Coverage
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: test-coverage-${{ github.event.pull_request.number }}
         path: reports/sonarqube-generic-coverage.xml
+    - name: Upload raw Xcode logs
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: xcode-logs-${{ github.job }}
+        path: ~/Library/Logs/scan/*.log
+        if-no-files-found: ignore
 
   test_ui:
     name: Test UI
-    runs-on: macos-15
+    runs-on:
+      group: stream-macos
     steps:
-    - uses: actions/checkout@v4.1.1
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
     - uses: ./.github/actions/bootstrap
@@ -94,21 +113,33 @@ jobs:
     - name: Run UI Tests (Debug)
       run: bundle exec fastlane test_ui device:"${{ env.IOS_SIMULATOR_DEVICE }}" ${{ env.VERBOSE }}
       timeout-minutes: 40
-    - uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        text: "You shall not pass!"
-        job_name: "Test UI (Debug)"
-        fields: repo,commit,author,workflow
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    - uses: slackapi/slack-github-action@v4
       if: ${{ github.event_name == 'push' && failure() }}
+      with:
+        webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        webhook-type: incoming-webhook
+        errors: true
+        payload: |
+          text: ${{ toJSON('You shall not pass!') }}
+          attachments:
+            - color: danger
+              title: ${{ toJSON(format('{0}: {1} ({2})', github.workflow, 'Test UI (Debug)', job.status)) }}
+              text: ${{ toJSON(format('Repository: {0} | Commit: {1} | Actor: {2}', github.repository, github.sha, github.actor)) }}
+              footer: ${{ toJSON(format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id)) }}
+    - name: Upload raw Xcode logs
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: xcode-logs-${{ github.job }}
+        path: ~/Library/Logs/scan/*.log
+        if-no-files-found: ignore
 
   test_attachments:
     name: Test Attachments
-    runs-on: macos-15
+    runs-on:
+      group: stream-macos
     steps:
-    - uses: actions/checkout@v4.1.1
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
     - uses: ./.github/actions/bootstrap
@@ -117,23 +148,35 @@ jobs:
     - name: Run Attachments Tests (Debug)
       run: bundle exec fastlane test_attachments device:"${{ env.IOS_SIMULATOR_DEVICE }}" ${{ env.VERBOSE }}
       timeout-minutes: 40
-    - uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        text: "You shall not pass!"
-        job_name: "Test Attachments (Debug)"
-        fields: repo,commit,author,workflow
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    - uses: slackapi/slack-github-action@v4
       if: ${{ github.event_name == 'push' && failure() }}
+      with:
+        webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        webhook-type: incoming-webhook
+        errors: true
+        payload: |
+          text: ${{ toJSON('You shall not pass!') }}
+          attachments:
+            - color: danger
+              title: ${{ toJSON(format('{0}: {1} ({2})', github.workflow, 'Test Attachments (Debug)', job.status)) }}
+              text: ${{ toJSON(format('Repository: {0} | Commit: {1} | Actor: {2}', github.repository, github.sha, github.actor)) }}
+              footer: ${{ toJSON(format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id)) }}
+    - name: Upload raw Xcode logs
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: xcode-logs-${{ github.job }}
+        path: ~/Library/Logs/scan/*.log
+        if-no-files-found: ignore
 
   automated-code-review:
     name: Automated Code Review
-    runs-on: macos-15
+    runs-on:
+      group: stream-macos
     env:
       XCODE_VERSION: "16.0"
     steps:
-    - uses: actions/checkout@v4.1.1
+    - uses: actions/checkout@v7
     - uses: ./.github/actions/bootstrap
       env:
         INSTALL_INTERFACE_ANALYZER: true
