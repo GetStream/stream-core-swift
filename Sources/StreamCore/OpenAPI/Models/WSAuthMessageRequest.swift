@@ -6,20 +6,12 @@ import Foundation
 
 public final class WSAuthMessageRequest: @unchecked Sendable, Codable, JSONEncodable, Hashable {
     public var eventProtocol: Int?
-    public var memberCustomInclude: [String]?
     public var products: [String]?
     public var token: String
     public var userDetails: ConnectUserDetailsRequest
 
-    public init(
-        eventProtocol: Int? = nil,
-        memberCustomInclude: [String]? = nil,
-        products: [String]? = nil,
-        token: String,
-        userDetails: ConnectUserDetailsRequest
-    ) {
+    public init(eventProtocol: Int? = nil, products: [String]? = nil, token: String, userDetails: ConnectUserDetailsRequest) {
         self.eventProtocol = eventProtocol
-        self.memberCustomInclude = memberCustomInclude
         self.products = products
         self.token = token
         self.userDetails = userDetails
@@ -27,7 +19,6 @@ public final class WSAuthMessageRequest: @unchecked Sendable, Codable, JSONEncod
     
     public enum CodingKeys: String, CodingKey, CaseIterable {
         case eventProtocol = "event_protocol"
-        case memberCustomInclude = "member_custom_include"
         case products
         case token
         case userDetails = "user_details"
@@ -35,7 +26,6 @@ public final class WSAuthMessageRequest: @unchecked Sendable, Codable, JSONEncod
     
     public static func == (lhs: WSAuthMessageRequest, rhs: WSAuthMessageRequest) -> Bool {
         lhs.eventProtocol == rhs.eventProtocol &&
-            lhs.memberCustomInclude == rhs.memberCustomInclude &&
             lhs.products == rhs.products &&
             lhs.token == rhs.token &&
             lhs.userDetails == rhs.userDetails
@@ -43,7 +33,6 @@ public final class WSAuthMessageRequest: @unchecked Sendable, Codable, JSONEncod
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(eventProtocol)
-        hasher.combine(memberCustomInclude)
         hasher.combine(products)
         hasher.combine(token)
         hasher.combine(userDetails)

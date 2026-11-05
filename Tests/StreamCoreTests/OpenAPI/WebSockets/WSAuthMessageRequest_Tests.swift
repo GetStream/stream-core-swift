@@ -8,10 +8,9 @@ import Testing
 
 struct WSAuthMessageRequest_Tests {
     @Test
-    func encode_withEventProtocolAndMemberCustomInclude_includesThem() throws {
+    func encode_withEventProtocol_includesIt() throws {
         let subject = WSAuthMessageRequest(
             eventProtocol: 3,
-            memberCustomInclude: ["role_label"],
             products: ["chat"],
             token: "token",
             userDetails: ConnectUserDetailsRequest(id: "user")
@@ -20,19 +19,17 @@ struct WSAuthMessageRequest_Tests {
         let object = try encodedObject(subject)
 
         #expect(object["event_protocol"] as? Int == 3)
-        #expect(object["member_custom_include"] as? [String] == ["role_label"])
         #expect(object["products"] as? [String] == ["chat"])
         #expect(object["token"] as? String == "token")
     }
 
     @Test
-    func encode_withoutEventProtocolAndMemberCustomInclude_omitsThem() throws {
+    func encode_withoutEventProtocol_omitsIt() throws {
         let subject = WSAuthMessageRequest(token: "token", userDetails: ConnectUserDetailsRequest(id: "user"))
 
         let object = try encodedObject(subject)
 
         #expect(object["event_protocol"] == nil)
-        #expect(object["member_custom_include"] == nil)
     }
 
     private func encodedObject(_ subject: WSAuthMessageRequest) throws -> [String: Any] {
