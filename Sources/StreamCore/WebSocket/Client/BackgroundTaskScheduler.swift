@@ -20,10 +20,14 @@ public protocol BackgroundTaskScheduler: Sendable {
     var isAppActive: Bool { get }
 }
 
-#if os(iOS)
+#if os(iOS) || os(tvOS)
 import UIKit
 
-public class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sendable {
+/// The previous name of ``DefaultBackgroundTaskScheduler``.
+public typealias IOSBackgroundTaskScheduler = DefaultBackgroundTaskScheduler
+
+/// Handles background tasks and app state updates with `UIApplication` on iOS and tvOS.
+public class DefaultBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sendable {
     private lazy var app: UIApplication? = {
         // We can't use `UIApplication.shared` directly because there's no way to convince the compiler
         // this code is accessible only for non-extension executables.
@@ -32,7 +36,7 @@ public class IOSBackgroundTaskScheduler: BackgroundTaskScheduler, @unchecked Sen
 
     /// The identifier of the currently running background task. `nil` if no background task is running.
     private var activeBackgroundTask: UIBackgroundTaskIdentifier?
-    private let queue = DispatchQueue(label: "io.getstream.IOSBackgroundTaskScheduler", target: .global())
+    private let queue = DispatchQueue(label: "io.getstream.DefaultBackgroundTaskScheduler", target: .global())
 
     public init() {}
     
