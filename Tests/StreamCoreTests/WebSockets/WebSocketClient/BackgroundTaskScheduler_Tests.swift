@@ -7,10 +7,10 @@ import XCTest
 
 #if os(iOS)
 @MainActor
-final class IOSBackgroundTaskScheduler_Tests: XCTestCase, @unchecked Sendable {
+final class DefaultBackgroundTaskScheduler_Tests: XCTestCase, @unchecked Sendable {
     func test_notifications_foreground() {
         // Given
-        let scheduler = IOSBackgroundTaskScheduler()
+        let scheduler = DefaultBackgroundTaskScheduler()
         var calledBackground = false
         var calledForeground = false
         scheduler.startListeningForAppStateUpdates(
@@ -28,7 +28,7 @@ final class IOSBackgroundTaskScheduler_Tests: XCTestCase, @unchecked Sendable {
 
     func test_notifications_background() {
         // Given
-        let scheduler = IOSBackgroundTaskScheduler()
+        let scheduler = DefaultBackgroundTaskScheduler()
         var calledBackground = false
         var calledForeground = false
         scheduler.startListeningForAppStateUpdates(

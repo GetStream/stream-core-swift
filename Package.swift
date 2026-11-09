@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "StreamCore",
     defaultLocalization: "en",
-    platforms: [.iOS(.v13)],
+    platforms: [.iOS(.v13), .tvOS(.v15)],
     products: [
         .library(
             name: "StreamCore",
