@@ -23,7 +23,6 @@ public protocol BackgroundTaskScheduler: Sendable {
 #if os(iOS) || os(tvOS)
 import UIKit
 
-/// The previous name of ``DefaultBackgroundTaskScheduler``.
 public typealias IOSBackgroundTaskScheduler = DefaultBackgroundTaskScheduler
 
 /// Handles background tasks and app state updates with `UIApplication` on iOS and tvOS.
