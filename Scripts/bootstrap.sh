@@ -25,7 +25,28 @@ if [ "${GITHUB_ACTIONS:-}" != "true" ]; then
   bundle exec lefthook install
 fi
 
-if [ "${SKIP_SWIFT_BOOTSTRAP:-}" != true ]; then
+OS="$(uname -s)"
+
+# Linux runners only lint the code. SwiftGen has no Linux build.
+if [[ $OS == Linux && ${SKIP_SWIFT_BOOTSTRAP:-} != true ]]; then
+  puts "Install SwiftLint v${SWIFT_LINT_VERSION}"
+  DOWNLOAD_URL="https://github.com/realm/SwiftLint/releases/download/${SWIFT_LINT_VERSION}/swiftlint_linux.zip"
+  DOWNLOAD_PATH="/tmp/swiftlint-${SWIFT_LINT_VERSION}.zip"
+  wget "$DOWNLOAD_URL" -O "$DOWNLOAD_PATH"
+  unzip -o "$DOWNLOAD_PATH" -d "/tmp/swiftlint-${SWIFT_LINT_VERSION}"
+  sudo install -m 755 "/tmp/swiftlint-${SWIFT_LINT_VERSION}/swiftlint" /usr/local/bin/swiftlint
+  swiftlint version
+
+  puts "Install SwiftFormat v${SWIFT_FORMAT_VERSION}"
+  DOWNLOAD_URL="https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFT_FORMAT_VERSION}/swiftformat_linux.zip"
+  DOWNLOAD_PATH="/tmp/swiftformat-${SWIFT_FORMAT_VERSION}.zip"
+  wget "$DOWNLOAD_URL" -O "$DOWNLOAD_PATH"
+  unzip -o "$DOWNLOAD_PATH" -d "/tmp/swiftformat-${SWIFT_FORMAT_VERSION}"
+  sudo install -m 755 "/tmp/swiftformat-${SWIFT_FORMAT_VERSION}/swiftformat_linux" /usr/local/bin/swiftformat
+  swiftformat --version
+fi
+
+if [[ $OS != Linux && ${SKIP_SWIFT_BOOTSTRAP:-} != true ]]; then
   puts "Install SwiftLint v${SWIFT_LINT_VERSION}"
   DOWNLOAD_URL="https://github.com/realm/SwiftLint/releases/download/${SWIFT_LINT_VERSION}/SwiftLint.pkg"
   DOWNLOAD_PATH="/tmp/SwiftLint-${SWIFT_LINT_VERSION}.pkg"
