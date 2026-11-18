@@ -35,9 +35,27 @@ permissions:
   pull-requests: write
 
 jobs:
+  guard:
+    name: Guard
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # to cancel skip-ci runs
+      contents: read
+      pull-requests: read
+    outputs:
+      checks: ${{ steps.guard.outputs.checks }}
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - id: guard
+        uses: ./.github/actions/ci-guard
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
   test_core:
     name: Test Core
     runs-on: macos-15
+    needs: guard
+    if: ${{ fromJSON(needs.guard.outputs.checks).core }}
     steps:
     - uses: actions/checkout@v4.1.1
       with:
@@ -84,6 +102,8 @@ jobs:
   test_ui:
     name: Test UI
     runs-on: macos-15
+    needs: guard
+    if: ${{ fromJSON(needs.guard.outputs.checks).ui }}
     steps:
     - uses: actions/checkout@v4.1.1
       with:
@@ -107,6 +127,8 @@ jobs:
   test_attachments:
     name: Test Attachments
     runs-on: macos-15
+    needs: guard
+    if: ${{ fromJSON(needs.guard.outputs.checks).attachments }}
     steps:
     - uses: actions/checkout@v4.1.1
       with:
@@ -130,6 +152,7 @@ jobs:
   automated-code-review:
     name: Automated Code Review
     runs-on: ubuntu-24.04
+    needs: guard
     steps:
     - uses: actions/checkout@v4.1.1
     - uses: ./.github/actions/ruby-cache
@@ -138,4 +161,5 @@ jobs:
         INSTALL_INTERFACE_ANALYZER: true
     - run: bundle exec fastlane lint_pr
     - run: bundle exec fastlane rubocop
+      if: ${{ fromJSON(needs.guard.outputs.checks).ruby }}
     - run: bundle exec fastlane run_swift_format strict:true
