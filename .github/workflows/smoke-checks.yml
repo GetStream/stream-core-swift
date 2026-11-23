@@ -63,15 +63,9 @@ jobs:
     - uses: ./.github/actions/bootstrap
       env:
         INSTALL_YEETD: true
-        INSTALL_SONAR: true
     - name: Run Core Tests (Debug)
       run: bundle exec fastlane test_core device:"${{ env.IOS_SIMULATOR_DEVICE }}" ${{ env.VERBOSE }}
       timeout-minutes: 40
-    - name: Run Sonar analysis
-      run: bundle exec fastlane sonar_upload
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_IOS_BOTS }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     - uses: 8398a7/action-slack@v3
       with:
         status: ${{ job.status }}
@@ -98,6 +92,34 @@ jobs:
       with:
         name: test-coverage-${{ github.event.pull_request.number }}
         path: reports/sonarqube-generic-coverage.xml
+
+  # Optional: a Sonar failure (for example a license issue) must not fail
+  # the Core tests.
+  sonar:
+    name: Sonar Analysis
+    runs-on: ubuntu-24.04
+    needs: test_core
+    continue-on-error: true
+    # Secrets are not available to forks.
+    if: ${{ !cancelled() && needs.test_core.result == 'success' && github.event.pull_request.head.repo.full_name == github.repository }}
+    steps:
+    - uses: actions/checkout@v4.1.1
+      with:
+        fetch-depth: 0
+    - uses: ./.github/actions/ruby-cache
+    - run: ./Scripts/bootstrap.sh
+      env:
+        INSTALL_SONAR: true
+        SKIP_SWIFT_BOOTSTRAP: true
+    - uses: actions/download-artifact@v4
+      with:
+        name: test-coverage-${{ github.event.pull_request.number }}
+        path: reports
+    - name: Run Sonar analysis
+      run: bundle exec fastlane sonar_upload
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_IOS_BOTS }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   test_ui:
     name: Test UI
