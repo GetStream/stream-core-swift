@@ -43,23 +43,27 @@ public final class OSLogDestination: BaseLogDestination, @unchecked Sendable {
             extendedDetails += logDetails.threadName
         }
 
-        var extendedMessage = "\(extendedDetails)> \(logDetails.messageWithAttachment)"
+        var extendedMessage = "\(extendedDetails)> \(logDetails.message)"
         if let error = logDetails.error {
             extendedMessage += "\n\(error)"
         }
         let formattedMessage = LogConfig
             .formatters
             .reduce(extendedMessage) { $1.format(logDetails: logDetails, message: $0) }
+        let type = Self.osLogType(for: logDetails.level)
+        if let attachment = logDetails.attachment {
+            // Attachments hold request and response bodies, so they are private: devices redact them from collected logs.
+            logger.log(level: type, "\(formattedMessage, privacy: .public)\n\(attachment.logDescription, privacy: .private)")
+        } else {
+            logger.log(level: type, "\(formattedMessage, privacy: .public)")
+        }
+    }
 
-        switch logDetails.level {
-        case .debug:
-            logger.debug("\(formattedMessage, privacy: .public)")
-        case .info:
-            logger.notice("\(formattedMessage, privacy: .public)")
-        case .warning:
-            logger.warning("\(formattedMessage, privacy: .public)")
-        case .error:
-            logger.critical("\(formattedMessage, privacy: .public)")
+    private static func osLogType(for level: LogLevel) -> OSLogType {
+        switch level {
+        case .debug: .debug
+        case .info: .default
+        case .warning, .error: .error
         }
     }
 }

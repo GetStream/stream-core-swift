@@ -14,7 +14,7 @@ public protocol LogAttachment: Sendable {
 
 /// An HTTP request attached to a log message, with its response or error.
 public struct HTTPLogAttachment: LogAttachment {
-    /// The request that was sent.
+    /// The request that was sent, with its credential headers, like `Authorization`, redacted.
     public let request: URLRequest
     /// The response that was received, if any.
     public let response: URLResponse?
@@ -33,7 +33,7 @@ public struct HTTPLogAttachment: LogAttachment {
         error: Error? = nil,
         session: URLSession? = nil
     ) {
-        self.request = request
+        self.request = request.redactingCredentialHeaders()
         self.response = response
         self.responseBody = responseBody
         self.error = error
@@ -65,18 +65,22 @@ public struct WebSocketLogAttachment: LogAttachment {
 
     /// Whether the message was sent or received.
     public let direction: Direction
-    /// The payload of the message.
+    /// The payload of the message, with its top-level `token` field redacted.
     public let payload: Data
 
     /// Creates the attachment of a WebSocket message.
     public init(direction: Direction, payload: Data) {
         self.direction = direction
-        self.payload = payload
+        self.payload = payload.redactingTopLevelToken()
     }
 
     public var logDescription: String {
         payload.logDescription ?? "<\(payload.count) bytes>"
     }
+}
+
+enum LogRedaction {
+    static let redactedValue = "<redacted>"
 }
 
 extension LogDetails {
@@ -98,5 +102,17 @@ extension Data {
             return String(data: self, encoding: .utf8)
         }
         return String(decoding: json, as: UTF8.self)
+    }
+
+    // The WebSocket auth message carries the user token at the top level.
+    func redactingTopLevelToken() -> Data {
+        guard range(of: Data(#""token""#.utf8)) != nil,
+              var object = try? JSONSerialization.jsonObject(with: self) as? [String: Any],
+              object["token"] != nil else {
+            return self
+        }
+        object["token"] = LogRedaction.redactedValue
+        return (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes]))
+            ?? Data(LogRedaction.redactedValue.utf8)
     }
 }
