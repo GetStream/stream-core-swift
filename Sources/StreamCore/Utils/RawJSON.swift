@@ -7,6 +7,9 @@ import Foundation
 /// A `RawJSON` type.
 /// Used to store and operate objects of unknown structure that's not possible to decode.
 /// https://forums.swift.org/t/new-unevaluated-type-for-decoder-to-allow-later-re-encoding-of-data-with-unknown-structure/11117
+///
+/// Decoding and encoding recurse once per level, so nesting is limited to 64 levels, counted from the root of
+/// the document. Deeper arrays and dictionaries decode as `nil`, and encoding one throws an error.
 public indirect enum RawJSON: Codable, Hashable, Sendable {
     case number(Double)
     case string(String)
@@ -14,9 +17,11 @@ public indirect enum RawJSON: Codable, Hashable, Sendable {
     case dictionary([String: RawJSON])
     case array([RawJSON])
     case `nil`
-    
+
     public static let double = number
-    
+
+    static let maxNestingDepth = 64
+
     public init(from decoder: Decoder) throws {
         let singleValueContainer = try decoder.singleValueContainer()
         if let value = try? singleValueContainer.decode(Bool.self) {
@@ -27,6 +32,10 @@ public indirect enum RawJSON: Codable, Hashable, Sendable {
             return
         } else if let value = try? singleValueContainer.decode(Double.self) {
             self = .number(value)
+            return
+        } else if decoder.codingPath.count >= Self.maxNestingDepth {
+            // Decoded JSON often comes from other users: a deep value is dropped rather than failing the whole payload.
+            self = .nil
             return
         } else if let value = try? singleValueContainer.decode([String: RawJSON].self) {
             self = .dictionary(value)
@@ -51,10 +60,25 @@ public indirect enum RawJSON: Codable, Hashable, Sendable {
         case let .number(value): try container.encode(value)
         case let .bool(value): try container.encode(value)
         case let .string(value): try container.encode(value)
-        case let .array(value): try container.encode(value)
-        case let .dictionary(value): try container.encode(value)
+        case let .array(value):
+            try checkNestingDepth(of: encoder)
+            try container.encode(value)
+        case let .dictionary(value):
+            try checkNestingDepth(of: encoder)
+            try container.encode(value)
         case .nil: try container.encodeNil()
         }
+    }
+
+    private func checkNestingDepth(of encoder: Encoder) throws {
+        guard encoder.codingPath.count >= Self.maxNestingDepth else { return }
+        throw EncodingError.invalidValue(
+            self,
+            EncodingError.Context(
+                codingPath: encoder.codingPath,
+                debugDescription: "RawJSON is nested deeper than \(Self.maxNestingDepth) levels"
+            )
+        )
     }
 }
 

@@ -43,8 +43,12 @@ extension ISO8601DateFormatter {
         guard !digits.isEmpty, let fraction = Int64(digits.padding(toLength: 9, withPad: "0", startingAt: 0)) else {
             return date
         }
-        let seconds = Int64(date.timeIntervalSince1970.rounded(.down))
-        return Date(unixNanoseconds: Double(seconds * 1_000_000_000 + fraction))
+        // Whole nanoseconds overflow Int64 before 1677 and after 2262: those dates keep the parsed milliseconds.
+        guard let seconds = Int64(exactly: date.timeIntervalSince1970.rounded(.down)) else { return date }
+        let (secondsInNanoseconds, multiplicationOverflow) = seconds.multipliedReportingOverflow(by: 1_000_000_000)
+        let (nanoseconds, additionOverflow) = secondsInNanoseconds.addingReportingOverflow(fraction)
+        guard !multiplicationOverflow, !additionOverflow else { return date }
+        return Date(unixNanoseconds: Double(nanoseconds))
     }
 }
 

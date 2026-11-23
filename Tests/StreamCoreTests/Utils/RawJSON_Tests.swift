@@ -244,4 +244,56 @@ final class RawJSON_Tests: XCTestCase, @unchecked Sendable {
 
         XCTAssertEqual(rawJSONArray, .array([.string("Hello"), .string("Stream")]))
     }
+
+    // MARK: - Nesting depth
+
+    func test_decoding_containersDeeperThanLimit_decodeAsNil() throws {
+        for (open, close) in [(#"{"k":"#, "}"), ("[", "]")] {
+            let json = Data((String(repeating: open, count: 300) + "1" + String(repeating: close, count: 300)).utf8)
+
+            var value = try onBackgroundThreadStack { try JSONDecoder.stream.decode(RawJSON.self, from: json) }
+
+            var depth = 0
+            while let nested = value.dictionaryValue?["k"] ?? value.arrayValue?.first {
+                value = nested
+                depth += 1
+            }
+            XCTAssertEqual(depth, RawJSON.maxNestingDepth, open)
+            XCTAssertEqual(value, .nil, open)
+        }
+    }
+
+    func test_encoding_containersDeeperThanLimit_throws() throws {
+        let value = nestedDictionary(depth: 300)
+
+        XCTAssertThrowsError(try onBackgroundThreadStack { try JSONEncoder.stream.encode(value) }) { error in
+            XCTAssertTrue(error is EncodingError)
+        }
+    }
+
+    func test_encodingAndDecoding_containersAtLimit_keepValue() throws {
+        let value = nestedDictionary(depth: RawJSON.maxNestingDepth)
+
+        let decoded = try JSONDecoder.stream.decode(RawJSON.self, from: JSONEncoder.stream.encode(value))
+
+        XCTAssertEqual(decoded, value)
+    }
+
+    private func nestedDictionary(depth: Int) -> RawJSON {
+        (0..<depth).reduce(RawJSON.number(1)) { value, _ in .dictionary(["k": value]) }
+    }
+
+    // Runs `body` on a thread with the 512 KiB stack of GCD's worker threads, where networking and database work run.
+    private func onBackgroundThreadStack<T: Sendable>(_ body: @escaping @Sendable () throws -> T) throws -> T {
+        nonisolated(unsafe) var result: Result<T, Error>?
+        let finished = DispatchSemaphore(value: 0)
+        let thread = Thread {
+            result = Result { try body() }
+            finished.signal()
+        }
+        thread.stackSize = 512 * 1024
+        thread.start()
+        finished.wait()
+        return try XCTUnwrap(result).get()
+    }
 }

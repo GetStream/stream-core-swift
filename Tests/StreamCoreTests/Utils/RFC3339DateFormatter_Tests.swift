@@ -44,6 +44,36 @@ final class RFC3339DateFormatter_Tests: XCTestCase {
         }
     }
 
+    func test_date_withFractionOutsideNanosecondRange_keepsParsedMilliseconds() {
+        let timestamps: [String: TimeInterval] = [
+            "2262-04-11T23:47:17.000001Z": 9_223_372_037,
+            "2300-01-01T00:00:00.5Z": 10_413_792_000.5,
+            "1600-01-01T00:00:00.5Z": -11_676_095_999.5,
+            "9999-12-31T23:59:59.5Z": 253_402_300_799.5
+        ]
+
+        for (timestamp, timeInterval) in timestamps {
+            let date = RFC3339DateFormatter.date(from: timestamp)
+            XCTAssertEqual(date?.timeIntervalSince1970 ?? .nan, timeInterval, accuracy: 0.001, timestamp)
+        }
+    }
+
+    func test_date_withFractionAtNanosecondRangeEnd_keepsNanoseconds() {
+        let expected = Date(timeIntervalSince1970: Double(Int64.max) / 1_000_000_000)
+
+        XCTAssertEqual(RFC3339DateFormatter.date(from: "2262-04-11T23:47:16.854775807Z"), expected)
+    }
+
+    func test_streamDecoder_withFractionOutsideNanosecondRange_decodesDates() throws {
+        let json = Data(#"["2300-01-01T00:00:00.5Z", "1600-01-01T00:00:00.5Z"]"#.utf8)
+
+        let dates = try JSONDecoder.streamCore.decode([Date].self, from: json)
+
+        XCTAssertEqual(dates.count, 2)
+        XCTAssertEqual(dates.first?.timeIntervalSince1970 ?? .nan, 10_413_792_000.5, accuracy: 0.001)
+        XCTAssertEqual(dates.last?.timeIntervalSince1970 ?? .nan, -11_676_095_999.5, accuracy: 0.001)
+    }
+
     func test_date_withInvalidInput_returnsNil() {
         let timestamps = [
             "",
