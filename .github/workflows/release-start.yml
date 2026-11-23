@@ -15,15 +15,13 @@ permissions:
 jobs:
   test-release:
     name: Start new release
-    runs-on: macos-15
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4.1.1
         with:
           fetch-depth: 0 # to fetch git tags
 
       - uses: ./.github/actions/ruby-cache
-
-      - uses: ./.github/actions/xcode-cache
 
       - name: Generate release bot token
         id: app-token
