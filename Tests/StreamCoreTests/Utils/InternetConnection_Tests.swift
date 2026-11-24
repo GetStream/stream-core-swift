@@ -32,6 +32,12 @@ final class InternetConnection_Tests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(monitor.delegate === internetConnection)
     }
 
+    func test_internetConnectionProtocol_exposesCurrentStatus() {
+        let subject: any InternetConnectionProtocol = internetConnection
+
+        XCTAssertEqual(subject.status, monitor.status)
+    }
+
     func test_internetConnection_postsStatusAndAvailabilityNotifications_whenAvailabilityChanges() {
         // Set unavailable status
         monitor.status = .unavailable
