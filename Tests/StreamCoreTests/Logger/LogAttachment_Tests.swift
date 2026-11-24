@@ -56,7 +56,7 @@ struct LogAttachment_Tests {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.httpAdditionalHeaders = ["X-Stream-Client": "stream-chat-swift"]
         var request = URLRequest(url: url)
-        request.setValue("token", forHTTPHeaderField: "Authorization")
+        request.setValue("jwt", forHTTPHeaderField: "Stream-Auth-Type")
 
         let attachment = HTTPLogAttachment(request: request, session: URLSession(configuration: configuration))
 
@@ -64,10 +64,45 @@ struct LogAttachment_Tests {
         cURL:
         $ curl -v \\
         \t-X GET \\
-        \t-H "Authorization: token" \\
+        \t-H "Stream-Auth-Type: jwt" \\
         \t-H "X-Stream-Client: stream-chat-swift" \\
         \t"\(url.absoluteString)"
         """)
+    }
+
+    @Test func httpAttachmentRedactsCredentialHeaders() {
+        var request = URLRequest(url: url)
+        request.setValue("secret-token", forHTTPHeaderField: "Authorization")
+        request.setValue("secret-proxy", forHTTPHeaderField: "Proxy-Authorization")
+        request.setValue("session=secret-cookie", forHTTPHeaderField: "Cookie")
+        request.setValue("jwt", forHTTPHeaderField: "Stream-Auth-Type")
+
+        let attachment = HTTPLogAttachment(request: request)
+
+        #expect(attachment.logDescription == """
+        cURL:
+        $ curl -v \\
+        \t-X GET \\
+        \t-H "Authorization: <redacted>" \\
+        \t-H "Cookie: <redacted>" \\
+        \t-H "Proxy-Authorization: <redacted>" \\
+        \t-H "Stream-Auth-Type: jwt" \\
+        \t"\(url.absoluteString)"
+        """)
+        #expect(attachment.request.value(forHTTPHeaderField: "Authorization") == "<redacted>")
+        #expect(attachment.request.value(forHTTPHeaderField: "Proxy-Authorization") == "<redacted>")
+        #expect(attachment.request.value(forHTTPHeaderField: "Cookie") == "<redacted>")
+        #expect(attachment.request.value(forHTTPHeaderField: "Stream-Auth-Type") == "jwt")
+    }
+
+    @Test func httpDescriptionRedactsTheSessionAuthorizationHeader() {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.httpAdditionalHeaders = ["authorization": "secret-token"]
+
+        let attachment = HTTPLogAttachment(request: URLRequest(url: url), session: URLSession(configuration: configuration))
+
+        #expect(!attachment.logDescription.contains("secret-token"))
+        #expect(attachment.logDescription.contains(#"-H "authorization: <redacted>""#))
     }
 
     @Test func httpDescriptionKeepsTextBodiesAndSkipsBinaryBodies() {
@@ -84,6 +119,26 @@ struct LogAttachment_Tests {
         let attachment = WebSocketLogAttachment(direction: .received, payload: Data(#"{"type":"message.new"}"#.utf8))
 
         #expect(attachment.logDescription == "{\n  \"type\" : \"message.new\"\n}")
+    }
+
+    @Test func webSocketAttachmentRedactsTheTokenOfTheAuthMessage() throws {
+        let payload = Data(#"{"products":["feeds"],"token":"secret-token","user_details":{"id":"luke"}}"#.utf8)
+
+        let attachment = WebSocketLogAttachment(direction: .sent, payload: payload)
+
+        #expect(!attachment.logDescription.contains("secret-token"))
+        let object = try #require(JSONSerialization.jsonObject(with: attachment.payload) as? [String: Any])
+        #expect(object["token"] as? String == "<redacted>")
+        #expect((object["user_details"] as? [String: Any])?["id"] as? String == "luke")
+        #expect(object["products"] as? [String] == ["feeds"])
+    }
+
+    @Test func webSocketAttachmentKeepsPayloadsWithoutATopLevelToken() {
+        let event = Data(#"{"type":"feeds.activity.added","activity":{"token":"not-a-credential"}}"#.utf8)
+        let text = Data("token".utf8)
+
+        #expect(WebSocketLogAttachment(direction: .received, payload: event).payload == event)
+        #expect(WebSocketLogAttachment(direction: .sent, payload: text).payload == text)
     }
 
     @Test func webSocketDescriptionOfABinaryPayloadIsItsSize() {

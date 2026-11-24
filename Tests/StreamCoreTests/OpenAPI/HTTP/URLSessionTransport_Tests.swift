@@ -44,6 +44,24 @@ extension Logger_Tests {
             #expect(attachment.responseBody == body)
         }
 
+        @Test func failedRequestIsLoggedWithoutTheAuthorizationHeader() async throws {
+            let body = Data(#"{"code":4,"message":"Invalid input","StatusCode":400,"duration":"","more_info":"","details":[]}"#.utf8)
+            let (transport, destination) = makeTransport(statusCode: 400, body: body)
+            defer { LogConfig.reset() }
+            var request = try makeRequest(path: "/api/v2/feeds")
+            request.setValue("secret-token", forHTTPHeaderField: "Authorization")
+
+            await #expect(throws: APIError.self) {
+                try await transport.execute(request: request)
+            }
+
+            let details = try await destination.waitForSingleDetails()
+            let attachment = try #require(details.attachment as? HTTPLogAttachment)
+            #expect(!attachment.logDescription.contains("secret-token"))
+            #expect(attachment.request.value(forHTTPHeaderField: "Authorization") == "<redacted>")
+            #expect(StubURLProtocol.requests.first?.value(forHTTPHeaderField: "Authorization") == "secret-token")
+        }
+
         @Test func expiredTokenIsLoggedAtInfoLevel() async throws {
             let (transport, destination) = makeTransport(statusCode: 401, body: expiredTokenBody)
             defer { LogConfig.reset() }

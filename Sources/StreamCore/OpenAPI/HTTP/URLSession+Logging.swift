@@ -23,7 +23,10 @@ extension URLRequest {
         }
         cURL.append(contentsOf: allHeaders
             .sorted { $0.key < $1.key }
-            .map { "-H \"\($0.key): \($0.value.replacingOccurrences(of: "\"", with: "\\\""))\"" }
+            .map { name, value in
+                let escapedValue = Self.loggedValue(ofHeader: name, value).replacingOccurrences(of: "\"", with: "\\\"")
+                return "-H \"\(name): \(escapedValue)\""
+            }
         )
         if let httpBody {
             let httpBodyString = String(decoding: httpBody, as: UTF8.self)
@@ -36,5 +39,23 @@ extension URLRequest {
             .replacingOccurrences(of: "$", with: "%24") // encoded JSON payload
         cURL.append("\"\(urlString)\"")
         return cURL.joined(separator: " \\\n\t")
+    }
+
+    func redactingCredentialHeaders() -> URLRequest {
+        var request = self
+        for name in (allHTTPHeaderFields ?? [:]).keys where Self.isCredentialHeader(name) {
+            request.setValue(LogRedaction.redactedValue, forHTTPHeaderField: name)
+        }
+        return request
+    }
+
+    private static let credentialHeaderFields: Set<String> = ["authorization", "proxy-authorization", "cookie"]
+
+    private static func isCredentialHeader(_ name: String) -> Bool {
+        credentialHeaderFields.contains(name.lowercased())
+    }
+
+    private static func loggedValue(ofHeader name: String, _ value: String) -> String {
+        isCredentialHeader(name) ? LogRedaction.redactedValue : value
     }
 }

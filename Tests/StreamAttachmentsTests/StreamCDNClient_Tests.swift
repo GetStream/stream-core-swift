@@ -37,6 +37,17 @@ struct StreamCDNClient_Tests {
         #expect(attachment.responseBody == body)
     }
 
+    @Test func failedUploadIsLoggedWithoutTheAuthorizationHeader() async throws {
+        defer { LogConfig.reset() }
+        let destination = try await upload(response: .failure(URLError(.timedOut)))
+
+        let details = try await destination.waitForSingleDetails()
+        let attachment = try #require(details.attachment as? HTTPLogAttachment)
+        #expect(!attachment.logDescription.contains("secret-token"))
+        #expect(attachment.request.value(forHTTPHeaderField: "Authorization") == "<redacted>")
+        #expect(StubURLProtocol.sentAuthorization == "secret-token")
+    }
+
     @Test func expiredTokenIsLoggedAtInfoLevel() async throws {
         let body = Data(#"{"code":40,"message":"Token expired","StatusCode":401,"duration":"","more_info":"","details":[]}"#.utf8)
         defer { LogConfig.reset() }
@@ -127,6 +138,7 @@ private final class StubRequestEncoder: RequestEncoder, @unchecked Sendable {
     ) {
         var request = URLRequest(url: baseURL.appendingPathComponent("uploads/file"))
         request.httpMethod = "POST"
+        request.setValue("secret-token", forHTTPHeaderField: "Authorization")
         completion(.success(request))
     }
 }
@@ -138,11 +150,13 @@ private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     }
 
     nonisolated(unsafe) static var response: Response = .http(statusCode: 200, body: Data())
+    nonisolated(unsafe) static var sentAuthorization: String?
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
+        Self.sentAuthorization = request.value(forHTTPHeaderField: "Authorization")
         switch Self.response {
         case let .http(statusCode, body):
             guard let url = request.url,
