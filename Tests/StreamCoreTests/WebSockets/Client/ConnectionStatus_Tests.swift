@@ -17,6 +17,14 @@ final class ConnectionStatus_Tests: XCTestCase {
             )
         )
 
+        let expiredTokenError = ClientError(
+            with: APIError(
+                code: StreamErrorCode.expiredToken,
+                message: .unique,
+                statusCode: 401
+            )
+        )
+
         let pairs: [(WebSocketConnectionState, ConnectionStatus)] = [
             (.initialized, .initialized),
             (.connecting, .connecting),
@@ -26,6 +34,7 @@ final class ConnectionStatus_Tests: XCTestCase {
             (.disconnected(source: .serverInitiated(error: nil)), .connecting),
             (.disconnected(source: .serverInitiated(error: testError)), .connecting),
             (.disconnected(source: .serverInitiated(error: invalidTokenError)), .disconnected(error: invalidTokenError)),
+            (.disconnected(source: .serverInitiated(error: expiredTokenError)), .connecting),
             (.connected(healthCheckInfo: HealthCheckInfo(connectionId: .unique)), .connected),
             (.disconnecting(source: .noPongReceived), .disconnecting),
             (.disconnecting(source: .serverInitiated(error: testError)), .disconnecting),
