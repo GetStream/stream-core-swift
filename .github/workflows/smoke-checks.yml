@@ -53,7 +53,7 @@ jobs:
 
   test_core:
     name: Test Core
-    runs-on: macos-15
+    runs-on: { group: scaleway-macos }
     needs: guard
     if: ${{ fromJSON(needs.guard.outputs.checks).core }}
     steps:
@@ -123,7 +123,7 @@ jobs:
 
   test_ui:
     name: Test UI
-    runs-on: macos-15
+    runs-on: { group: scaleway-macos }
     needs: guard
     if: ${{ fromJSON(needs.guard.outputs.checks).ui }}
     steps:
@@ -148,7 +148,7 @@ jobs:
 
   test_attachments:
     name: Test Attachments
-    runs-on: macos-15
+    runs-on: { group: scaleway-macos }
     needs: guard
     if: ${{ fromJSON(needs.guard.outputs.checks).attachments }}
     steps:
