@@ -47,7 +47,7 @@ jobs:
             device: "iPhone 13 Pro"
             setup_runtime: true
       fail-fast: false
-    runs-on: macos-15
+    runs-on: { group: scaleway-macos }
     env:
       XCODE_VERSION: "26.2"
       IOS_SIMULATOR_DEVICE: "${{ matrix.device }} (${{ matrix.ios }})"
